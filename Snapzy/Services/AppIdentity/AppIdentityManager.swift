@@ -12,6 +12,7 @@ import Security
 nonisolated enum AppBundleIdentity {
   static let releaseIdentifier = "com.trongduong.snapzy"
   static let debugIdentifier = "com.trongduong.snapzy.debug"
+  static let previewIdentifier = "com.tianruian.openshot.preview"
 
   #if DEBUG
   static let isDebugBuild = true
@@ -25,7 +26,8 @@ nonisolated enum AppBundleIdentity {
     // Local development builds may retain the normal app identity and signing
     // certificate to preserve existing macOS capture permissions across rebuilds.
     // Release builds still require the release identity; arbitrary IDs are rejected.
-    identifier == releaseIdentifier || (debugBuild && identifier == debugIdentifier)
+    identifier == releaseIdentifier
+      || (debugBuild && (identifier == debugIdentifier || identifier == previewIdentifier))
   }
 }
 

@@ -16,6 +16,12 @@ final class AppBundleIdentityTests: XCTestCase {
     XCTAssertFalse(AppBundleIdentity.matches("com.trongduong.snapzy.debug", debugBuild: false))
   }
 
+  func testPreviewIdentityIsLimitedToDevelopmentBuilds() async {
+    XCTAssertTrue(AppBundleIdentity.matches("com.tianruian.openshot.preview", debugBuild: true))
+    XCTAssertFalse(AppBundleIdentity.matches("com.tianruian.openshot.preview", debugBuild: false))
+    XCTAssertFalse(AppBundleIdentity.matches("com.tianruian.openshot.preview.other", debugBuild: true))
+  }
+
   func testNeitherBuildAcceptsMissingOrUnrelatedIdentity() async {
     for debugBuild in [true, false] {
       for identifier in [nil, "", "com.example.snapzy", "com.trongduong.snapzy.debug.other"] as [String?] {

@@ -15,10 +15,10 @@ protocol QuickAccessManaging {
   @discardableResult
   func addVideo(url: URL) async -> QuickAccessItem?
 
-  func pinScreenshot(id: UUID)
+  func pinScreenshot(id: UUID, sourceScreenRect: CGRect?)
 
   @discardableResult
-  func pinScreenshot(url: URL) async -> QuickAccessItem?
+  func pinScreenshot(url: URL, sourceScreenRect: CGRect?) async -> QuickAccessItem?
 }
 
 extension QuickAccessManager: QuickAccessManaging {}

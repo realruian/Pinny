@@ -345,6 +345,25 @@ final class PostCaptureActionHandlerTests: XCTestCase {
     XCTAssertEqual(fakeQuickAccess.pinnedScreenshotURLs, [tempFileURL])
   }
 
+  func testInPlacePin_preservesRenderedPixelsAndSourceRectWithoutCornerPreview() async throws {
+    preferences.setAction(.copyFile, for: .screenshot, enabled: false)
+    _ = saveDefaultPreset(padding: 12)
+    let beforeData = try Data(contentsOf: tempFileURL)
+    let fakeQuickAccess = FakeQuickAccessManager()
+    let handler = makeHandler(quickAccess: fakeQuickAccess)
+    let rect = CGRect(x: -1200, y: 145.5, width: 120, height: 80)
+
+    let item = await handler.handleScreenshotCapture(
+      url: tempFileURL, pinToScreen: true, sourceScreenRect: rect
+    )
+
+    XCTAssertNotNil(item)
+    XCTAssertTrue(fakeQuickAccess.addedScreenshots.isEmpty)
+    XCTAssertEqual(fakeQuickAccess.pinnedScreenshotURLs, [tempFileURL])
+    XCTAssertEqual(fakeQuickAccess.pinnedSourceRects, [rect])
+    XCTAssertEqual(try Data(contentsOf: tempFileURL), beforeData)
+  }
+
   // MARK: - AfterCaptureAction Properties
 
   func testAfterCaptureAction_allCases() {

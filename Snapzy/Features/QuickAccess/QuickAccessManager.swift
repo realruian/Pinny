@@ -636,15 +636,15 @@ final class QuickAccessManager: ObservableObject {
   }
 
   /// Pin a screenshot item without toggling it back off.
-  func pinScreenshot(id: UUID) {
-    setPinState(id: id, isPinned: true, closePinWindow: false)
+  func pinScreenshot(id: UUID, sourceScreenRect: CGRect? = nil) {
+    setPinState(id: id, isPinned: true, closePinWindow: false, sourceScreenRect: sourceScreenRect)
   }
 
   /// Pin a saved screenshot URL, creating a transient pin window if no Quick Access item owns it.
   @discardableResult
-  func pinScreenshot(url: URL) async -> QuickAccessItem? {
+  func pinScreenshot(url: URL, sourceScreenRect: CGRect? = nil) async -> QuickAccessItem? {
     if let existingItem = item(matching: url) {
-      pinScreenshot(id: existingItem.id)
+      pinScreenshot(id: existingItem.id, sourceScreenRect: sourceScreenRect)
       return item(matching: url) ?? existingItem
     }
 
@@ -664,7 +664,7 @@ final class QuickAccessManager: ObservableObject {
     let result = await ThumbnailGenerator.generate(from: url)
     let thumbnail = result.thumbnail ?? ThumbnailGenerator.placeholderThumbnail()
     let item = QuickAccessItem(url: url, thumbnail: thumbnail)
-    let didShowWindow = pinWindowManager.show(item: item) { closedId in
+    let didShowWindow = pinWindowManager.show(item: item, sourceScreenRect: sourceScreenRect) { closedId in
       DiagnosticLogger.shared.log(
         .debug,
         .action,
@@ -700,7 +700,7 @@ final class QuickAccessManager: ObservableObject {
     }
   }
 
-  private func setPinState(id: UUID, isPinned: Bool, closePinWindow: Bool) {
+  private func setPinState(id: UUID, isPinned: Bool, closePinWindow: Bool, sourceScreenRect: CGRect? = nil) {
     guard let index = items.firstIndex(where: { $0.id == id }) else {
       if closePinWindow {
         pinWindowManager.close(id: id)
@@ -717,7 +717,7 @@ final class QuickAccessManager: ObservableObject {
     items[index].isPinned = isPinned
 
     if isPinned {
-      let didShowWindow = pinWindowManager.show(item: items[index]) { [weak self] closedId in
+      let didShowWindow = pinWindowManager.show(item: items[index], sourceScreenRect: sourceScreenRect) { [weak self] closedId in
         self?.handlePinWindowClosed(id: closedId)
       }
 

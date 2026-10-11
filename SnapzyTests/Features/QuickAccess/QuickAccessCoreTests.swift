@@ -484,6 +484,127 @@ final class QuickAccessCoreTests: XCTestCase {
     XCTAssertNotEqual(base, pinned)
   }
 
+  func testInPlacePin_keepsSourceGeometryAcrossDisplaysAndImagePixelScales() {
+    let mainVisibleFrame = CGRect(x: 0, y: 24, width: 1440, height: 850)
+    let sourceRects = [
+      CGRect(x: 310, y: 247, width: 380, height: 260),
+      CGRect(x: -1530, y: 540.5, width: 120, height: 40),
+      CGRect(x: 20, y: -700, width: 800, height: 600),
+      CGRect(x: 0, y: 0, width: 1440, height: 900),
+    ]
+    for rect in sourceRects {
+      for scale: CGFloat in [1, 2] {
+        let imageSize = CGSize(width: rect.width * scale, height: rect.height * scale)
+        for mode: QuickAccessPinZoomMode in [.fixedViewport, .windowFollowsImage] {
+          let frame = QuickAccessPinWindowSizing.initialFrame(
+            imageSize: imageSize, visibleFrame: mainVisibleFrame, mode: mode,
+            sourceScreenRect: rect
+          )
+          XCTAssertEqual(frame, rect)
+          let image = NSImage(size: imageSize)
+          let state = QuickAccessPinWindowState(
+            id: UUID(), url: URL(fileURLWithPath: "/tmp/in-place-pin.png"),
+            image: image, thumbnail: image, baseSize: frame.size,
+            zoomMode: .windowFollowsImage, preservesSourceSize: true
+          )
+          Self.retainedPinWindowStates.append(state)
+          XCTAssertEqual(state.displaySize, rect.size)
+          XCTAssertEqual(state.imageDisplaySize, rect.size)
+          state.setZoomPercent(50)
+          XCTAssertEqual(state.displaySize, CGSize(width: rect.width / 2, height: rect.height / 2))
+          state.resetZoom()
+          XCTAssertEqual(state.displaySize, rect.size)
+        }
+      }
+    }
+  }
+
+  func testInPlacePin_invalidOrMissingRectRetainsLegacyPlacement() {
+    let visibleFrame = CGRect(x: 0, y: 24, width: 1440, height: 850)
+    let imageSize = CGSize(width: 400, height: 300)
+    let expected = QuickAccessPinWindowSizing.frame(
+      size: QuickAccessPinWindowSizing.size(for: imageSize, visibleSize: visibleFrame.size),
+      centeredAt: CGPoint(x: visibleFrame.midX, y: visibleFrame.midY)
+    )
+    for rect: CGRect? in [nil, .zero, CGRect(x: CGFloat.nan, y: 0, width: 100, height: 100)] {
+      XCTAssertEqual(QuickAccessPinWindowSizing.initialFrame(
+        imageSize: imageSize, visibleFrame: visibleFrame, mode: .windowFollowsImage,
+        sourceScreenRect: rect
+      ), expected)
+    }
+  }
+
+  func testInPlacePin_realPanelKeepsExactFrameAndUnclippedCorners() throws {
+    let before = Set(NSApp.windows.map(\.windowNumber))
+    let image = NSImage(size: CGSize(width: 160, height: 80))
+    let item = QuickAccessItem(url: URL(fileURLWithPath: "/tmp/in-place-pin-fixture.png"), thumbnail: image)
+    let rect = CGRect(x: 103, y: 247, width: 80, height: 40)
+    let manager = QuickAccessPinWindowManager.shared
+    defer { manager.close(id: item.id) }
+
+    XCTAssertTrue(manager.show(item: item, sourceScreenRect: rect, onUserClose: { _ in }))
+    let panel = try XCTUnwrap(NSApp.windows.first {
+      $0 is QuickAccessPinWindow && !before.contains($0.windowNumber)
+    })
+    panel.contentView?.layoutSubtreeIfNeeded()
+    XCTAssertEqual(panel.frame, rect)
+    XCTAssertEqual(panel.contentView?.frame.size, rect.size)
+    XCTAssertEqual(panel.contentView?.superview?.layer?.cornerRadius ?? 0, 0)
+  }
+
+  func testPinDoubleClick_copiesOriginalPixelsClosesOnlyClickedPin() throws {
+    let pasteboard = NSPasteboard.general
+    let savedItems = (pasteboard.pasteboardItems ?? []).map { item in
+      item.types.compactMap { type in item.data(forType: type).map { (type, $0) } }
+    }
+    defer {
+      pasteboard.clearContents()
+      let restored = savedItems.map { representations in
+        let item = NSPasteboardItem()
+        for (type, data) in representations { item.setData(data, forType: type) }
+        return item
+      }
+      pasteboard.writeObjects(restored)
+    }
+    let bitmap = try XCTUnwrap(NSBitmapImageRep(
+      bitmapDataPlanes: nil, pixelsWide: 160, pixelsHigh: 80,
+      bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true,
+      isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0
+    ))
+    for y in 0..<80 {
+      for x in 0..<160 { bitmap.setColor(NSColor(deviceRed: 1, green: 0, blue: 0, alpha: 1), atX: x, y: y) }
+    }
+    let image = NSImage(size: CGSize(width: 80, height: 40))
+    image.addRepresentation(bitmap)
+    // Missing file deliberately exercises copying the actual retained image.
+    let item = QuickAccessItem(url: URL(fileURLWithPath: "/tmp/missing-pin-\(UUID()).png"), thumbnail: image)
+    let other = QuickAccessItem(url: URL(fileURLWithPath: "/tmp/other-pin-\(UUID()).png"), thumbnail: image)
+    let manager = QuickAccessPinWindowManager.shared
+    defer { manager.close(id: item.id); manager.close(id: other.id) }
+    var closed: [UUID] = []
+    let before = Set(NSApp.windows.map(\.windowNumber))
+    XCTAssertTrue(manager.show(item: item, sourceScreenRect: CGRect(x: 120, y: 250, width: 80, height: 40), onUserClose: { closed.append($0) }))
+    let panel = try XCTUnwrap(NSApp.windows.first {
+      $0 is QuickAccessPinWindow && !before.contains($0.windowNumber)
+    })
+    XCTAssertTrue(manager.show(item: other, sourceScreenRect: CGRect(x: 300, y: 250, width: 80, height: 40), onUserClose: { closed.append($0) }))
+    // Shrinking the visible panel must not shrink the copied pixel data.
+    panel.setFrame(NSRect(x: 120, y: 250, width: 40, height: 20), display: true)
+    let doubleClick = try XCTUnwrap(NSEvent.mouseEvent(
+      with: .leftMouseDown, location: NSPoint(x: 10, y: 10),
+      modifierFlags: [], timestamp: 0, windowNumber: panel.windowNumber,
+      context: nil, eventNumber: 2, clickCount: 2, pressure: 1
+    ))
+    panel.sendEvent(doubleClick)
+    XCTAssertFalse(panel.isVisible)
+    XCTAssertEqual(closed, [item.id])
+    let copied = try XCTUnwrap(NSImage(pasteboard: pasteboard))
+    let copiedBitmap = try XCTUnwrap(NSBitmapImageRep(data: try XCTUnwrap(copied.tiffRepresentation)))
+    XCTAssertEqual(copiedBitmap.pixelsWide, 160)
+    XCTAssertEqual(copiedBitmap.pixelsHigh, 80)
+    XCTAssertGreaterThan(try XCTUnwrap(copiedBitmap.colorAt(x: 12, y: 10)).redComponent, 0.9)
+  }
+
   func testQuickAccessPinWindowSizing_enforcesMinimumInteractiveSizeForTinyImages() {
     let size = QuickAccessPinWindowSizing.size(
       for: CGSize(width: 24, height: 16),

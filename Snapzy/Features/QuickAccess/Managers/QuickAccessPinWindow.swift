@@ -100,6 +100,7 @@ final class QuickAccessPinWindow: NSPanel {
   private static let pinnedWindowLevel = NSWindow.Level(rawValue: NSWindow.Level.floating.rawValue + 2)
 
   var onEscapeRequested: (() -> Void)?
+  var onCopyAndCloseRequested: (() -> Void)?
 
   private weak var pinState: QuickAccessPinWindowState?
   private var localMouseMonitor: Any?
@@ -144,6 +145,14 @@ final class QuickAccessPinWindow: NSPanel {
     case .scrollWheel:
       super.sendEvent(event)
     case .leftMouseDown:
+      // Intercept at the panel so the image viewport and background dragging
+      // cannot consume the second click or start another drag.
+      if event.clickCount == 2, pinState?.isLocked == false,
+         NSRect(origin: .zero, size: frame.size).contains(event.locationInWindow) {
+        backgroundDrag.end()
+        onCopyAndCloseRequested?()
+        return
+      }
       beginBackgroundDragIfEligible(with: event)
       super.sendEvent(event)
     case .leftMouseDragged where continueBackgroundDrag():
@@ -242,7 +251,7 @@ final class QuickAccessPinWindow: NSPanel {
     collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
     acceptsMouseMovedEvents = true
     ignoresMouseEvents = false
-    applyCornerRadius()
+    applyCornerRadius(pinState?.preservesSourceSize == true ? 0 : NSWindow.defaultCornerRadius)
     level = Self.pinnedWindowLevel
     // AppKit may key the panel from a hit-tested view only when that view opts
     // in. The existing pointer-hover path can also key this nonactivating pin

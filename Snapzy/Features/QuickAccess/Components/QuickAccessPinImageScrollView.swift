@@ -13,6 +13,7 @@ struct QuickAccessPinImageViewport: NSViewRepresentable {
 
   func makeNSView(context _: Context) -> QuickAccessPinImageScrollView {
     let scrollView = QuickAccessPinImageScrollView()
+    scrollView.minimumDisplaySize = state.minimumDisplaySize
     scrollView.isLockedProvider = { [weak state] in
       state?.isLocked ?? true
     }
@@ -32,6 +33,7 @@ struct QuickAccessPinImageViewport: NSViewRepresentable {
   }
 
   func updateNSView(_ scrollView: QuickAccessPinImageScrollView, context _: Context) {
+    scrollView.minimumDisplaySize = state.minimumDisplaySize
     scrollView.stateResizeRequest = { [weak state] size, fraction in state?.onWindowResize?(size, fraction) }
     scrollView.update(
       image: state.image,
@@ -55,6 +57,7 @@ final class QuickAccessPinImageScrollView: NSScrollView {
   }
 
   var onViewportChange: ViewportChangeHandler?
+  var minimumDisplaySize = QuickAccessPinWindowSizing.minimumInteractiveSize
   var isLockedProvider: () -> Bool = { false } {
     didSet {
       imageView.isLockedProvider = isLockedProvider
@@ -361,7 +364,8 @@ final class QuickAccessPinImageScrollView: NSScrollView {
   private func displaySizeForZoom(_ target: CGFloat) -> CGSize {
     QuickAccessPinWindowState.windowFollowsImageDisplaySize(
       baseSize: configuredImageSize,
-      zoomFactor: target
+      zoomFactor: target,
+      minimumSize: minimumDisplaySize
     )
   }
 

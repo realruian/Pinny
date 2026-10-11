@@ -440,6 +440,9 @@ final class InlineAreaAnnotateSession: ObservableObject {
       return
     }
 
+    // Retain the pixel-aligned crop's AppKit screen rect before completing the session.
+    // Image pixels (especially on Retina displays) cannot recover its position or point size.
+    let sourceScreenRect = selectionRect.map { screenRect(for: $0) }
     let result = await ScreenCaptureManager.shared.saveProcessedImage(
       cgImage,
       to: saveDirectory,
@@ -457,7 +460,9 @@ final class InlineAreaAnnotateSession: ObservableObject {
     }
     complete(result)
     if pinToScreen, case .success(let url) = result {
-      await PostCaptureActionHandler.shared.handleScreenshotCapture(url: url, pinToScreen: true)
+      await PostCaptureActionHandler.shared.handleScreenshotCapture(
+        url: url, pinToScreen: true, sourceScreenRect: sourceScreenRect
+      )
     }
   }
 

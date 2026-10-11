@@ -15,6 +15,26 @@ enum QuickAccessPinWindowSizing {
   private static let screenMaxRatio: CGFloat = 0.8
   private static let screenMargin: CGFloat = 24
 
+  static func validSourceRect(_ rect: CGRect?) -> CGRect? {
+    guard let rect, rect.origin.x.isFinite, rect.origin.y.isFinite,
+          rect.width.isFinite, rect.height.isFinite,
+          rect.width > 0, rect.height > 0 else { return nil }
+    return rect
+  }
+
+  /// Capture coordinates are already in AppKit points. Do not fit, center, or
+  /// clamp them to a visibleFrame: that would move edge and secondary-display captures.
+  static func initialFrame(
+    imageSize: CGSize, visibleFrame: CGRect, mode: QuickAccessPinZoomMode,
+    sourceScreenRect: CGRect? = nil
+  ) -> CGRect {
+    if let rect = validSourceRect(sourceScreenRect) { return rect }
+    return frame(
+      size: size(for: imageSize, visibleSize: visibleFrame.size, mode: mode),
+      centeredAt: CGPoint(x: visibleFrame.midX, y: visibleFrame.midY)
+    )
+  }
+
   static func size(for imageSize: CGSize, visibleSize: CGSize, mode: QuickAccessPinZoomMode) -> CGSize {
     guard mode == .fixedViewport else { return size(for: imageSize, visibleSize: visibleSize) }
     let maxWidth = min(absoluteMaxSize.width, visibleSize.width * screenMaxRatio)

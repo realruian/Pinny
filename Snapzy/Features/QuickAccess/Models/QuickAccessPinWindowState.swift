@@ -23,32 +23,40 @@ final class QuickAccessPinWindowState: ObservableObject {
   @Published private(set) var zoomMode: QuickAccessPinZoomMode
 
   private(set) var baseSize: CGSize
+  let preservesSourceSize: Bool
   var onWindowResize: ((CGSize, CGPoint) -> Void)?
 
   static let minimumZoomFactor: CGFloat = 0.4
   static let maximumZoomFactor: CGFloat = 8
 
-  static func windowFollowsImageDisplaySize(baseSize: CGSize, zoomFactor: CGFloat) -> CGSize {
+  static func windowFollowsImageDisplaySize(
+    baseSize: CGSize, zoomFactor: CGFloat,
+    minimumSize: CGSize = QuickAccessPinWindowSizing.minimumInteractiveSize
+  ) -> CGSize {
     let factor = min(max(zoomFactor, minimumZoomFactor), maximumZoomFactor)
-    let minimumSize = QuickAccessPinWindowSizing.minimumInteractiveSize
     return CGSize(
       width: max(baseSize.width * factor, minimumSize.width),
       height: max(baseSize.height * factor, minimumSize.height)
     )
   }
 
-  init(id: UUID, url: URL, image: NSImage, thumbnail: NSImage, baseSize: CGSize, zoomMode: QuickAccessPinZoomMode = .defaultMode) {
+  init(id: UUID, url: URL, image: NSImage, thumbnail: NSImage, baseSize: CGSize, zoomMode: QuickAccessPinZoomMode = .defaultMode, preservesSourceSize: Bool = false) {
     self.id = id
     self.url = url
     self.image = image
     self.thumbnail = thumbnail
     self.baseSize = baseSize
     self.zoomMode = zoomMode
+    self.preservesSourceSize = preservesSourceSize
+  }
+
+  var minimumDisplaySize: CGSize {
+    preservesSourceSize ? CGSize(width: 1, height: 1) : QuickAccessPinWindowSizing.minimumInteractiveSize
   }
 
   var displaySize: CGSize {
     zoomMode == .windowFollowsImage
-      ? Self.windowFollowsImageDisplaySize(baseSize: baseSize, zoomFactor: zoomFactor)
+      ? Self.windowFollowsImageDisplaySize(baseSize: baseSize, zoomFactor: zoomFactor, minimumSize: minimumDisplaySize)
       : baseSize
   }
 

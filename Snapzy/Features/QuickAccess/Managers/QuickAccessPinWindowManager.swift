@@ -17,7 +17,7 @@ final class QuickAccessPinWindowManager {
   private init() {}
 
   @discardableResult
-  func show(item: QuickAccessItem, onUserClose: @escaping (UUID) -> Void) -> Bool {
+  func show(item: QuickAccessItem, sourceScreenRect: CGRect? = nil, onUserClose: @escaping (UUID) -> Void) -> Bool {
     guard !item.isVideo else { return false }
 
     if let controller = controllers[item.id] {
@@ -26,7 +26,7 @@ final class QuickAccessPinWindowManager {
       return true
     }
 
-    let controller = QuickAccessPinWindowController(item: item)
+    let controller = QuickAccessPinWindowController(item: item, sourceScreenRect: sourceScreenRect)
     controller.onUserClose = { [weak self] id in
       self?.controllers[id] = nil
       onUserClose(id)
@@ -75,29 +75,38 @@ private final class QuickAccessPinWindowController {
   private let id: UUID
   private let state: QuickAccessPinWindowState
   private let window: QuickAccessPinWindow
+  private let sourceSize: CGSize?
 
-  init(item: QuickAccessItem) {
+  init(item: QuickAccessItem, sourceScreenRect: CGRect?) {
     id = item.id
 
     let image = Self.loadImage(for: item)
+    let sourceScreenRect = QuickAccessPinWindowSizing.validSourceRect(sourceScreenRect)
+    sourceSize = sourceScreenRect?.size
     let screen = ScreenUtility.activeScreen()
-    let mode = QuickAccessPinZoomModeStore.shared.mode
-    let baseSize = QuickAccessPinWindowSizing.size(for: image.size, visibleSize: screen.visibleFrame.size, mode: mode)
+    let mode: QuickAccessPinZoomMode = sourceScreenRect == nil ? QuickAccessPinZoomModeStore.shared.mode : .windowFollowsImage
+    let frame = QuickAccessPinWindowSizing.initialFrame(
+      imageSize: image.size, visibleFrame: screen.visibleFrame, mode: mode,
+      sourceScreenRect: sourceScreenRect
+    )
     state = QuickAccessPinWindowState(
       id: item.id,
       url: item.url,
       image: image,
       thumbnail: item.thumbnail,
-      baseSize: baseSize,
-      zoomMode: mode
+      baseSize: frame.size,
+      zoomMode: mode,
+      preservesSourceSize: sourceScreenRect != nil
     )
 
-    let frame = QuickAccessPinWindowSizing.centeredFrame(size: state.displaySize, on: screen)
     window = QuickAccessPinWindow(contentRect: frame, state: state)
     state.onWindowResize = { [weak self] size, anchorFraction in
       self?.resize(to: size, preservingAnchorFraction: anchorFraction, animated: false)
     }
     window.contentView = hostingView(size: state.displaySize)
+    window.onCopyAndCloseRequested = { [weak self] in
+      self?.copyAndClose()
+    }
     window.onEscapeRequested = { [weak self] in
       self?.handleUserClose()
     }
@@ -106,6 +115,10 @@ private final class QuickAccessPinWindowController {
   func show() {
     window.alphaValue = 1.0
     orderFront()
+    DiagnosticLogger.shared.log(.info, .action, "Pinned screenshot presented", context: [
+      "frame": NSStringFromRect(window.frame),
+      "sourceSize": sourceSize.map { NSStringFromSize($0) } ?? "none",
+    ])
   }
 
   func orderFront() {
@@ -116,7 +129,7 @@ private final class QuickAccessPinWindowController {
   func update(item: QuickAccessItem, imageOverride: NSImage? = nil) {
     let image = imageOverride ?? Self.loadImage(for: item)
     let screen = window.screen ?? ScreenUtility.activeScreen()
-    let baseSize = QuickAccessPinWindowSizing.size(for: image.size, visibleSize: screen.visibleFrame.size, mode: state.zoomMode)
+    let baseSize = sourceSize ?? QuickAccessPinWindowSizing.size(for: image.size, visibleSize: screen.visibleFrame.size, mode: state.zoomMode)
     let newSize = state.update(
       url: item.url,
       image: image,
@@ -139,18 +152,22 @@ private final class QuickAccessPinWindowController {
   }
 
   private func hostingView(size: CGSize) -> NSHostingView<QuickAccessPinWindowView> {
-    let view = QuickAccessPinWindowView(
-      state: state,
-      onClose: { [weak self] in
-        self?.handleUserClose()
-      },
-      onLockChanged: { [weak self] in
-        self?.window.updateMousePassthrough()
-      }
-    )
+    let view = QuickAccessPinWindowView(state: state)
     let hostingView = NSHostingView(rootView: view)
     hostingView.frame = NSRect(origin: .zero, size: size)
     return hostingView
+  }
+
+  private func copyAndClose() {
+    // Copy the full-resolution image retained by this pin, including edits.
+    // It remains available even when the source file has moved or disappeared.
+    let pasteboard = NSPasteboard.general
+    pasteboard.clearContents()
+    guard pasteboard.writeObjects([state.image]) else {
+      NSSound.beep()
+      return
+    }
+    handleUserClose()
   }
 
   private func handleUserClose() {
@@ -169,7 +186,9 @@ private final class QuickAccessPinWindowController {
       height: size.height
     )
     let screen = window.screen ?? ScreenUtility.activeScreen()
-    let targetFrame = QuickAccessPinWindowSizing.constrainedFrame(proposedFrame, on: screen)
+    let targetFrame = sourceSize == nil
+      ? QuickAccessPinWindowSizing.constrainedFrame(proposedFrame, on: screen)
+      : proposedFrame
     window.setFrame(targetFrame, display: true, animate: animated)
     window.contentView?.frame = NSRect(origin: .zero, size: targetFrame.size)
     window.updateMousePassthrough()
@@ -177,7 +196,7 @@ private final class QuickAccessPinWindowController {
 
   func setZoomMode(_ mode: QuickAccessPinZoomMode) {
     let screen = window.screen ?? ScreenUtility.activeScreen()
-    let size = QuickAccessPinWindowSizing.size(for: state.image.size, visibleSize: screen.visibleFrame.size, mode: mode)
+    let size = sourceSize ?? QuickAccessPinWindowSizing.size(for: state.image.size, visibleSize: screen.visibleFrame.size, mode: mode)
     guard state.setZoomMode(mode, baseSize: size) else { return }
     let frame = QuickAccessPinWindowSizing.resizedFrame(
       window.frame,

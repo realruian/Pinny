@@ -45,11 +45,15 @@ final class PostCaptureActionHandler {
 
   /// Execute all enabled post-capture actions for a screenshot
   @discardableResult
-  func handleScreenshotCapture(url: URL, pinToScreen: Bool = false) async -> QuickAccessItem? {
+  func handleScreenshotCapture(
+    url: URL, pinToScreen: Bool = false, sourceScreenRect: CGRect? = nil
+  ) async -> QuickAccessItem? {
     let quickAccessItem = await executeActions(
       for: .screenshot,
       url: url,
-      pinToScreen: pinToScreen
+      skipQuickAccess: pinToScreen && sourceScreenRect != nil,
+      pinToScreen: pinToScreen,
+      sourceScreenRect: sourceScreenRect
     )
 
     // Add to capture history
@@ -283,7 +287,8 @@ final class PostCaptureActionHandler {
     for captureType: CaptureType,
     url: URL,
     skipQuickAccess: Bool = false,
-    pinToScreen: Bool = false
+    pinToScreen: Bool = false,
+    sourceScreenRect: CGRect? = nil
   ) async -> QuickAccessItem? {
     let scopedAccess = fileAccess.beginAccessingURL(url)
     defer { scopedAccess.stop() }
@@ -301,7 +306,10 @@ final class PostCaptureActionHandler {
     }
 
     logger.info("Executing post-capture actions for \(captureType == .screenshot ? "screenshot" : "recording"): \(url.lastPathComponent)")
-    let screenshotSessionData = captureType == .screenshot
+    let isInPlacePin = captureType == .screenshot && pinToScreen && sourceScreenRect != nil
+    // The inline editor already rendered the selected pixels. A share preset would add
+    // padding or scale them, breaking alignment with the source region.
+    let screenshotSessionData = captureType == .screenshot && !isInPlacePin
       ? screenshotPresetAutoApplier.applyDefaultPresetIfNeeded(to: url)
       : nil
     if let screenshotSessionData {
@@ -371,9 +379,9 @@ final class PostCaptureActionHandler {
 
     if captureType == .screenshot && pinToScreen {
       if let quickAccessItem {
-        quickAccess.pinScreenshot(id: quickAccessItem.id)
+        quickAccess.pinScreenshot(id: quickAccessItem.id, sourceScreenRect: sourceScreenRect)
       } else {
-        quickAccessItem = await quickAccess.pinScreenshot(url: url)
+        quickAccessItem = await quickAccess.pinScreenshot(url: url, sourceScreenRect: sourceScreenRect)
       }
       DiagnosticLogger.shared.log(
         .info,
@@ -384,7 +392,7 @@ final class PostCaptureActionHandler {
     }
 
     // Open Annotate Editor (screenshots only)
-    if captureType == .screenshot && preferences.isActionEnabled(.openAnnotate, for: captureType) {
+    if captureType == .screenshot && !isInPlacePin && preferences.isActionEnabled(.openAnnotate, for: captureType) {
       if let quickAccessItem {
         AnnotateManager.shared.openAnnotation(for: quickAccessItem)
       } else {
