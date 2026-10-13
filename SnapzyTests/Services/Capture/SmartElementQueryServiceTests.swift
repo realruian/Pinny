@@ -21,6 +21,95 @@ final class SmartElementQueryServiceTests: XCTestCase {
     super.tearDown()
   }
 
+  func testHierarchyNavigationAndManualChoiceSurviveSameComponentHover() throws {
+    guard !NSScreen.screens.isEmpty else { throw XCTSkip("Requires display") }
+    let card = AXElementSnapshot(role: "AXGroup", position: CGPoint(x: 20, y: 20), size: CGSize(width: 240, height: 160))
+    let icon = AXElementSnapshot(role: "AXImage", position: CGPoint(x: 40, y: 40),
+      size: CGSize(width: 24, height: 24), parent: { card })
+    let service = SmartElementQueryService(snapshotProvider: FakeAXSnapshotProvider(snapshotForCall: [icon, icon]),
+      permissionChecker: { true })
+    var received: [CGRect?] = []
+    service.elementDetectedPublisher.sink { received.append($0) }.store(in: &cancellables)
+    service.queryElement(at: CGPoint(x: 50, y: 50), pid: 1)
+    XCTAssertEqual(received.last??.width, 240)
+    XCTAssertTrue(service.selectAdjacentCandidate(towardParent: false))
+    XCTAssertEqual(received.last??.width, 24)
+    service.queryElement(at: CGPoint(x: 51, y: 51), pid: 1)
+    XCTAssertEqual(received.count, 2, "Explicit child choice must survive small pointer moves")
+    XCTAssertTrue(service.selectAdjacentCandidate(towardParent: true))
+    XCTAssertEqual(received.last??.width, 240)
+    XCTAssertFalse(service.selectAdjacentCandidate(towardParent: true))
+  }
+
+  func testHoverStabilizesNestedChangesAndCancelDiscardsDelayedResult() throws {
+    guard !NSScreen.screens.isEmpty else { throw XCTSkip("Requires display") }
+    let outer = AXElementSnapshot(role: "AXGroup", position: CGPoint(x: 20, y: 20), size: CGSize(width: 240, height: 160))
+    let inner = AXElementSnapshot(role: "AXGroup", position: CGPoint(x: 30, y: 30),
+      size: CGSize(width: 100, height: 80), parent: { outer })
+    let service = SmartElementQueryService(snapshotProvider: FakeAXSnapshotProvider(snapshotForCall: [outer, inner]),
+      permissionChecker: { true }, stabilizationMilliseconds: 60)
+    var received: [CGRect?] = []
+    service.elementDetectedPublisher.sink { received.append($0) }.store(in: &cancellables)
+    service.queryElement(at: CGPoint(x: 50, y: 50), pid: 1)
+    service.queryElement(at: CGPoint(x: 51, y: 51), pid: 1)
+    XCTAssertEqual(received.count, 1, "A nested change must not immediately jump")
+    let stabilized = expectation(description: "Stable candidate accepted")
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) { stabilized.fulfill() }
+    wait(for: [stabilized], timeout: 1)
+    XCTAssertEqual(received.last??.width, 100)
+    service.cancelPendingQueries()
+    XCTAssertNil(received.last!)
+    XCTAssertFalse(service.selectAdjacentCandidate(towardParent: true))
+  }
+
+  func testCancelInvalidatesQueuedAXResponse() {
+    let service = SmartElementQueryService(snapshotProvider: CountingAXSnapshotProvider(snapshot: nil),
+      permissionChecker: { true })
+    var received: [CGRect?] = []
+    service.elementDetectedPublisher.sink { received.append($0) }.store(in: &cancellables)
+    service.updateLocation(.zero, pid: 1)
+    service.cancelPendingQueries()
+    let drained = expectation(description: "Queued query drained")
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { drained.fulfill() }
+    wait(for: [drained], timeout: 1)
+    XCTAssertEqual(received.count, 1, "Only cancellation may emit after session ends")
+  }
+
+  func testSlowAXQueriesCoalesceToLatestPosition() throws {
+    guard !NSScreen.screens.isEmpty else { throw XCTSkip("Requires display") }
+    let provider = SlowAXSnapshotProvider()
+    let service = SmartElementQueryService(snapshotProvider: provider, permissionChecker: { true },
+      debounceMilliseconds: 1, stabilizationMilliseconds: 0)
+    let resolved = expectation(description: "Latest position resolved")
+    service.elementDetectedPublisher.compactMap { $0 }.sink { rect in
+      XCTAssertEqual(rect.minX, 111)
+      resolved.fulfill()
+    }.store(in: &cancellables)
+    for offset in 0..<12 {
+      DispatchQueue.main.asyncAfter(deadline: .now() + Double(offset) * 0.012) {
+        service.updateLocation(CGPoint(x: 100 + offset, y: 100), pid: 1)
+      }
+    }
+    wait(for: [resolved], timeout: 1)
+    XCTAssertLessThanOrEqual(provider.callCount, 3, "Obsolete positions must not queue full AX traversals")
+  }
+
+  func testStationaryUpdatesDoNotStarveSlowAXQuery() throws {
+    guard !NSScreen.screens.isEmpty else { throw XCTSkip("Requires display") }
+    let provider = SlowAXSnapshotProvider()
+    let service = SmartElementQueryService(snapshotProvider: provider, permissionChecker: { true }, debounceMilliseconds: 1)
+    let resolved = expectation(description: "Stationary candidate resolved")
+    service.elementDetectedPublisher.compactMap { $0 }.prefix(1).sink { _ in resolved.fulfill() }
+      .store(in: &cancellables)
+    for offset in 0..<7 {
+      DispatchQueue.main.asyncAfter(deadline: .now() + Double(offset) * 0.01) {
+        service.updateLocation(CGPoint(x: 100, y: 100), pid: 1)
+      }
+    }
+    wait(for: [resolved], timeout: 1)
+    XCTAssertEqual(provider.callCount, 1)
+  }
+
   // MARK: - Permission gate
 
   func testQueryElement_permissionDenied_emitsNil_logsOnce() {
@@ -58,8 +147,8 @@ final class SmartElementQueryServiceTests: XCTestCase {
     var received: [CGRect?] = []
     service.elementDetectedPublisher.sink { received.append($0) }.store(in: &cancellables)
 
-    service.queryElement(at: .zero, pid: 1)
-    service.queryElement(at: .zero, pid: 1)
+    service.queryElement(at: CGPoint(x: 60, y: 60), pid: 1)
+    service.queryElement(at: CGPoint(x: 60, y: 60), pid: 1)
 
     XCTAssertEqual(received.count, 1, "Identical rect must emit only once.")
   }
@@ -82,9 +171,9 @@ final class SmartElementQueryServiceTests: XCTestCase {
     var received: [CGRect?] = []
     service.elementDetectedPublisher.sink { received.append($0) }.store(in: &cancellables)
 
-    service.queryElement(at: .zero, pid: 1)
+    service.queryElement(at: CGPoint(x: 60, y: 60), pid: 1)
     service.cancelPendingQueries()
-    service.queryElement(at: .zero, pid: 1)
+    service.queryElement(at: CGPoint(x: 60, y: 60), pid: 1)
 
     XCTAssertEqual(received.count, 3, "Expected: rect, nil (cancel), rect again (dedup reset).")
     XCTAssertNotNil(received[0])
@@ -122,7 +211,7 @@ final class SmartElementQueryServiceTests: XCTestCase {
 
     for offset in 0..<5 {
       service.pushInputForTesting(
-        point: CGPoint(x: 100 + Double(offset), y: 100),
+        point: CGPoint(x: 20 + Double(offset), y: 20),
         pid: 1
       )
     }
@@ -130,5 +219,16 @@ final class SmartElementQueryServiceTests: XCTestCase {
     wait(for: [expectation], timeout: 0.5)
     XCTAssertEqual(received.count, 1, "Debounce must collapse rapid inputs to one.")
     XCTAssertEqual(provider.callCount, 1, "Underlying AX query fires once after debounce window.")
+  }
+}
+
+private final class SlowAXSnapshotProvider: AXSnapshotProviding {
+  private let lock = NSLock()
+  private var count = 0
+  var callCount: Int { lock.lock(); defer { lock.unlock() }; return count }
+  func snapshot(at point: CGPoint, pid: Int32?) -> AXElementSnapshot? {
+    lock.lock(); count += 1; lock.unlock()
+    Thread.sleep(forTimeInterval: 0.08) // Simulates an unresponsive target app on the worker queue.
+    return AXElementSnapshot(role: "AXGroup", position: point, size: CGSize(width: 200, height: 120))
   }
 }

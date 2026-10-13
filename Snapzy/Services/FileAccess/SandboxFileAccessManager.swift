@@ -219,6 +219,11 @@ final class SandboxFileAccessManager {
   }
 
   func beginAccessingURL(_ targetURL: URL) -> ScopedAccess {
+    // Unsandboxed builds already have direct access. Resolving a stale bookmark for
+    // an unrelated export folder can synchronously block even a temporary image write.
+    guard isRunningSandboxed else {
+      return ScopedAccess(url: targetURL, accessURL: targetURL, didStartAccessing: false)
+    }
     let scopeURL = resolveURLForScopedAccess(targetURL)
     var accessURL = scopeURL
     var didStartAccessing = scopeURL.startAccessingSecurityScopedResource()

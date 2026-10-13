@@ -125,7 +125,7 @@ final class QuickAccessPinWindow: NSPanel {
     installMouseMonitors()
   }
 
-  override var canBecomeKey: Bool { true }
+  override var canBecomeKey: Bool { false }
   override var canBecomeMain: Bool { false }
 
   override func keyDown(with event: NSEvent) {
@@ -143,7 +143,11 @@ final class QuickAccessPinWindow: NSPanel {
         super.sendEvent(event)
       }
     case .scrollWheel:
-      super.sendEvent(event)
+      if let scrollView = imageScrollView, pinState?.isLocked == false {
+        scrollView.scrollWheel(with: event)
+      } else {
+        super.sendEvent(event)
+      }
     case .leftMouseDown:
       // Intercept at the panel so the image viewport and background dragging
       // cannot consume the second click or start another drag.
@@ -155,7 +159,7 @@ final class QuickAccessPinWindow: NSPanel {
       }
       beginBackgroundDragIfEligible(with: event)
       super.sendEvent(event)
-    case .leftMouseDragged where continueBackgroundDrag():
+    case .leftMouseDragged where continueBackgroundDrag(with: event):
       return
     case .leftMouseUp:
       // A manual drag consumed the gesture: swallow the mouse-up so the click
@@ -174,6 +178,15 @@ final class QuickAccessPinWindow: NSPanel {
   override func resignKey() {
     backgroundDrag.end()
     super.resignKey()
+  }
+
+  private var imageScrollView: QuickAccessPinImageScrollView? {
+    var remaining = contentView.map { [$0] } ?? []
+    while let view = remaining.popLast() {
+      if let scrollView = view as? QuickAccessPinImageScrollView { return scrollView }
+      remaining.append(contentsOf: view.subviews)
+    }
+    return nil
   }
 
   @discardableResult
@@ -221,20 +234,10 @@ final class QuickAccessPinWindow: NSPanel {
 
     let isInside = frame.contains(mouseLocation)
     pinState.isMouseInside = isInside
-
     guard pinState.isLocked else {
+      // Hovering an image must not steal keyboard focus or cancel a drag when
+      // the system pointer differs from a queued event's location.
       ignoresMouseEvents = false
-      if isInside {
-        if !isKeyWindow {
-          makeKey()
-        }
-      } else {
-        if isKeyWindow {
-          if let otherWindow = NSApp.windows.first(where: { $0 != self && $0.canBecomeKey && $0.isVisible }) {
-            otherWindow.makeKey()
-          }
-        }
-      }
       return
     }
 
@@ -247,15 +250,13 @@ final class QuickAccessPinWindow: NSPanel {
     isOpaque = false
     backgroundColor = .clear
     hasShadow = true
-    isMovableByWindowBackground = true
+    isMovableByWindowBackground = false
     collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
     acceptsMouseMovedEvents = true
     ignoresMouseEvents = false
     applyCornerRadius(pinState?.preservesSourceSize == true ? 0 : NSWindow.defaultCornerRadius)
     level = Self.pinnedWindowLevel
-    // AppKit may key the panel from a hit-tested view only when that view opts
-    // in. The existing pointer-hover path can also key this nonactivating pin
-    // directly, without activating the Snapzy application.
+    // Pure image pins never take keyboard focus; pointer events still reach sendEvent.
     becomesKeyOnlyIfNeeded = true
   }
 
@@ -346,26 +347,17 @@ final class QuickAccessPinWindow: NSPanel {
     guard !isOverInteractiveControl(event) else { return }
 
     backgroundDrag.begin(
-      startScreenPoint: NSEvent.mouseLocation,
+      startScreenPoint: convertPoint(toScreen: event.locationInWindow),
       grabOffset: event.locationInWindow,
       initialFrameOrigin: frame.origin
     )
   }
 
-  private func continueBackgroundDrag() -> Bool {
-    // Missed mouse-up (the window resigned key or the event was lost
-    // mid-gesture): the left button is no longer pressed, so the gesture is
-    // over.
-    guard NSEvent.pressedMouseButtons & 0x1 != 0 else {
-      logDragTransition("missedMouseUp", from: backgroundDrag.mode, to: .idle)
-      backgroundDrag.end()
-      return false
-    }
-
+  private func continueBackgroundDrag(with event: NSEvent) -> Bool {
     let modeBefore = backgroundDrag.mode
     let frameBefore = frame.origin
     guard let target = backgroundDrag.dragged(
-      screenPoint: NSEvent.mouseLocation,
+      screenPoint: convertPoint(toScreen: event.locationInWindow),
       currentFrameOrigin: frame.origin
     ) else {
       logDragTransition("dragged", from: modeBefore, to: backgroundDrag.mode, context: [

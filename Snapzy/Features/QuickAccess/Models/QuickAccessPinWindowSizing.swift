@@ -15,6 +15,24 @@ enum QuickAccessPinWindowSizing {
   private static let screenMaxRatio: CGFloat = 0.8
   private static let screenMargin: CGFloat = 24
 
+  /// Limit interactive zoom without changing the original capture at presentation.
+  static func maximumZoom(baseSize: CGSize, visibleSize: CGSize) -> CGFloat {
+    guard baseSize.width > 0, baseSize.height > 0 else { return 1 }
+    return min(8, max(1, min(visibleSize.width / baseSize.width, visibleSize.height / baseSize.height)))
+  }
+
+  static func repositionAfterZoom(_ frame: CGRect, within bounds: CGRect) -> CGRect {
+    // Preserve image size/aspect ratio, including original captures spanning displays.
+    var result = frame
+    if frame.width <= bounds.width {
+      result.origin.x = min(max(frame.minX, bounds.minX), bounds.maxX - frame.width)
+    }
+    if frame.height <= bounds.height {
+      result.origin.y = min(max(frame.minY, bounds.minY), bounds.maxY - frame.height)
+    }
+    return result
+  }
+
   static func validSourceRect(_ rect: CGRect?) -> CGRect? {
     guard let rect, rect.origin.x.isFinite, rect.origin.y.isFinite,
           rect.width.isFinite, rect.height.isFinite,

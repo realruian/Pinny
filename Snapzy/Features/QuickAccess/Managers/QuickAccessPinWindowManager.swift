@@ -215,7 +215,9 @@ private final class QuickAccessPinWindowController {
       to: size,
       preservingAnchorFraction: fraction
     )
-    window.setFrame(frame, display: true, animate: animated)
+    let screen = window.screen ?? ScreenUtility.activeScreen()
+    let visibleFrame = QuickAccessPinWindowSizing.repositionAfterZoom(frame, within: screen.visibleFrame)
+    window.setFrame(visibleFrame, display: true, animate: animated)
     window.contentView?.frame = NSRect(origin: .zero, size: size)
     window.updateMousePassthrough()
   }

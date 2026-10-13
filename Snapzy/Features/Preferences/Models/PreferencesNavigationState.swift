@@ -71,7 +71,7 @@ enum PreferencesTab: String, CaseIterable, Identifiable, Hashable {
     case .annotate:
       return "pencil.and.scribble"
     case .quickAccess:
-      return "square.stack"
+      return "pin"
     case .history:
       return "clock.arrow.circlepath"
     case .shortcuts:

@@ -12,6 +12,80 @@ import XCTest
 
 final class InlineAreaAnnotateSessionTests: XCTestCase {
 
+  func testResizeTargetsCoverEntireBorderWithoutCornerOverlap() {
+    for rect in [CGRect(x: 100, y: 80, width: 600, height: 300), CGRect(x: 0, y: 0, width: 8, height: 10)] {
+      let targets = InlineAreaResizeHandle.allCases.map { handle -> CGRect in
+        let center = handle.position(in: rect)
+        let size = handle.hitSize(in: rect)
+        return CGRect(x: center.x - size.width / 2, y: center.y - size.height / 2, width: size.width, height: size.height)
+      }
+      for fraction in stride(from: 0.0, through: 1.0, by: 0.01) {
+        for point in [CGPoint(x: rect.minX + rect.width * fraction, y: rect.minY),
+                      CGPoint(x: rect.minX + rect.width * fraction, y: rect.maxY),
+                      CGPoint(x: rect.minX, y: rect.minY + rect.height * fraction),
+                      CGPoint(x: rect.maxX, y: rect.minY + rect.height * fraction)] {
+          XCTAssertTrue(targets.contains { $0.contains(point) }, "Unreachable border point: \(point)")
+        }
+      }
+      for first in targets.indices {
+        for second in targets.indices where second > first {
+          let overlap = targets[first].intersection(targets[second])
+          XCTAssertTrue(overlap.isNull || overlap.width == 0 || overlap.height == 0)
+        }
+      }
+    }
+  }
+
+  @MainActor
+  func testMoveAndResizeRefreshRetinaCaptureDimensions() throws {
+    let session = try makeSelectionSession()
+    defer { session.cancel() }
+    session.beginSelection(at: CGPoint(x: 100, y: 100))
+    session.endSelection(at: CGPoint(x: 300, y: 250))
+    XCTAssertEqual(session.state.selectedTool, .selection)
+    let moved = CGRect(x: 180, y: 140, width: 200, height: 150)
+    session.moveSelection(to: moved, refreshImage: true)
+    XCTAssertEqual(session.selectionRect, moved)
+    let resized = CGRect(x: 160, y: 120, width: 320, height: 240)
+    session.resizeSelection(to: resized, previousRect: moved)
+    XCTAssertEqual(session.selectionRect, resized)
+    let image = try XCTUnwrap(session.state.sourceImage)
+    let pixels = try XCTUnwrap(image.cgImage(forProposedRect: nil, context: nil, hints: nil))
+    XCTAssertEqual(pixels.width, 640)
+    XCTAssertEqual(pixels.height, 480)
+  }
+
+  @MainActor
+  func testCancelCompletesOnceAndCannotSaveAfterwards() async throws {
+    var results: [CaptureResult] = []
+    let session = try makeSelectionSession(onComplete: { results.append($0) })
+    session.beginAnnotating(with: CGRect(x: 100, y: 100, width: 200, height: 150))
+    session.cancel()
+    session.cancel()
+    await session.finish()
+    XCTAssertEqual(results.count, 1)
+    guard case .failure(.cancelled) = results.first else { return XCTFail("Expected cancellation") }
+    XCTAssertFalse(session.isFinishing)
+  }
+
+  @MainActor
+  func testSaveFailureKeepsSelectionForRetryAndShowsError() async throws {
+    let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+    // A regular file cannot be used as an export directory.
+    try Data("not a directory".utf8).write(to: directory)
+    defer { try? FileManager.default.removeItem(at: directory) }
+    var didComplete = false
+    let session = try makeSelectionSession(saveDirectory: directory, onComplete: { _ in didComplete = true })
+    defer { session.cancel() }
+    session.beginAnnotating(with: CGRect(x: 100, y: 100, width: 200, height: 150))
+    await session.finish()
+    XCTAssertFalse(didComplete)
+    XCTAssertEqual(session.phase, .annotating)
+    XCTAssertNotNil(session.state.sourceImage)
+    XCTAssertNotNil(session.actionMessage)
+    XCTAssertFalse(session.isFinishing)
+  }
+
   // MARK: - desktopFrame
 
   func testDesktopFrame_unionsScreenFrames() {
@@ -395,8 +469,29 @@ final class InlineAreaAnnotateSessionTests: XCTestCase {
     XCTAssertEqual(session.phase, .selecting)
   }
 
+  func testElementHierarchyKeysOnlyApplyDuringSelection() throws {
+    let tab = try makeKeyEvent(keyCode: 48, characters: "\t", flags: [])
+    let backTab = try makeKeyEvent(keyCode: 48, characters: "\t", flags: .shift)
+    let appSwitch = try makeKeyEvent(keyCode: 48, characters: "\t", flags: .command)
+    XCTAssertEqual(InlineAreaAnnotateSession.keyAction(for: tab, source: .local, phase: .selecting,
+      hasTextResponder: false, hasKeyWindow: true), .changeElementLevel(towardParent: true))
+    XCTAssertEqual(InlineAreaAnnotateSession.keyAction(for: backTab, source: .local, phase: .selecting,
+      hasTextResponder: false, hasKeyWindow: true), .changeElementLevel(towardParent: false))
+    for event in [tab, backTab, appSwitch] {
+      XCTAssertEqual(InlineAreaAnnotateSession.keyAction(for: event, source: .global, phase: .selecting,
+        hasTextResponder: false, hasKeyWindow: false), .passThrough)
+      XCTAssertEqual(InlineAreaAnnotateSession.keyAction(for: event, source: .local, phase: .annotating,
+        hasTextResponder: false, hasKeyWindow: true), .passThrough)
+    }
+    XCTAssertEqual(InlineAreaAnnotateSession.keyAction(for: appSwitch, source: .local, phase: .selecting,
+      hasTextResponder: false, hasKeyWindow: true), .passThrough)
+  }
+
   @MainActor
-  private func makeSelectionSession() throws -> InlineAreaAnnotateSession {
+  private func makeSelectionSession(
+    saveDirectory: URL = FileManager.default.temporaryDirectory,
+    onComplete: @escaping (CaptureResult) -> Void = { _ in }
+  ) throws -> InlineAreaAnnotateSession {
     // Fake display ID: the session hides the cursor per display at init — a nonexistent
     // display keeps that a harmless no-op instead of hiding the test runner's cursor.
     let displayID: CGDirectDisplayID = 999_999_999
@@ -423,10 +518,10 @@ final class InlineAreaAnnotateSessionTests: XCTestCase {
         colorSpaceName: nil,
         image: image
       )),
-      saveDirectory: FileManager.default.temporaryDirectory,
+      saveDirectory: saveDirectory,
       outputFormat: .png,
       defaults: try XCTUnwrap(UserDefaults(suiteName: "InlineAreaAnnotateSessionTests.pointer")),
-      onComplete: { _ in }
+      onComplete: onComplete
     )
   }
 }

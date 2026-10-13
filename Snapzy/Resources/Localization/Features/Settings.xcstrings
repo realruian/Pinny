@@ -1,6 +1,312 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "preferences-workflow.capture-section": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capture in place"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原位截图"
+          }
+        }
+      }
+    },
+    "preferences-workflow.capture-title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Screenshot & Annotate"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "截图并标注"
+          }
+        }
+      }
+    },
+    "preferences-workflow.capture-description": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep the selection in place to adjust and annotate before finishing. Configure its shortcut in Keyboard Shortcuts."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选区留在原位置，确认前可调整和标注。可在键盘快捷键中设置入口。"
+          }
+        }
+      }
+    },
+    "preferences-workflow.component-title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select a component"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择完整组件"
+          }
+        }
+      }
+    },
+    "preferences-workflow.component-description": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hover to detect components. During selection, Tab selects the parent and Shift-Tab selects the child. Available regions depend on the target app."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "悬停识别组件；选区阶段按 Tab 扩大、⇧Tab 缩小。识别范围取决于目标应用提供的组件信息。"
+          }
+        }
+      }
+    },
+    "preferences-workflow.recognition-settings": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detection Settings"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "识别设置"
+          }
+        }
+      }
+    },
+    "preferences-workflow.adjust-title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move and resize the selection"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拖动和调整范围"
+          }
+        }
+      }
+    },
+    "preferences-workflow.adjust-description": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "With the selection tool, drag an empty part of the image to move the region. Drag any edge or corner to resize it."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择工具下直接拖动图像空白处，无需空格；拖动任意边缘或四角调整范围。"
+          }
+        }
+      }
+    },
+    "preferences-workflow.pin-title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pin in place"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原位钉住"
+          }
+        }
+      }
+    },
+    "preferences-workflow.pin-description": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Click the pin beside the selection to keep its original position and size. The pinned image has no controls and can be dragged directly."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点击选区旁的图钉，按原位置、原大小钉住。贴图只显示图像，可直接拖动。"
+          }
+        }
+      }
+    },
+    "preferences-workflow.double-click-title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Double-click to copy and close"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "双击复制并关闭"
+          }
+        }
+      }
+    },
+    "preferences-workflow.double-click-description": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Double-click a pinned image to copy its original-resolution content and close that image. Zoom does not change the copied resolution."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "双击贴图，复制原始分辨率图像并关闭这一张。缩放不影响复制的清晰度。"
+          }
+        }
+      }
+    },
+    "preferences-workflow.zoom-title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scroll to zoom"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "滚轮缩放"
+          }
+        }
+      }
+    },
+    "preferences-workflow.zoom-description": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose whether the window resizes with the image when you scroll to zoom."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "缩放贴图时选择窗口是否随图像改变大小。"
+          }
+        }
+      }
+    },
+    "preferences-workflow.legacy-cards-title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Screen-corner cards (legacy workflow)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "屏幕角落卡片（旧流程）"
+          }
+        }
+      }
+    },
+    "preferences-workflow.legacy-cards-description": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These settings apply only to corner cards shown after capture. Card position, action buttons, and automatic dismissal do not affect inline selections or pinned images."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "以下设置仅用于截图完成后的角落卡片。原位选区和钉住的图片不受这些卡片位置、按钮或自动关闭设置影响。"
+          }
+        }
+      }
+    },
+    "preferences-workflow.accessibility-permission": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Required to detect components inside windows. macOS also grants the ability to control other apps."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "窗口内组件识别需要此权限。macOS 会同时授予控制其他应用的能力。"
+          }
+        }
+      }
+    },
+    "preferences-workflow.save-permission": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save screenshots to the selected folder."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用于保存截图到所选文件夹。"
+          }
+        }
+      }
+    },
     "history-background-style.glass": {
       "extractionState": "stale",
       "localizations": {
@@ -13826,61 +14132,61 @@
       "localizations": {
         "de": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "Schnellzugriff"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quick Access"
+            "value": "Pinned Images"
           }
         },
         "es": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "Acceso rápido"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "Accès rapide"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "クイックアクセス"
           }
         },
         "ko": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "빠른 액세스"
           }
         },
         "ru": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "Быстрый доступ"
           }
         },
         "vi": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "Truy cập nhanh"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "快速访问"
+            "value": "贴图"
           }
         },
         "zh-Hant": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "快速訪問"
           }
         }

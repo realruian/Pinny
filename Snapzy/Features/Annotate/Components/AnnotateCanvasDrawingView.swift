@@ -16,12 +16,15 @@ struct CanvasDrawingView: NSViewRepresentable {
   var canvasBounds: CGRect
   var acceptsFirstMouse = false
   var interactionBridge: CanvasInteractionBridge?
+  /// Inline capture only: drag empty selection-tool space to move the capture region.
+  var onSelectionBackgroundDrag: ((CGSize, Bool) -> Void)?
 
   func makeNSView(context _: Context) -> DrawingCanvasNSView {
     let view = DrawingCanvasNSView(state: state, acceptsFirstMouse: acceptsFirstMouse)
     view.displayScale = displayScale
     view.canvasBounds = canvasBounds
     view.interactionBridge = interactionBridge
+    view.onSelectionBackgroundDrag = onSelectionBackgroundDrag
     interactionBridge?.drawingCanvas = view
     return view
   }
@@ -40,6 +43,7 @@ struct CanvasDrawingView: NSViewRepresentable {
     }
     nsView.acceptsInactiveWindowMouse = acceptsFirstMouse
     nsView.interactionBridge = interactionBridge
+    nsView.onSelectionBackgroundDrag = onSelectionBackgroundDrag
     interactionBridge?.drawingCanvas = nsView
   }
 
@@ -292,6 +296,9 @@ final class DrawingCanvasNSView: NSView {
   var canvasBounds: CGRect = .zero
   var acceptsInactiveWindowMouse: Bool
   weak var interactionBridge: CanvasInteractionBridge?
+  var onSelectionBackgroundDrag: ((CGSize, Bool) -> Void)?
+  private var selectionBackgroundDragStart: CGPoint?
+  private var selectionBackgroundDidMove = false
   private let shortcutManager = AnnotateShortcutManager.shared
   private var currentPath: [CGPoint] = []
   /// Text-snapped highlighter bars for the in-progress drag. Empty means the
@@ -1038,6 +1045,12 @@ final class DrawingCanvasNSView: NSView {
         beginAnnotationDrag(anchor: annotation, at: imagePoint)
         return
       } else {
+        if onSelectionBackgroundDrag != nil {
+          state.selectedAnnotationId = nil
+          selectionBackgroundDragStart = event.locationInWindow
+          selectionBackgroundDidMove = false
+          return
+        }
         beginAreaSelection(at: imagePoint)
         invalidateDrawing()
         return
@@ -1226,6 +1239,15 @@ final class DrawingCanvasNSView: NSView {
   }
 
   override func mouseDragged(with event: NSEvent) {
+    if let start = selectionBackgroundDragStart {
+      // Window coordinates stay stable while the canvas itself moves under the pointer.
+      let delta = CGSize(width: event.locationInWindow.x - start.x,
+                         height: start.y - event.locationInWindow.y)
+      guard selectionBackgroundDidMove || hypot(delta.width, delta.height) >= 2 else { return }
+      selectionBackgroundDidMove = true
+      onSelectionBackgroundDrag?(delta, false)
+      return
+    }
     let displayPoint = convert(event.locationInWindow, from: nil)
     updateCanvasMouseLocation(for: displayPoint)
     let imagePoint = interactionPoint(from: displayPoint)
@@ -1523,6 +1545,18 @@ final class DrawingCanvasNSView: NSView {
   }
 
   override func mouseUp(with event: NSEvent) {
+    if let start = selectionBackgroundDragStart {
+      selectionBackgroundDragStart = nil
+      if selectionBackgroundDidMove {
+        onSelectionBackgroundDrag?(
+          CGSize(width: event.locationInWindow.x - start.x, height: start.y - event.locationInWindow.y), true
+        )
+      }
+      selectionBackgroundDidMove = false
+      dragStart = nil
+      NSCursor.openHand.set()
+      return
+    }
     if state.isCombineMode {
       state.frozenCombineContentBounds = nil
     }
@@ -2456,6 +2490,11 @@ final class DrawingCanvasNSView: NSView {
     // Show hand cursor when hovering over any annotation (for move/resize)
     if hitTestAnnotation(at: imagePoint) != nil {
       NSCursor.pointingHand.set()
+      return
+    }
+
+    if state.selectedTool == .selection, onSelectionBackgroundDrag != nil {
+      NSCursor.openHand.set()
       return
     }
 

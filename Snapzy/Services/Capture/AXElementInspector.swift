@@ -35,24 +35,72 @@ enum AXElementInspector {
   static let maxParentDepth = 25
   static let windowFillThreshold: CGFloat = 0.95
 
-  /// Walks up the parent chain until it finds an element matching the
-  /// acceptable-role / reasonable-size criteria. Returns nil if no
-  /// suitable candidate is found within `maxParentDepth` levels.
-  static func findMeaningful(_ snapshot: AXElementSnapshot) -> AXElementSnapshot? {
+  /// Keep every distinct ancestor so a precise target stays reachable with Shift-Tab.
+  /// Default selection is a separate policy; it must not discard small controls.
+  static func candidates(_ snapshot: AXElementSnapshot, at point: CGPoint? = nil) -> [AXElementSnapshot] {
+    var result: [AXElementSnapshot] = []
     var current: AXElementSnapshot? = snapshot
-    var depth = 0
-    while let candidate = current, depth < maxParentDepth {
-      if isMeaningful(candidate, atDepth: depth) {
-        DiagnosticLogger.shared.log(.debug, .capture, "findMeaningful: accepted element at depth \(depth)", context: ["role": candidate.role ?? "nil"])
-        return candidate
+    for depth in 0..<maxParentDepth {
+      guard let candidate = current else { break }
+      let rect = candidate.rect
+      let validBounds = rect.origin.x.isFinite && rect.origin.y.isFinite
+        && rect.width.isFinite && rect.height.isFinite
+        && rect.width >= minSide && rect.height >= minSide
+      let containsPointer = point.map { rect.insetBy(dx: -1, dy: -1).contains($0) } ?? true
+      let containsChild = result.last.map { rect.insetBy(dx: -1, dy: -1).contains($0.rect) } ?? true
+      if validBounds, containsPointer, containsChild,
+         isMeaningful(candidate, atDepth: depth) || candidate.role == "AXWindow" {
+        // AX wrappers often repeat exactly the same geometry. Keep the semantic parent.
+        if let last = result.last, approximatelyEqual(last.rect, rect) {
+          if componentRoles.contains(candidate.role ?? "") { result[result.count - 1] = candidate }
+        } else {
+          result.append(candidate)
+        }
       }
+      if candidate.role == "AXWindow" || candidate.role == "AXApplication" { break }
       current = candidate.parent
-      depth += 1
     }
-    if depth >= maxParentDepth {
-      DiagnosticLogger.shared.log(.debug, .capture, "findMeaningful: reached maxParentDepth without success")
+    return result
+  }
+
+  private static let componentRoles: Set<String> = [
+    "AXGroup", "AXCell", "AXRow", "AXScrollArea", "AXOutline", "AXTable",
+    "AXList", "AXGrid", "AXForm", "AXRegion", "AXLandmark", "AXSheet", "AXTabGroup"
+  ]
+
+  static func preferredIndex(in candidates: [AXElementSnapshot]) -> Int? {
+    guard !candidates.isEmpty else { return nil }
+    // Prefer the nearest useful component, rather than its icon, label, or compact row.
+    if let component = candidates.firstIndex(where: {
+      componentRoles.contains($0.role ?? "")
+        && $0.size.width >= 80 && $0.size.height >= 48
+        && $0.size.width * $0.size.height >= 6_000
+    }) {
+      // A substantial image is already a useful capture target when the only containing
+      // component is an enormous page. A small icon does not receive this exception.
+      if let image = candidates[..<component].firstIndex(where: {
+        $0.role == "AXImage" && $0.size.width >= 160 && $0.size.height >= 120
+          && candidates[component].rect.width * candidates[component].rect.height
+            > $0.size.width * $0.size.height * 6
+      }) { return image }
+      return component
     }
-    return nil
+    // With no card/pane exposed by the app, prefer the enclosing control to its label.
+    if let control = candidates.firstIndex(where: {
+      ["AXButton", "AXLink", "AXTextField", "AXTextArea", "AXPopUpButton", "AXMenuItem"].contains($0.role ?? "")
+    }) { return control }
+    return 0
+  }
+
+  static func findMeaningful(_ snapshot: AXElementSnapshot) -> AXElementSnapshot? {
+    let options = candidates(snapshot)
+    guard let index = preferredIndex(in: options) else { return nil }
+    return options[index]
+  }
+
+  private static func approximatelyEqual(_ lhs: CGRect, _ rhs: CGRect) -> Bool {
+    abs(lhs.minX - rhs.minX) <= 1 && abs(lhs.minY - rhs.minY) <= 1
+      && abs(lhs.maxX - rhs.maxX) <= 1 && abs(lhs.maxY - rhs.maxY) <= 1
   }
 
   static func isMeaningful(_ snapshot: AXElementSnapshot, atDepth depth: Int = 0) -> Bool {

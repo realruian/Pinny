@@ -51,12 +51,23 @@ struct PermissionsSettingsView: View {
         permissionRow(
           icon: "folder.fill",
           name: L10n.Onboarding.saveFolder,
-          description: L10n.Onboarding.requiredForCaptures,
+          description: L10n.PreferencesWorkflow.savePermission,
           statusLabel: saveFolderGranted ? L10n.PermissionRow.granted : L10n.Common.notGranted,
           statusIcon: saveFolderGranted ? "checkmark.circle.fill" : "xmark.circle.fill",
           statusColor: saveFolderGranted ? .green : .orange,
           isRequired: true,
           settingsURL: filesAndFoldersURL
+        )
+
+        permissionRow(
+          icon: "hand.raised.fill",
+          name: L10n.Onboarding.accessibility,
+          description: L10n.PreferencesWorkflow.accessibilityPermission,
+          statusLabel: accessibilityGranted ? L10n.PermissionRow.granted : L10n.Common.notGranted,
+          statusIcon: accessibilityGranted ? "checkmark.circle.fill" : "xmark.circle.fill",
+          statusColor: accessibilityGranted ? .green : .orange,
+          isRequired: false,
+          settingsURL: accessibilityURL
         )
 
         permissionRow(
@@ -68,17 +79,6 @@ struct PermissionsSettingsView: View {
           statusColor: microphoneGranted ? .green : .orange,
           isRequired: false,
           settingsURL: microphoneURL
-        )
-
-        permissionRow(
-          icon: "hand.raised.fill",
-          name: L10n.Onboarding.accessibility,
-          description: L10n.Onboarding.optionalForGlobalShortcuts,
-          statusLabel: accessibilityGranted ? L10n.PermissionRow.granted : L10n.Common.notGranted,
-          statusIcon: accessibilityGranted ? "checkmark.circle.fill" : "xmark.circle.fill",
-          statusColor: accessibilityGranted ? .green : .orange,
-          isRequired: false,
-          settingsURL: accessibilityURL
         )
 
         if !identityManager.health.isHealthy {

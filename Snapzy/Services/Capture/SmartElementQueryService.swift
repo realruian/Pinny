@@ -6,8 +6,7 @@
 //  AppKit bottom-left global coordinates for the AreaSelection overlay
 //  to render and capture.
 //
-//  All AX queries run on the main thread per Apple guidance. The input
-//  stream is debounced so that a still cursor triggers exactly one query.
+//  AX snapshots resolve on one serial worker; selection state is applied on main.
 //
 
 import AppKit
@@ -15,12 +14,7 @@ import ApplicationServices
 import Combine
 import Foundation
 
-/// Resolves the AX element under the cursor and publishes its rect.
-///
-/// Threading: all public methods must be called from the main thread.
-/// AX APIs are not safe to call off-main (researcher-01 §8), and the
-/// internal Combine pipeline uses `DispatchQueue.main` as its scheduler
-/// so the query closure also fires on the main thread.
+/// Public entry points and publisher updates are main-thread only.
 final class SmartElementQueryService {
   static let shared = SmartElementQueryService()
 
@@ -40,7 +34,29 @@ final class SmartElementQueryService {
 
   // MARK: - State
 
-  private let inputSubject = PassthroughSubject<(CGPoint, Int32?), Never>()
+  private struct Request {
+    let point: CGPoint
+    let pid: Int32?
+    let revision: UInt64
+  }
+  private struct Resolution {
+    let rects: [CGRect] // AX top-left coordinates, no live AX references cross the queue.
+    let preferredIndex: Int?
+    let permissionGranted: Bool
+  }
+  private let inputSubject = PassthroughSubject<Request, Never>()
+  private let queryQueue = DispatchQueue(label: "openshot.element-query", qos: .userInteractive)
+  private var revision: UInt64 = 0
+  private var latestRequest: Request?
+  private var queryInFlight = false
+  private var queuedRequest: Request?
+  private var candidateRects: [CGRect] = []
+  private var selectedIndex: Int?
+  private var manuallySelectedRect: CGRect?
+  private var currentPID: Int32?
+  private var pendingChange: DispatchWorkItem?
+  private var pendingRect: CGRect?
+  private let stabilizationMilliseconds: Int
   private let detectedSubject = PassthroughSubject<CGRect?, Never>()
   private var cancellables = Set<AnyCancellable>()
   private var lastEmittedRect: CGRect?
@@ -56,22 +72,50 @@ final class SmartElementQueryService {
   init(
     snapshotProvider: AXSnapshotProviding = AXAccessibilitySnapshotProvider(),
     permissionChecker: @escaping () -> Bool = { AXIsProcessTrusted() },
-    debounceMilliseconds: Int = 25
+    debounceMilliseconds: Int = 25,
+    stabilizationMilliseconds: Int = 120
   ) {
     self.snapshotProvider = snapshotProvider
     self.permissionChecker = permissionChecker
     self.debounceMilliseconds = debounceMilliseconds
+    self.stabilizationMilliseconds = stabilizationMilliseconds
     bindPipeline()
   }
 
   private func bindPipeline() {
     inputSubject
       .throttle(for: .milliseconds(debounceMilliseconds), scheduler: DispatchQueue.main, latest: true)
-      .receive(on: DispatchQueue.global(qos: .userInteractive))
-      .sink { [weak self] point, pid in
-        self?.queryElement(at: point, pid: pid)
+      .sink { [weak self] request in
+        self?.enqueue(request)
       }
       .store(in: &cancellables)
+  }
+
+  /// At most one AX traversal runs and one latest request waits. Slow target apps
+  /// must not accumulate an unbounded queue of obsolete mouse positions.
+  private func enqueue(_ request: Request) {
+    guard request.revision == revision else { return }
+    if queryInFlight {
+      queuedRequest = request
+      return
+    }
+    queryInFlight = true
+    queryQueue.async { [weak self] in
+      guard let self else { return }
+      let result = resolve(at: request.point, pid: request.pid)
+      DispatchQueue.main.async { [weak self] in
+        guard let self else { return }
+        queryInFlight = false
+        if request.revision == revision {
+          latestRequest = nil
+          apply(result, point: request.point, pid: request.pid)
+        }
+        if let next = queuedRequest {
+          queuedRequest = nil
+          enqueue(next)
+        }
+      }
+    }
   }
 
   // MARK: - Public API
@@ -88,7 +132,7 @@ final class SmartElementQueryService {
   /// `updateLocation(_:pid:)` instead.
   func updateMouseLocation(pid: Int32? = nil) {
     guard let location = CGEvent(source: nil)?.location else { return }
-    inputSubject.send((location, pid))
+    updateLocation(location, pid: pid)
   }
 
   /// Push an explicit screen point (Quartz global coordinates, top-left origin — the same
@@ -96,22 +140,47 @@ final class SmartElementQueryService {
   /// already have a live, correct cursor position and can't rely on `updateMouseLocation`'s
   /// internal re-read — see its doc comment for why that can go stale.
   func updateLocation(_ point: CGPoint, pid: Int32? = nil) {
-    inputSubject.send((point, pid))
+    // Repeated stationary-pointer updates must not invalidate their own slow query.
+    if let request = latestRequest, request.point == point, request.pid == pid { return }
+    revision &+= 1
+    let request = Request(point: point, pid: pid, revision: revision)
+    latestRequest = request
+    inputSubject.send(request)
   }
 
   /// Push an explicit point through the debounced input pipeline.
   /// Internal so tests can exercise the debounce/dedup without depending on
   /// the real cursor position. Not part of the production call surface.
   internal func pushInputForTesting(point: CGPoint, pid: Int32?) {
-    inputSubject.send((point, pid))
+    updateLocation(point, pid: pid)
   }
 
   /// Clear the current highlight and forget the last emission so the next query
   /// will always emit (even if it matches the previous rect).
   func cancelPendingQueries() {
+    revision &+= 1 // A queued or in-flight AX response cannot resurrect a closed selection.
+    latestRequest = nil
+    queuedRequest = nil
+    cancelPendingChange()
+    candidateRects = []
+    selectedIndex = nil
+    manuallySelectedRect = nil
+    currentPID = nil
     lastEmittedRect = nil
     hasEmittedAtLeastOnce = false
     detectedSubject.send(nil)
+  }
+
+  /// Parent/child navigation is explicit and immediate, never delayed by hover stabilization.
+  @discardableResult
+  func selectAdjacentCandidate(towardParent: Bool) -> Bool {
+    guard let selectedIndex else { return false }
+    let next = selectedIndex + (towardParent ? 1 : -1)
+    guard candidateRects.indices.contains(next) else { return false }
+    cancelPendingChange()
+    manuallySelectedRect = candidateRects[next]
+    commit(next)
+    return true
   }
 
   /// Prompt the user for Accessibility permission if not already granted.
@@ -141,55 +210,86 @@ final class SmartElementQueryService {
   /// production callers go through `updateMouseLocation(pid:)` so the input is
   /// debounced. Tests may call this directly to bypass timing.
   internal func queryElement(at point: CGPoint, pid: Int32?) {
+    // Synchronous test seam; production always uses the serial pipeline above.
+    apply(resolve(at: point, pid: pid), point: point, pid: pid)
+  }
+
+  private func resolve(at point: CGPoint, pid: Int32?) -> Resolution {
     guard permissionChecker() else {
-      logPermissionDeniedOnce()
-      emit(nil)
-      return
+      return Resolution(rects: [], preferredIndex: nil, permissionGranted: false)
     }
-
-    DiagnosticLogger.shared.log(.debug, .capture, "queryElement(at: \(point), pid: \(pid ?? -1))")
-
     guard let raw = snapshotProvider.snapshot(at: point, pid: pid) else {
-      DiagnosticLogger.shared.log(.debug, .capture, "snapshotProvider.snapshot returned nil")
+      return Resolution(rects: [], preferredIndex: nil, permissionGranted: true)
+    }
+    let options = AXElementInspector.candidates(raw, at: point)
+    return Resolution(rects: options.map(\.rect),
+                      preferredIndex: AXElementInspector.preferredIndex(in: options), permissionGranted: true)
+  }
+
+  private func apply(_ result: Resolution, point: CGPoint, pid: Int32?) {
+    guard result.permissionGranted else {
+      logPermissionDeniedOnce()
+      cancelPendingChange()
+      candidateRects = []
+      selectedIndex = nil
+      manuallySelectedRect = nil
       emit(nil)
       return
     }
-
-    DiagnosticLogger.shared.log(.debug, .capture, "snapshot returned element: role=\(raw.role ?? "nil") size=\(raw.size)")
-
-    guard let meaningful = AXElementInspector.findMeaningful(raw) else {
-      DiagnosticLogger.shared.log(
-        .debug,
-        .capture,
-        "Smart element capture: no meaningful element after walk",
-        context: ["rawRole": raw.role ?? "nil", "rawSize": "\(raw.size)"]
-      )
-      emit(nil)
+    let sameOwner = currentPID == pid
+    currentPID = pid
+    let oldRect = lastEmittedRect
+    let valid = result.rects.enumerated().compactMap { index, rect -> (Int, CGRect)? in
+      AXElementInspector.screenRect(forTopLeftRect: rect).map { (index, $0) }
+    }
+    candidateRects = valid.map { $0.1 }
+    let defaultIndex = valid.firstIndex { $0.0 == result.preferredIndex }
+    var nextIndex = defaultIndex
+    if sameOwner, let manual = manuallySelectedRect,
+       let index = candidateRects.firstIndex(of: manual) {
+      nextIndex = index
+    } else {
+      manuallySelectedRect = nil
+    }
+    let nextRect = nextIndex.map { candidateRects[$0] }
+    selectedIndex = oldRect.flatMap { candidateRects.firstIndex(of: $0) }
+    if nextRect == oldRect {
+      cancelPendingChange()
+      commit(nextIndex)
       return
     }
-
-    guard let flippedRect = AXElementInspector.screenRect(forTopLeftRect: meaningful.rect) else {
-      DiagnosticLogger.shared.log(
-        .warning,
-        .capture,
-        "Smart element capture: no screen contains AX rect",
-        context: ["axRect": "\(meaningful.rect)"]
-      )
-      emit(nil)
-      return
+    // Stay on the existing component for brief subelement changes inside its bounds.
+    // Crossing its boundary or changing apps switches immediately.
+    let oldAXRect = oldRect.map { rect in
+      let height = CGDisplayBounds(CGMainDisplayID()).height
+      return CGRect(x: rect.minX, y: height - rect.maxY, width: rect.width, height: rect.height)
     }
+    if sameOwner, let oldAXRect, oldAXRect.insetBy(dx: -2, dy: -2).contains(point),
+       stabilizationMilliseconds > 0 {
+      if pendingChange != nil, pendingRect == nextRect { return }
+      cancelPendingChange()
+      pendingRect = nextRect
+      let work = DispatchWorkItem { [weak self] in
+        guard let self else { return }
+        commit(nextRect.flatMap { self.candidateRects.firstIndex(of: $0) })
+      }
+      pendingChange = work
+      DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(stabilizationMilliseconds), execute: work)
+    } else {
+      commit(nextIndex)
+    }
+  }
 
-    DiagnosticLogger.shared.log(
-      .debug,
-      .capture,
-      "Smart element capture: emit",
-      context: [
-        "role": meaningful.role ?? "nil",
-        "axRect": "\(meaningful.rect)",
-        "flippedRect": "\(flippedRect)",
-      ]
-    )
-    emit(flippedRect)
+  private func commit(_ index: Int?) {
+    cancelPendingChange()
+    selectedIndex = index
+    emit(index.map { candidateRects[$0] })
+  }
+
+  private func cancelPendingChange() {
+    pendingChange?.cancel()
+    pendingChange = nil
+    pendingRect = nil
   }
 
   private func emit(_ rect: CGRect?) {

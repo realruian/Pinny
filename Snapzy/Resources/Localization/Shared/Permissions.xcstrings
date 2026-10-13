@@ -526,61 +526,61 @@
       "localizations": {
         "de": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "Snapzy benötigt bestimmte Berechtigungen, um Ihren Bildschirm und Audio aufzunehmen."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy requires certain permissions to capture your screen and audio."
+            "value": "Screen recording access is needed for screenshots; Accessibility access is needed for component detection. Microphone access is only for audio recording."
           }
         },
         "es": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "Snapzy requiere ciertos permisos para capturar su pantalla y audio."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "Snapzy nécessite certaines autorisations pour capturer votre écran et votre audio."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "Snapzy が画面と音声を記録するには、いくつかの権限が必要です。"
           }
         },
         "ko": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "Snapzy가 화면과 오디오를 캡처하려면 특정 권한이 필요합니다."
           }
         },
         "ru": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "Snapzy требует определенных разрешений для захвата экрана и звука."
           }
         },
         "vi": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "Snapzy cần một số quyền để chụp màn hình và ghi âm."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy 需要截屏、访问麦克风音频及文件等权限。"
+            "value": "截图需要屏幕录制权限，组件识别需要辅助功能权限。麦克风仅用于录音。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "Snapzy 需要擷取螢幕畫面、麥克風音訊與檔案等相關權限。"
           }
         }

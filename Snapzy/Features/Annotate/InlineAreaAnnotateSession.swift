@@ -39,6 +39,7 @@ nonisolated enum InlineAreaKeyAction: Equatable {
   case finish
   case copyCurrentImage
   case copyMagnifierColor
+  case changeElementLevel(towardParent: Bool)
   case setMoveModifierActive(Bool)
   case resetMoveModifierAndPassThrough
 }
@@ -69,6 +70,8 @@ final class InlineAreaAnnotateSession: ObservableObject {
   /// read this instead of gesture-only state, or it freezes at the drag-start point.
   @Published var selectionPointerLocation: CGPoint?
   @Published var isMoveModifierActive = false
+  @Published private(set) var isFinishing = false
+  @Published var actionMessage: String?
   /// The window currently under the cursor while "automatically detect window under cursor"
   /// is on (see `autoDetectWindowUnderCursor`) — mirrors plain area screenshot's
   /// `hoveredWindowCandidate`, but shared at the session level since any of the per-display
@@ -219,6 +222,10 @@ final class InlineAreaAnnotateSession: ObservableObject {
   /// `updateWindowHover`. `point` is in the same coordinate space as `WindowCaptureTarget.frame`
   /// (AppKit global screen coordinates, bottom-left origin).
   func updateHoveredWindow(atScreenPoint point: CGPoint) {
+    guard phase == .selecting else { return }
+    if let rect = hoveredSmartElementRect, !rect.insetBy(dx: -2, dy: -2).contains(point) {
+      hoveredSmartElementRect = nil
+    }
     guard autoDetectWindowUnderCursor else {
       hoveredWindowCandidate = nil
       return
@@ -323,10 +330,15 @@ final class InlineAreaAnnotateSession: ObservableObject {
     guard clampedRect.width > 5, clampedRect.height > 5,
           let crop = cropImage(for: clampedRect) else { return }
 
+    removeSelectionMonitor()
+    selectionStartPoint = nil
+    selectionPointerLocation = nil
     selectionRect = crop.localRect
     state.loadImage(crop.image, url: nil)
-    state.selectedTool = AnnotateToolPreference.initialTool(userDefaults: defaults)
+    // Start with direct region movement; drawing tools remain an explicit choice.
+    state.selectedTool = .selection
     phase = .annotating
+    SmartElementQueryService.shared.cancelPendingQueries()
     cursorHider.showAll()
   }
 
@@ -390,6 +402,9 @@ final class InlineAreaAnnotateSession: ObservableObject {
       // Only claim the key when the magnifier was actually active — otherwise this falls
       // through as `.passThrough` would have, so plain "C" typing elsewhere is unaffected.
       return copyMagnifierColorForKeyWindow(event)
+    case .changeElementLevel(let towardParent):
+      guard autoDetectElementUnderCursor else { return false }
+      return SmartElementQueryService.shared.selectAdjacentCandidate(towardParent: towardParent)
     case .setMoveModifierActive(let active):
       isMoveModifierActive = active
       return true
@@ -400,6 +415,7 @@ final class InlineAreaAnnotateSession: ObservableObject {
   }
 
   func cancel() {
+    guard !isFinishing else { return }
     complete(.failure(.cancelled))
   }
 
@@ -428,7 +444,11 @@ final class InlineAreaAnnotateSession: ObservableObject {
   }
 
   private func finish(pinToScreen: Bool) async {
-    guard phase == .annotating else { return }
+    guard phase == .annotating, !didComplete, !isFinishing else { return }
+    isFinishing = true
+    actionMessage = nil
+    defer { isFinishing = false }
+    state.commitTextEditing()
     if let selectionRect, let crop = cropImage(for: selectionRect) {
       self.selectionRect = crop.localRect
       state.replaceSourceImagePreservingAnnotations(crop.image)
@@ -436,7 +456,7 @@ final class InlineAreaAnnotateSession: ObservableObject {
 
     guard let renderedImage = AnnotateExporter.renderFinalImage(state: state),
           let cgImage = AnnotateExporter.bestCGImage(from: renderedImage) else {
-      complete(.failure(.captureFailed(L10n.ScreenCapture.failedToCropCapturedImage)))
+      actionMessage = L10n.ScreenCapture.failedToCropCapturedImage
       return
     }
 
@@ -452,11 +472,16 @@ final class InlineAreaAnnotateSession: ObservableObject {
       context: context
     )
 
+    guard !didComplete else { return }
     if case .success = result {
       SoundManager.playScreenshotCapture()
     }
     if case .success(let url) = result {
       persistCommittedSession(for: url)
+    }
+    if case .failure(let error) = result {
+      actionMessage = error.localizedDescription
+      return
     }
     complete(result)
     if pinToScreen, case .success(let url) = result {
@@ -467,8 +492,14 @@ final class InlineAreaAnnotateSession: ObservableObject {
   }
 
   func copyCurrentImage() {
-    guard let image = AnnotateExporter.renderFinalImage(state: state) else { return }
+    guard phase == .annotating, !didComplete, !isFinishing else { return }
+    state.commitTextEditing()
+    guard let image = AnnotateExporter.renderFinalImage(state: state) else {
+      actionMessage = L10n.ScreenCapture.failedToCropCapturedImage
+      return
+    }
     ClipboardHelper.copyImage(image)
+    actionMessage = L10n.Common.copiedToClipboard
     SoundManager.play("Pop")
   }
 
@@ -591,22 +622,17 @@ final class InlineAreaAnnotateSession: ObservableObject {
     selectionLocalMonitor = NSEvent.addLocalMonitorForEvents(
       matching: [.leftMouseDragged, .leftMouseUp]
     ) { [weak self] event in
+      guard let self, self.phase == .selecting, self.selectionStartPoint != nil,
+            let window = event.window, self.windows.contains(window) else { return event }
+      // Use the event's window coordinates. The global pointer can already have moved
+      // (or belong to another display) by the time a queued event is processed.
+      let point = self.localDesktopPoint(for: window.convertPoint(toScreen: event.locationInWindow))
       switch event.type {
-      case .leftMouseDragged:
-        MainActor.assumeIsolated {
-          guard let self else { return }
-          self.updateSelection(to: self.localDesktopPoint(for: NSEvent.mouseLocation))
-        }
-        return nil
-      case .leftMouseUp:
-        MainActor.assumeIsolated {
-          guard let self else { return }
-          self.endSelection(at: self.localDesktopPoint(for: NSEvent.mouseLocation))
-        }
-        return nil
-      default:
-        return event
+      case .leftMouseDragged: self.updateSelection(to: point)
+      case .leftMouseUp: self.endSelection(at: point)
+      default: return event
       }
+      return nil
     }
   }
 
@@ -638,6 +664,7 @@ final class InlineAreaAnnotateSession: ObservableObject {
   private func complete(_ result: CaptureResult, closeWindow: Bool = true) {
     guard !didComplete else { return }
     didComplete = true
+    SmartElementQueryService.shared.cancelPendingQueries()
     isMoveModifierActive = false
     selectionPointerLocation = nil
     removeKeyMonitors()
@@ -720,6 +747,11 @@ final class InlineAreaAnnotateSession: ObservableObject {
     hasKeyWindow: Bool
   ) -> InlineAreaKeyAction {
     guard phase == .annotating else {
+      if event.type == .keyDown, event.keyCode == 48, !hasTextResponder,
+         source == .local || hasKeyWindow,
+         event.modifierFlags.intersection([.command, .control, .option]).isEmpty {
+        return .changeElementLevel(towardParent: !event.modifierFlags.contains(.shift))
+      }
       if matchesCancelShortcut(event) {
         return .cancel
       }

@@ -31,6 +31,7 @@ private final class QuickAccessPinMockScrollWheelEvent: NSEvent {
   let eventDeltaY: CGFloat
   let flags: NSEvent.ModifierFlags
   let precise: Bool
+  let momentum: NSEvent.Phase
   let location: NSPoint
 
   init(
@@ -38,12 +39,14 @@ private final class QuickAccessPinMockScrollWheelEvent: NSEvent {
     deltaY: CGFloat,
     modifierFlags: NSEvent.ModifierFlags = [],
     hasPreciseDeltas: Bool,
+    momentumPhase: NSEvent.Phase = [],
     location: NSPoint = NSPoint(x: 200, y: 150)
   ) {
     eventDeltaX = deltaX
     eventDeltaY = deltaY
     flags = modifierFlags
     precise = hasPreciseDeltas
+    momentum = momentumPhase
     self.location = location
     super.init()
   }
@@ -54,6 +57,7 @@ private final class QuickAccessPinMockScrollWheelEvent: NSEvent {
   override var scrollingDeltaY: CGFloat { eventDeltaY }
   override var modifierFlags: NSEvent.ModifierFlags { flags }
   override var hasPreciseScrollingDeltas: Bool { precise }
+  override var momentumPhase: NSEvent.Phase { momentum }
   override var locationInWindow: NSPoint { location }
   override var phase: NSEvent.Phase { .changed }
 }
@@ -897,8 +901,8 @@ final class QuickAccessCoreTests: XCTestCase {
     }
     scrollView.update(image: image, viewportSize: state.baseSize, imageSize: state.baseSize, zoomMode: .fixedViewport, magnification: 1, panOffset: .zero)
     let documentView = try XCTUnwrap(scrollView.documentView as? QuickAccessPinImageDocumentView)
-    XCTAssertTrue(documentView.needsPanelToBecomeKey)
-    XCTAssertTrue(documentView.acceptsFirstResponder)
+    XCTAssertFalse(documentView.needsPanelToBecomeKey)
+    XCTAssertFalse(documentView.acceptsFirstResponder)
     XCTAssertFalse(documentView.gestureRecognizers.contains { $0 is NSMagnificationGestureRecognizer })
 
     documentView.magnify(with: QuickAccessPinMockMagnifyEvent(delta: 0.5))
@@ -1369,7 +1373,13 @@ final class QuickAccessCoreTests: XCTestCase {
     )
     XCTAssertEqual(scrollView.scrollAction(for: commandScrollEvent), .magnify)
     scrollView.scrollWheel(with: commandScrollEvent)
-    XCTAssertEqual(state.zoomFactor, zoomBeforeRejectedScrolls * 0.9, accuracy: 0.001)
+    XCTAssertEqual(state.zoomFactor, zoomBeforeRejectedScrolls * 0.98, accuracy: 0.001)
+
+    let momentumEvent = QuickAccessPinMockScrollWheelEvent(deltaY: -100, modifierFlags: [.command],
+      hasPreciseDeltas: true, momentumPhase: .changed)
+    XCTAssertEqual(scrollView.scrollAction(for: momentumEvent), .reject("momentum"))
+    scrollView.scrollWheel(with: momentumEvent)
+    XCTAssertEqual(state.zoomFactor, zoomBeforeRejectedScrolls * 0.98, accuracy: 0.001)
 
     let commandHorizontalScrollEvent = QuickAccessPinMockScrollWheelEvent(
       deltaX: 10,
@@ -1394,7 +1404,7 @@ final class QuickAccessCoreTests: XCTestCase {
     XCTAssertEqual(scrollView.scrollAction(for: lockedEvent), .reject("locked"))
     scrollView.scrollWheel(with: lockedEvent)
 
-    XCTAssertEqual(state.zoomFactor, zoomBeforeRejectedScrolls * 0.9, accuracy: 0.001)
+    XCTAssertEqual(state.zoomFactor, zoomBeforeRejectedScrolls * 0.98, accuracy: 0.001)
     XCTAssertEqual(state.panOffset, panBeforeRejectedScrolls)
   }
 
@@ -1437,6 +1447,24 @@ final class QuickAccessCoreTests: XCTestCase {
 
     XCTAssertLessThan(state.panOffset.y, 0)
     XCTAssertEqual(state.panOffset.x, 0, accuracy: 0.001)
+  }
+
+  func testPinWindowRoutesWheelToImageWhenHostingViewWouldReceiveIt() {
+    let image = NSImage(size: CGSize(width: 400, height: 300))
+    let state = QuickAccessPinWindowState(id: UUID(), url: URL(fileURLWithPath: "/tmp/pin.png"),
+      image: image, thumbnail: image, baseSize: image.size, zoomMode: .windowFollowsImage)
+    Self.retainedPinWindowStates.append(state)
+    let window = QuickAccessPinWindow(contentRect: NSRect(origin: .zero, size: image.size), state: state)
+    defer { window.close() }
+    let scrollView = QuickAccessPinImageScrollView(frame: NSRect(origin: .zero, size: image.size))
+    scrollView.onViewportChange = { zoom, pan in state.updateViewport(magnification: zoom, panOffset: pan) }
+    scrollView.update(image: image, viewportSize: image.size, imageSize: image.size,
+                      zoomMode: .windowFollowsImage, magnification: 1, panOffset: .zero)
+    let host = NSView(frame: scrollView.frame)
+    host.addSubview(scrollView)
+    window.contentView = host
+    window.sendEvent(QuickAccessPinMockScrollWheelEvent(deltaY: 10, hasPreciseDeltas: false))
+    XCTAssertEqual(state.zoomFactor, 0.9, accuracy: 0.001)
   }
 
   func testQuickAccessPinImageScrollView_windowFollowsImageZoomsOnVerticalScrollOnly() throws {

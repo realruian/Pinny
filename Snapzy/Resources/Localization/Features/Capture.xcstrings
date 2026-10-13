@@ -461,61 +461,61 @@
       "localizations": {
         "de": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "Overlay mit Schnellaktionen anzeigen"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Display overlay with quick actions"
+            "value": "Show a corner card after capture. Configure cards under the legacy workflow in Pinned Images."
           }
         },
         "es": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "Mostrar superposición con acciones rápidas"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "Afficher la superposition avec des actions rapides"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "クイックアクションでオーバーレイを表示"
           }
         },
         "ko": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "빠른 작업이 포함된 오버레이 표시"
           }
         },
         "ru": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "Отображение наложения с быстрыми действиями"
           }
         },
         "vi": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "Hiện lớp phủ với các thao tác nhanh"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "通过快速操作显示叠加"
+            "value": "完成后显示屏幕角落卡片；卡片设置位于“贴图”的旧流程区域。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "通過快速操作顯示疊加"
           }
         }
@@ -3523,61 +3523,61 @@
       "localizations": {
         "de": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "Werkzeug, das verwendet wird, wenn „Letztes Werkzeug merken“ deaktiviert ist"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tool selected when remembering the last tool is turned off"
+            "value": "Used in the separate annotation editor. Inline screenshots start with the selection tool for moving the region."
           }
         },
         "es": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "Herramienta seleccionada cuando recordar la última herramienta está desactivado"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "Outil sélectionné lorsque la mémorisation du dernier outil est désactivée"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "最後のツールを記憶する設定がオフのときに選択されるツール"
           }
         },
         "ko": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "마지막 도구 기억이 꺼져 있을 때 선택되는 도구"
           }
         },
         "ru": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "Инструмент, выбираемый, когда запоминание последнего инструмента отключено"
           }
         },
         "vi": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "Công cụ được chọn khi tính năng ghi nhớ công cụ gần nhất bị tắt"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "关闭记住上次工具时使用的工具"
+            "value": "用于独立标注编辑器。原位截图固定从选择工具开始，方便拖动选区。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "關閉記住上次工具時使用的工具"
           }
         }
@@ -3787,61 +3787,61 @@
       "localizations": {
         "de": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "Jede Screenshot-Anmerkung mit dem zuletzt ausgewählten Werkzeug starten"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Start each screenshot annotation with the last tool you chose"
+            "value": "Reuse the last tool in the separate annotation editor. Inline screenshots still start with the selection tool."
           }
         },
         "es": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "Inicia cada anotación de captura con la última herramienta elegida"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "Commencer chaque annotation de capture avec le dernier outil choisi"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "各スクリーンショットの注釈を最後に選んだツールで開始します"
           }
         },
         "ko": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "각 스크린샷 주석을 마지막으로 선택한 도구로 시작합니다"
           }
         },
         "ru": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "Начинать каждую аннотацию снимка экрана с последнего выбранного инструмента"
           }
         },
         "vi": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "Bắt đầu mỗi lần chú thích ảnh chụp bằng công cụ bạn chọn gần nhất"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "每次开始截图标注时使用上次选择的工具"
+            "value": "独立标注编辑器沿用上次工具；原位截图仍从选择工具开始。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "每次開始截圖標註時使用上次選取的工具"
           }
         }
@@ -4048,61 +4048,61 @@
       "localizations": {
         "de": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "Hebt beim Bewegen der Maus eine bestimmte Schaltfläche, ein Popup oder ein Webseitenelement hervor, anstatt das ganze Fenster. Erfordert die obige Einstellung."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Highlight a specific button, popup, or webpage element when hovering, instead of the whole window. Requires the setting above."
+            "value": "With window detection enabled, prefer components such as sidebars and cards. Requires Accessibility access. In Screenshot & Annotate, use Tab / Shift-Tab to switch levels."
           }
         },
         "es": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "Resalta un botón, ventana emergente o elemento web específico al pasar el cursor, en lugar de toda la ventana. Requiere que la opción anterior esté activada."
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "Met en surbrillance un bouton, une fenêtre contextuelle ou un élément de page web spécifique lors du survol, au lieu de toute la fenêtre. Nécessite que le réglage ci-dessus soit activé."
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "ホバー時にウィンドウ全体ではなく、特定のボタン、ポップアップ、またはウェブページの要素をハイライトします。上記の設定が必要です。"
           }
         },
         "ko": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "마우스를 올리면 창 전체 대신 특정 버튼, 팝업 또는 웹페이지 요소를 강조 표시합니다. 위 설정이 켜져 있어야 합니다."
           }
         },
         "ru": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "При наведении выделяется конкретная кнопка, всплывающее окно или элемент веб-страницы, а не всё окно целиком. Требует включения настройки выше."
           }
         },
         "vi": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "Làm nổi bật một nút, cửa sổ bật lên hoặc phần tử trang web cụ thể khi di chuột qua, thay vì toàn bộ cửa sổ. Yêu cầu bật cài đặt phía trên."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "悬停时高亮具体的按钮、弹窗或网页元素，而不是整个窗口。需要先开启上面的设置。"
+            "value": "开启上面的窗口识别后，优先选择侧栏、卡片等组件。需要辅助功能权限；截图并标注时可用 Tab / ⇧Tab 切换父子层级。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "游標移到上方時高亮具體的按鈕、彈窗或網頁元素，而不是整個視窗。需要先開啟上面的設定。"
           }
         }
@@ -4113,61 +4113,61 @@
       "localizations": {
         "de": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "Auch bestimmte Elemente erkennen, nicht nur Fenster"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Also detect specific elements, not just windows"
+            "value": "Prefer components inside windows"
           }
         },
         "es": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "Detectar también elementos específicos, no solo ventanas"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "Détecter aussi des éléments spécifiques, pas seulement les fenêtres"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "ウィンドウだけでなく特定の要素も検出する"
           }
         },
         "ko": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "창뿐만 아니라 특정 요소도 감지"
           }
         },
         "ru": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "Также определять отдельные элементы, а не только окна"
           }
         },
         "vi": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "Cũng phát hiện các phần tử cụ thể, không chỉ cửa sổ"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "同时识别具体元素，不仅是窗口"
+            "value": "优先识别窗口内组件"
           }
         },
         "zh-Hant": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "同時識別具體元素，不僅是視窗"
           }
         }
@@ -4243,61 +4243,61 @@
       "localizations": {
         "de": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "Fenster unter dem Cursor automatisch erkennen"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Automatically detect window under cursor"
+            "value": "Detect windows automatically"
           }
         },
         "es": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "Detectar automáticamente la ventana bajo el cursor"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "Détecter automatiquement la fenêtre sous le curseur"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "カーソル下のウィンドウを自動検出"
           }
         },
         "ko": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "커서 아래 창 자동 감지"
           }
         },
         "ru": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "Автоматически определять окно под курсором"
           }
         },
         "vi": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "Tự động phát hiện cửa sổ dưới con trỏ"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "自动检测光标所在窗口"
+            "value": "自动识别窗口"
           }
         },
         "zh-Hant": {
           "stringUnit": {
-            "state": "translated",
+            "state": "needs_review",
             "value": "自動偵測游標所在視窗"
           }
         }

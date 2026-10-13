@@ -12,6 +12,48 @@ import XCTest
 
 final class AXElementInspectorTests: XCTestCase {
 
+  func testPrefersCardButKeepsIconAndWindowReachable() {
+    let window = AXElementSnapshot(role: "AXWindow", position: .zero, size: CGSize(width: 800, height: 600))
+    let card = AXElementSnapshot(role: "AXGroup", position: CGPoint(x: 20, y: 20),
+      size: CGSize(width: 240, height: 160), parent: { window })
+    let icon = AXElementSnapshot(role: "AXImage", position: CGPoint(x: 40, y: 40),
+      size: CGSize(width: 24, height: 24), parent: { card })
+    let options = AXElementInspector.candidates(icon, at: CGPoint(x: 50, y: 50))
+    XCTAssertEqual(options.map(\.role), ["AXImage", "AXGroup", "AXWindow"])
+    XCTAssertEqual(AXElementInspector.preferredIndex(in: options), 1)
+  }
+
+  func testSidebarPreferredOverCompactRowAndText() {
+    let sidebar = AXElementSnapshot(role: "AXOutline", position: .zero, size: CGSize(width: 180, height: 600))
+    let row = AXElementSnapshot(role: "AXRow", position: CGPoint(x: 0, y: 30),
+      size: CGSize(width: 180, height: 28), parent: { sidebar })
+    let text = AXElementSnapshot(role: "AXStaticText", position: CGPoint(x: 20, y: 35),
+      size: CGSize(width: 60, height: 18), parent: { row })
+    XCTAssertEqual(AXElementInspector.findMeaningful(text)?.role, "AXOutline")
+  }
+
+  func testButtonPreferredOverItsLabelWithoutComponentAncestor() {
+    let button = AXElementSnapshot(role: "AXButton", position: .zero, size: CGSize(width: 90, height: 32))
+    let label = AXElementSnapshot(role: "AXStaticText", position: CGPoint(x: 5, y: 5),
+      size: CGSize(width: 60, height: 18), parent: { button })
+    XCTAssertEqual(AXElementInspector.findMeaningful(label)?.role, "AXButton")
+  }
+
+  func testSubstantialImageDoesNotJumpToEnormousPage() {
+    let page = AXElementSnapshot(role: "AXScrollArea", position: .zero, size: CGSize(width: 1000, height: 800))
+    let photo = AXElementSnapshot(role: "AXImage", position: CGPoint(x: 30, y: 30),
+      size: CGSize(width: 200, height: 150), parent: { page })
+    XCTAssertEqual(AXElementInspector.findMeaningful(photo)?.role, "AXImage")
+  }
+
+  func testDeduplicatesWrappersAndRejectsStaleHitOutsidePointer() {
+    let group = AXElementSnapshot(role: "AXGroup", position: .zero, size: CGSize(width: 100, height: 80))
+    let image = AXElementSnapshot(role: "AXImage", position: .zero,
+      size: CGSize(width: 100, height: 80), parent: { group })
+    XCTAssertEqual(AXElementInspector.candidates(image).count, 1)
+    XCTAssertTrue(AXElementInspector.candidates(image, at: CGPoint(x: 200, y: 200)).isEmpty)
+  }
+
   // MARK: - Y-flip
 
   func testScreenRect_flipsAxTopLeftToAppKitBottomLeft_onPrimaryDisplay() throws {

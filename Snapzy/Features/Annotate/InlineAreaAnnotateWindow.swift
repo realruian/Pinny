@@ -224,7 +224,6 @@ private struct InlineAreaAnnotateRootView: View {
   @State private var resizePreviewRect: CGRect?
   @State private var activeResizeHandle: InlineAreaResizeHandle?
   @State private var cursorIndicatorPoint: CGPoint?
-  @State private var propertiesContentWidth: CGFloat = 0
   /// Viewport point where a gesture began on a hovered window, while it's still ambiguous
   /// whether this will resolve as a click (select the window) or a drag (manual region
   /// selection) — mirrors plain area screenshot's `pendingWindowDetectionStartPoint`.
@@ -278,6 +277,17 @@ private struct InlineAreaAnnotateRootView: View {
             }
           } else {
             selectionBorder(rect: viewportRect)
+            if session.hoveredSmartElementRect != nil,
+               session.controlDisplayID(for: desktopRect) == display.displayID {
+              Text(L10n.Annotate.elementHierarchyHint)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(.white)
+                .padding(.horizontal, 10).padding(.vertical, 6)
+                .background(.black.opacity(0.75), in: Capsule())
+                .position(x: min(max(viewportRect.midX, 160), max(160, geometry.size.width - 160)),
+                          y: min(max(viewportRect.maxY + 24, 24), geometry.size.height - 24))
+                .allowsHitTesting(false)
+            }
           }
         }
 
@@ -403,7 +413,9 @@ private struct InlineAreaAnnotateRootView: View {
           // window (or, if a finer element was detected, that element) rather than an (empty,
           // sub-threshold) manual region.
           pendingWindowSelectionStart = nil
-          if let smartElementRect = session.hoveredSmartElementRect {
+          let clickPoint = screenPoint(fromDesktopPoint: desktopPoint(for: value.location))
+          if let smartElementRect = session.hoveredSmartElementRect,
+             smartElementRect.insetBy(dx: -2, dy: -2).contains(clickPoint) {
             session.selectElement(atScreenRect: smartElementRect)
           } else if let candidate = session.hoveredWindowCandidate {
             session.selectWindow(candidate)
@@ -483,7 +495,26 @@ private struct InlineAreaAnnotateRootView: View {
         state: session.state,
         displayScale: displayScale,
         canvasBounds: CGRect(origin: .zero, size: imageSize),
-        acceptsFirstMouse: true
+        acceptsFirstMouse: true,
+        onSelectionBackgroundDrag: { translation, finished in
+          guard let desktopRect = session.selectionRect else { return }
+          if movingStartRect == nil { movingStartRect = desktopRect }
+          guard let start = movingStartRect else { return }
+          let nextRect = session.clampedSelectionPreview(
+            for: start.offsetBy(dx: translation.width, dy: translation.height)
+          )
+          var transaction = Transaction()
+          transaction.animation = nil
+          withTransaction(transaction) {
+            if finished {
+              session.moveSelection(to: nextRect, refreshImage: true)
+              movingPreviewRect = nil
+              movingStartRect = nil
+            } else {
+              movingPreviewRect = nextRect
+            }
+          }
+        }
       )
       .frame(width: rect.width, height: rect.height)
 
@@ -522,49 +553,39 @@ private struct InlineAreaAnnotateRootView: View {
 
   @ViewBuilder
   private func controls(rect: CGRect, desktopRect: CGRect, containerSize: CGSize) -> some View {
+    let showsDetails = session.state.showsQuickPropertiesBar || session.actionMessage != nil
     let placement = controlPlacement(
-      for: rect,
-      containerSize: containerSize,
-      showsProperties: session.state.showsQuickPropertiesBar,
-      propertiesContentWidth: propertiesContentWidth,
+      for: rect, containerSize: containerSize,
+      showsProperties: showsDetails, propertiesContentWidth: 0,
       controlInsets: display.controlInsets
     )
+    let height = InlineAreaLayout.reservedControlHeight(showsProperties: showsDetails)
 
-    InlineAreaControlDeck(
-      session: session,
-      maxWidth: placement.toolbarWidth,
-      moveGesture: moveGesture(for: desktopRect)
-    )
-    .frame(width: placement.toolbarWidth, height: InlineAreaLayout.toolbarHeight)
-    .position(placement.toolbarCenter)
-    .transaction { transaction in
-      transaction.animation = nil
-    }
-
-    InlineAreaPropertiesBar(
-      state: session.state,
-      maxWidth: placement.propertiesWidth,
-      popoverEdge: placement.propertiesPopoverEdge,
-      onContentWidthChange: { width in
-        let roundedWidth = ceil(width)
-        guard abs(propertiesContentWidth - roundedWidth) > 0.5 else { return }
-        propertiesContentWidth = roundedWidth
+    VStack(spacing: InlineAreaLayout.controlStackSpacing) {
+      InlineAreaControlDeck(session: session, maxWidth: placement.toolbarWidth)
+        .frame(height: InlineAreaLayout.toolbarHeight)
+      if let message = session.actionMessage {
+        Text(message)
+          .font(.system(size: 12))
+          .lineLimit(2)
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .padding(.horizontal, 12)
+          .frame(height: InlineAreaLayout.propertiesHeight)
+          .accessibilityIdentifier("inline.actionFeedback")
+      } else if session.state.showsQuickPropertiesBar {
+        InlineAreaPropertiesBar(
+          state: session.state, maxWidth: placement.toolbarWidth,
+          popoverEdge: placement.propertiesPopoverEdge,
+          onContentWidthChange: { _ in }
+        )
       }
-    )
-    .frame(width: placement.propertiesWidth, height: InlineAreaLayout.propertiesHeight)
-    .opacity(session.state.showsQuickPropertiesBar ? 1 : 0)
-    .allowsHitTesting(session.state.showsQuickPropertiesBar)
-    .position(placement.propertiesCenter)
-    .transaction { transaction in
-      transaction.animation = nil
     }
-
-    InlineAreaActionRail(session: session)
-      .frame(width: InlineAreaLayout.actionRailWidth, height: InlineAreaLayout.actionRailHeight)
-      .position(placement.actionRailCenter)
-      .transaction { transaction in
-        transaction.animation = nil
-      }
+    .frame(width: placement.toolbarWidth, height: height)
+    .inlineAreaPanelChrome()
+    .position(x: placement.toolbarCenter.x,
+              y: placement.toolbarCenter.y - InlineAreaLayout.toolbarHeight / 2 + height / 2)
+    .zIndex(10)
+    .transaction { $0.animation = nil }
   }
 
   private func moveGesture(for desktopRect: CGRect) -> some Gesture {
@@ -611,7 +632,7 @@ private struct InlineAreaAnnotateRootView: View {
       .allowsHitTesting(false)
 
     ForEach(InlineAreaResizeHandle.allCases) { handle in
-      InlineAreaResizeHandleHitTarget(handle: handle)
+      InlineAreaResizeHandleHitTarget(handle: handle, size: handle.hitSize(in: rect))
         .position(handle.position(in: rect))
         .gesture(resizeGesture(
           for: handle,
@@ -956,7 +977,7 @@ enum InlineAreaVerticalSide {
   case below
 }
 
-private enum InlineAreaResizeHandle: CaseIterable, Identifiable {
+enum InlineAreaResizeHandle: CaseIterable, Identifiable {
   case topLeft
   case top
   case topRight
@@ -1016,6 +1037,19 @@ private enum InlineAreaResizeHandle: CaseIterable, Identifiable {
       return InlineAreaResizeCursor.diagonal(nwse: true)
     case .topRight, .bottomLeft:
       return InlineAreaResizeCursor.diagonal(nwse: false)
+    }
+  }
+
+  /// Continuous edge targets, with disjoint corners taking both resize axes.
+  func hitSize(in rect: CGRect) -> CGSize {
+    let corner = min(InlineAreaResizeHandleChrome.hitSize, min(rect.width, rect.height) / 2)
+    switch self {
+    case .top, .bottom:
+      return CGSize(width: max(0, rect.width - corner), height: corner)
+    case .left, .right:
+      return CGSize(width: corner, height: max(0, rect.height - corner))
+    default:
+      return CGSize(width: corner, height: corner)
     }
   }
 
@@ -1179,10 +1213,11 @@ private struct InlineAreaResizeHandlesOverlay: View {
 
 private struct InlineAreaResizeHandleHitTarget: View {
   let handle: InlineAreaResizeHandle
+  let size: CGSize
 
   var body: some View {
     Color.clear
-      .frame(width: InlineAreaResizeHandleChrome.hitSize, height: InlineAreaResizeHandleChrome.hitSize)
+      .frame(width: size.width, height: size.height)
       .contentShape(Rectangle())
       .onHover { hovering in
         if hovering {
@@ -1200,7 +1235,6 @@ struct InlineAreaControlPlacement {
   let toolbarCenter: CGPoint
   let propertiesCenter: CGPoint
   let propertiesPopoverEdge: Edge
-  let actionRailCenter: CGPoint
 }
 
 private enum InlineAreaToolbarMetrics {
@@ -1213,29 +1247,17 @@ private enum InlineAreaToolbarMetrics {
   static let groupSpacing: CGFloat = ToolbarConstants.groupSpacing
   static let horizontalPadding: CGFloat = ToolbarConstants.horizontalPadding
   static let verticalPadding: CGFloat = ToolbarConstants.verticalPadding
-  static let actionRailSpacing: CGFloat = ToolbarConstants.itemSpacing
-  static let actionRailPadding: CGFloat = ToolbarConstants.verticalPadding
-  static let actionRailDividerWidth: CGFloat = 24
-  static let actionRailDividerHeight: CGFloat = 1
-  static let actionRailDividerVerticalPadding: CGFloat = 4
   static let hoverAnimation: Animation = ToolbarConstants.hoverAnimation
 }
 
 enum InlineAreaLayout {
   static let toolbarHeight: CGFloat = InlineAreaToolbarMetrics.iconButtonSize + InlineAreaToolbarMetrics.verticalPadding * 2
   static let propertiesHeight: CGFloat = 38
-  static let controlStackSpacing: CGFloat = 6
+  static let controlStackSpacing: CGFloat = 0
   static let selectionGap: CGFloat = 12
   static let screenPadding: CGFloat = 16
   static let controlPanelOuterHorizontalInset: CGFloat = 12
   static let minimumSelectionSize: CGFloat = 24
-  static let actionRailWidth: CGFloat = InlineAreaToolbarMetrics.iconButtonSize + InlineAreaToolbarMetrics.actionRailPadding * 2
-  static let actionRailHeight: CGFloat = InlineAreaToolbarMetrics.iconButtonSize * 4
-    + InlineAreaToolbarMetrics.actionRailSpacing * 4
-    + InlineAreaToolbarMetrics.actionRailDividerHeight
-    + InlineAreaToolbarMetrics.actionRailDividerVerticalPadding * 2
-    + InlineAreaToolbarMetrics.actionRailPadding * 2
-
   static func reservedControlHeight(showsProperties: Bool) -> CGFloat {
     if showsProperties {
       return toolbarHeight + controlStackSpacing + propertiesHeight
@@ -1288,44 +1310,12 @@ enum InlineAreaControlGeometry {
       showsProperties: showsProperties,
       controlInsets: controlInsets
     )
-    let splitSides = splitControlSides(
-      for: rect,
-      preferredSide: verticalSide,
-      containerSize: containerSize,
-      showsProperties: showsProperties,
-      controlInsets: controlInsets
-    )
-    let toolbarCenterY = splitSides == nil
-      ? centers.toolbar
-      : singleControlCenter(
-        for: rect,
-        height: InlineAreaLayout.toolbarHeight,
-        side: splitSides?.toolbar ?? verticalSide,
-        containerSize: containerSize,
-        controlInsets: controlInsets
-      )
-    let propertiesCenterY = splitSides == nil
-      ? centers.properties
-      : singleControlCenter(
-        for: rect,
-        height: InlineAreaLayout.propertiesHeight,
-        side: splitSides?.properties ?? verticalSide,
-        containerSize: containerSize,
-        controlInsets: controlInsets
-      )
-    let propertiesSide = splitSides?.properties ?? verticalSide
-
     return InlineAreaControlPlacement(
       toolbarWidth: toolbarWidth,
       propertiesWidth: propertiesWidth,
-      toolbarCenter: CGPoint(x: toolbarX, y: toolbarCenterY),
-      propertiesCenter: CGPoint(x: propertiesX, y: propertiesCenterY),
-      propertiesPopoverEdge: propertiesSide == .above ? .bottom : .top,
-      actionRailCenter: actionRailPosition(
-        for: rect,
-        containerSize: containerSize,
-        controlInsets: controlInsets
-      )
+      toolbarCenter: CGPoint(x: toolbarX, y: centers.toolbar),
+      propertiesCenter: CGPoint(x: propertiesX, y: centers.properties),
+      propertiesPopoverEdge: verticalSide == .above ? .bottom : .top
     )
   }
 
@@ -1333,7 +1323,7 @@ enum InlineAreaControlGeometry {
     for containerSize: CGSize,
     controlInsets: InlineAreaControlInsets
   ) -> CGFloat {
-    min(664, availableControlWidth(for: containerSize, controlInsets: controlInsets))
+    min(800, availableControlWidth(for: containerSize, controlInsets: controlInsets))
   }
 
   private static func propertiesBarWidth(
@@ -1399,52 +1389,6 @@ enum InlineAreaControlGeometry {
     return aboveSpace >= belowSpace ? .above : .below
   }
 
-  private static func splitControlSides(
-    for rect: CGRect,
-    preferredSide: InlineAreaVerticalSide,
-    containerSize: CGSize,
-    showsProperties: Bool,
-    controlInsets: InlineAreaControlInsets
-  ) -> (toolbar: InlineAreaVerticalSide, properties: InlineAreaVerticalSide)? {
-    guard showsProperties else { return nil }
-
-    let aboveSpace = spaceAbove(rect, controlInsets: controlInsets)
-    let belowSpace = spaceBelow(rect, containerSize: containerSize, controlInsets: controlInsets)
-
-    if aboveSpace >= InlineAreaLayout.reservedControlHeight(showsProperties: true)
-      || belowSpace >= InlineAreaLayout.reservedControlHeight(showsProperties: true)
-    {
-      return nil
-    }
-
-    switch preferredSide {
-    case .above:
-      if aboveSpace >= InlineAreaLayout.toolbarHeight,
-         belowSpace >= InlineAreaLayout.propertiesHeight
-      {
-        return (.above, .below)
-      }
-      if aboveSpace >= InlineAreaLayout.propertiesHeight,
-         belowSpace >= InlineAreaLayout.toolbarHeight
-      {
-        return (.below, .above)
-      }
-    case .below:
-      if belowSpace >= InlineAreaLayout.toolbarHeight,
-         aboveSpace >= InlineAreaLayout.propertiesHeight
-      {
-        return (.below, .above)
-      }
-      if belowSpace >= InlineAreaLayout.propertiesHeight,
-         aboveSpace >= InlineAreaLayout.toolbarHeight
-      {
-        return (.above, .below)
-      }
-    }
-
-    return nil
-  }
-
   private static func controlCenters(
     for rect: CGRect,
     side: InlineAreaVerticalSide,
@@ -1473,58 +1417,6 @@ enum InlineAreaControlGeometry {
       : toolbarCenter
 
     return (toolbarCenter, propertiesCenter)
-  }
-
-  private static func singleControlCenter(
-    for rect: CGRect,
-    height: CGFloat,
-    side: InlineAreaVerticalSide,
-    containerSize: CGSize,
-    controlInsets: InlineAreaControlInsets
-  ) -> CGFloat {
-    let rawCenter: CGFloat
-
-    switch side {
-    case .above:
-      rawCenter = rect.minY - InlineAreaLayout.selectionGap - height / 2
-    case .below:
-      rawCenter = rect.maxY + InlineAreaLayout.selectionGap + height / 2
-    }
-
-    return clamped(
-      rawCenter,
-      min: controlInsets.controlTopPadding + height / 2,
-      max: containerSize.height - controlInsets.controlBottomPadding - height / 2
-    )
-  }
-
-  private static func actionRailPosition(
-    for rect: CGRect,
-    containerSize: CGSize,
-    controlInsets: InlineAreaControlInsets
-  ) -> CGPoint {
-    let rightX = rect.maxX + InlineAreaLayout.actionRailWidth / 2 + InlineAreaLayout.selectionGap
-    let leftX = rect.minX - InlineAreaLayout.actionRailWidth / 2 - InlineAreaLayout.selectionGap
-    let minimumX = InlineAreaLayout.actionRailWidth / 2 + controlInsets.controlLeadingPadding
-    let maximumX = containerSize.width - InlineAreaLayout.actionRailWidth / 2 - controlInsets.controlTrailingPadding
-    let x: CGFloat
-    if rightX <= maximumX {
-      x = rightX
-    } else if leftX >= minimumX {
-      x = leftX
-    } else {
-      x = clamped(
-        rect.maxX - InlineAreaLayout.actionRailWidth / 2 - InlineAreaLayout.selectionGap,
-        min: minimumX,
-        max: maximumX
-      )
-    }
-    let y = clamped(
-      rect.midY,
-      min: InlineAreaLayout.actionRailHeight / 2 + controlInsets.controlTopPadding,
-      max: containerSize.height - InlineAreaLayout.actionRailHeight / 2 - controlInsets.controlBottomPadding
-    )
-    return CGPoint(x: x, y: y)
   }
 
   private static func spaceAbove(
@@ -1594,10 +1486,10 @@ private struct InlineAreaPanelBackgroundTint: View {
 
 private extension View {
   func inlineAreaPanelChrome() -> some View {
-    background(InlineAreaPanelBackgroundTint())
-      .background(InlineAreaHudMaterialBackground(cornerRadius: InlineAreaChrome.cornerRadius))
+    background(InlineAreaPanelBackgroundTint().allowsHitTesting(false))
+      .background(InlineAreaHudMaterialBackground(cornerRadius: InlineAreaChrome.cornerRadius).allowsHitTesting(false))
       .clipShape(RoundedRectangle(cornerRadius: InlineAreaChrome.cornerRadius, style: .continuous))
-      .overlay(InlineAreaPanelBorder())
+      .overlay(InlineAreaPanelBorder().allowsHitTesting(false))
       .shadow(color: Color.black.opacity(0.35), radius: 18, x: 0, y: 8)
       .shadow(color: Color.black.opacity(0.18), radius: 3, x: 0, y: 1)
   }
@@ -1671,53 +1563,44 @@ private enum InlineAreaResizeCursor {
   }
 }
 
-private struct InlineAreaControlDeck<MoveGesture: Gesture>: View {
+private struct InlineAreaControlDeck: View {
   @ObservedObject var session: InlineAreaAnnotateSession
   let maxWidth: CGFloat
-  let moveGesture: MoveGesture
 
   var body: some View {
-    ScrollView(.horizontal, showsIndicators: false) {
-      HStack(spacing: InlineAreaToolbarMetrics.itemSpacing) {
-        InlineAreaMoveHandle()
-          .gesture(moveGesture)
-
-        InlineAreaDivider()
-
-        ForEach(Array(AnnotationToolType.inlineToolGroups.enumerated()), id: \.offset) { index, tools in
-          if index > 0 {
-            InlineAreaDivider()
+    HStack(spacing: InlineAreaToolbarMetrics.itemSpacing) {
+      // Only drawing tools scroll on narrow displays. Output and cancel stay reachable.
+      ScrollView(.horizontal, showsIndicators: false) {
+        HStack(spacing: InlineAreaToolbarMetrics.itemSpacing) {
+          ForEach(Array(AnnotationToolType.inlineToolGroups.enumerated()), id: \.offset) { index, tools in
+            if index > 0 { InlineAreaDivider() }
+            InlineAreaToolGroup(tools: tools, selectedTool: session.state.selectedTool) { tool in
+              session.actionMessage = nil
+              session.state.activateTool(tool)
+            }
           }
-          InlineAreaToolGroup(tools: tools, selectedTool: session.state.selectedTool) { tool in
-            session.state.activateTool(tool)
+          InlineAreaDivider()
+          InlineAreaIconButton(icon: "arrow.uturn.backward", tooltip: L10n.Common.undo,
+                               isEnabled: session.state.canUndo) {
+            session.actionMessage = nil
+            session.state.undo()
+          }
+          InlineAreaIconButton(icon: "arrow.uturn.forward", tooltip: L10n.Common.redo,
+                               isEnabled: session.state.canRedo) {
+            session.actionMessage = nil
+            session.state.redo()
           }
         }
-
-        InlineAreaDivider()
-
-        InlineAreaIconButton(
-          icon: "arrow.uturn.backward",
-          tooltip: L10n.Common.undo,
-          isEnabled: session.state.canUndo
-        ) {
-          session.state.undo()
-        }
-
-        InlineAreaIconButton(
-          icon: "arrow.uturn.forward",
-          tooltip: L10n.Common.redo,
-          isEnabled: session.state.canRedo
-        ) {
-          session.state.redo()
-        }
+        .fixedSize(horizontal: true, vertical: false)
       }
-      .fixedSize(horizontal: true, vertical: false)
+      InlineAreaDivider()
+      InlineAreaCaptureActions(session: session)
+        .fixedSize()
     }
-    .frame(maxWidth: max(0, maxWidth - InlineAreaToolbarMetrics.horizontalPadding * 2))
     .padding(.horizontal, InlineAreaToolbarMetrics.horizontalPadding)
-    .padding(.vertical, InlineAreaToolbarMetrics.verticalPadding)
-    .inlineAreaPanelChrome()
-    .animation(.easeOut(duration: 0.16), value: session.state.selectedTool)
+    .frame(width: maxWidth, height: InlineAreaLayout.toolbarHeight)
+    .accessibilityElement(children: .contain)
+    .accessibilityIdentifier("inline.captureToolbar")
   }
 }
 
@@ -1755,6 +1638,7 @@ private struct InlineAreaToolButton: View {
     }
     .buttonStyle(.plain)
     .help(tool.displayName)
+    .accessibilityLabel(tool.displayName)
     .onHover { isHovering = $0 }
     .animation(InlineAreaToolbarMetrics.hoverAnimation, value: isHovering)
     .accessibilityAddTraits(isSelected ? .isSelected : [])
@@ -1778,7 +1662,7 @@ private struct InlineAreaMoveHandle: View {
       Image(systemName: "arrow.up.and.down.and.arrow.left.and.right")
         .font(.system(size: 12, weight: .medium))
 
-      Text("Space")
+      Text(L10n.AnnotateUI.dragSelection)
         .font(.system(size: 11, weight: .semibold))
         .lineLimit(1)
     }
@@ -1817,6 +1701,7 @@ private struct InlineAreaIconButton: View {
     .disabled(!isEnabled)
     .opacity(isEnabled ? 1 : 0.42)
     .help(tooltip)
+    .accessibilityLabel(tooltip)
     .onHover { isHovering = $0 }
     .animation(InlineAreaToolbarMetrics.hoverAnimation, value: isHovering)
   }
@@ -2041,7 +1926,6 @@ private struct InlineAreaPropertiesBar: View {
       .frame(maxWidth: max(0, maxWidth - InlineAreaLayout.controlPanelOuterHorizontalInset))
     }
     .frame(width: maxWidth, height: InlineAreaLayout.propertiesHeight, alignment: .leading)
-    .inlineAreaPanelChrome()
     .onPreferenceChange(InlineAreaPropertiesContentWidthKey.self) { width in
       onContentWidthChange(max(0, width))
     }
@@ -2922,49 +2806,32 @@ private struct InlineAreaPropertyGroup<Content: View>: View {
   }
 }
 
-private struct InlineAreaActionRail: View {
+private struct InlineAreaCaptureActions: View {
   @ObservedObject var session: InlineAreaAnnotateSession
 
   var body: some View {
-    VStack(spacing: InlineAreaToolbarMetrics.actionRailSpacing) {
-      InlineAreaIconButton(icon: "pin", tooltip: L10n.PreferencesQuickAccess.pinToScreenAction) {
-        Task { await session.finishAndPin() }
-      }
-
-      InlineAreaIconButton(icon: "xmark", tooltip: L10n.Common.cancel) {
-        session.cancel()
-      }
-
-      InlineAreaIconButton(
-        icon: "checkmark",
-        tooltip: L10n.Common.withShortcut(L10n.Common.done, "⌘S"),
-        isProminent: true
-      ) {
-        Task { await session.finish() }
-      }
-
-      InlineAreaRailDivider()
-        .padding(.vertical, InlineAreaToolbarMetrics.actionRailDividerVerticalPadding)
-
-      InlineAreaIconButton(
-        icon: "doc.on.doc",
-        tooltip: L10n.Common.withShortcut(L10n.AnnotateUI.copyToClipboard, "⌘C")
-      ) {
+    HStack(spacing: InlineAreaToolbarMetrics.itemSpacing) {
+      InlineAreaIconButton(icon: "doc.on.doc",
+        tooltip: L10n.Common.withShortcut(L10n.AnnotateUI.copyToClipboard, "⌘C"),
+        isEnabled: !session.isFinishing) {
         session.copyCurrentImage()
       }
+      InlineAreaIconButton(icon: "pin", tooltip: L10n.PreferencesQuickAccess.pinToScreenAction,
+                          isEnabled: !session.isFinishing) {
+        Task { await session.finishAndPin() }
+      }
+      InlineAreaIconButton(icon: "checkmark",
+        tooltip: L10n.Common.withShortcut(L10n.Common.done, "⌘S"),
+        isEnabled: !session.isFinishing, isProminent: true) {
+        Task { await session.finish() }
+      }
+      InlineAreaIconButton(icon: "xmark", tooltip: L10n.Common.cancel,
+                          isEnabled: !session.isFinishing) {
+        session.cancel()
+      }
     }
-    .padding(InlineAreaToolbarMetrics.actionRailPadding)
-    .inlineAreaPanelChrome()
-  }
-}
-
-private struct InlineAreaRailDivider: View {
-  var body: some View {
-    Rectangle()
-      .fill(InlineAreaChrome.divider)
-      .frame(
-        width: InlineAreaToolbarMetrics.actionRailDividerWidth,
-        height: InlineAreaToolbarMetrics.actionRailDividerHeight
-      )
+    .overlay {
+      if session.isFinishing { ProgressView().controlSize(.small).allowsHitTesting(false) }
+    }
   }
 }

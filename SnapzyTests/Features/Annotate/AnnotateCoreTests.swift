@@ -533,45 +533,22 @@ final class AnnotateCoreTests: XCTestCase {
     )
   }
 
-  func testInlineAreaActionRail_usesLeftOutsideWhenRightOutsideUnavailable() {
-    let containerSize = CGSize(width: 400, height: 300)
-    let rect = CGRect(x: 320, y: 60, width: 64, height: 180)
-
-    let placement = InlineAreaControlGeometry.placement(
-      for: rect,
-      containerSize: containerSize,
-      showsProperties: false,
-      propertiesContentWidth: 0,
-      controlInsets: .zero
-    )
-
-    XCTAssertLessThan(
-      placement.actionRailCenter.x + InlineAreaLayout.actionRailWidth / 2,
-      rect.minX
-    )
-  }
-
-  func testInlineAreaActionRail_usesRightInnerWhenNoOutsideHorizontalRoom() {
-    let containerSize = CGSize(width: 400, height: 300)
-    let rect = CGRect(x: 0, y: 20, width: 400, height: 260)
-
-    let placement = InlineAreaControlGeometry.placement(
-      for: rect,
-      containerSize: containerSize,
-      showsProperties: false,
-      propertiesContentWidth: 0,
-      controlInsets: .zero
-    )
-
-    let maximumX = containerSize.width
-      - InlineAreaLayout.actionRailWidth / 2
-      - InlineAreaLayout.screenPadding
-    XCTAssertEqual(placement.actionRailCenter.x, maximumX, accuracy: 0.0001)
-    XCTAssertGreaterThan(placement.actionRailCenter.x, rect.midX)
-    XCTAssertLessThanOrEqual(
-      placement.actionRailCenter.x + InlineAreaLayout.actionRailWidth / 2,
-      rect.maxX + 0.0001
-    )
+  func testUnifiedControlsStayTogetherAndOnScreen() {
+    for size in [CGSize(width: 400, height: 300), CGSize(width: 1512, height: 982)] {
+      for rect in [CGRect(origin: .zero, size: size),
+                   CGRect(x: size.width - 100, y: 60, width: 80, height: 180)] {
+        let placement = InlineAreaControlGeometry.placement(
+          for: rect, containerSize: size, showsProperties: true,
+          propertiesContentWidth: 1200, controlInsets: .zero
+        )
+        XCTAssertGreaterThanOrEqual(placement.toolbarCenter.x - placement.toolbarWidth / 2, 16)
+        XCTAssertLessThanOrEqual(placement.toolbarCenter.x + placement.toolbarWidth / 2, size.width - 16)
+        XCTAssertGreaterThanOrEqual(placement.toolbarCenter.y - InlineAreaLayout.toolbarHeight / 2, 16)
+        XCTAssertLessThanOrEqual(placement.propertiesCenter.y + InlineAreaLayout.propertiesHeight / 2, size.height - 16)
+        XCTAssertEqual(placement.propertiesCenter.y - InlineAreaLayout.propertiesHeight / 2,
+                       placement.toolbarCenter.y + InlineAreaLayout.toolbarHeight / 2)
+      }
+    }
   }
 
   func testInlineAreaControlInsetsPreferVisibleFrameAndSafeArea() {
@@ -901,6 +878,54 @@ final class AnnotateCoreTests: XCTestCase {
 
     XCTAssertFalse(editorCanvas.acceptsFirstMouse(for: nil))
     XCTAssertTrue(inlineCanvas.acceptsFirstMouse(for: nil))
+  }
+
+  @MainActor
+  func testInlineBackgroundDragUsesWindowDeltaAndDoesNotSelectAnnotations() {
+    let state = makeAnnotateState()
+    state.selectedTool = .selection
+    let canvas = DrawingCanvasNSView(state: state)
+    canvas.frame = CGRect(x: 0, y: 0, width: 400, height: 300)
+    canvas.canvasBounds = canvas.bounds
+    var updates: [(CGSize, Bool)] = []
+    canvas.onSelectionBackgroundDrag = { updates.append(($0, $1)) }
+    canvas.mouseDown(with: makeMouseEvent(type: .leftMouseDown, location: CGPoint(x: 200, y: 150)))
+    canvas.mouseDragged(with: makeMouseEvent(type: .leftMouseDragged, location: CGPoint(x: 230, y: 130)))
+    // The image view follows the selection during the same gesture.
+    canvas.frame.origin = CGPoint(x: 30, y: -20)
+    canvas.mouseDragged(with: makeMouseEvent(type: .leftMouseDragged, location: CGPoint(x: 250, y: 110)))
+    canvas.mouseUp(with: makeMouseEvent(type: .leftMouseUp, location: CGPoint(x: 250, y: 110)))
+    XCTAssertEqual(updates.map { $0.0 }, [CGSize(width: 30, height: 20), CGSize(width: 50, height: 40), CGSize(width: 50, height: 40)])
+    XCTAssertEqual(updates.map { $0.1 }, [false, false, true])
+    XCTAssertTrue(state.annotations.isEmpty)
+    XCTAssertFalse(state.hasSelectedAnnotations)
+  }
+
+  @MainActor
+  func testInlineBackgroundClickDoesNotMoveAndDrawingToolStillDraws() {
+    let state = makeAnnotateState()
+    state.selectedTool = .selection
+    let canvas = DrawingCanvasNSView(state: state)
+    canvas.frame = CGRect(x: 0, y: 0, width: 400, height: 300)
+    canvas.canvasBounds = canvas.bounds
+    var dragCount = 0
+    canvas.onSelectionBackgroundDrag = { _, _ in dragCount += 1 }
+    let start = CGPoint(x: 100, y: 100)
+    canvas.mouseDown(with: makeMouseEvent(type: .leftMouseDown, location: start))
+    canvas.mouseUp(with: makeMouseEvent(type: .leftMouseUp, location: start))
+    XCTAssertEqual(dragCount, 0)
+    state.selectedTool = .rectangle
+    canvas.mouseDown(with: makeMouseEvent(type: .leftMouseDown, location: start))
+    canvas.mouseDragged(with: makeMouseEvent(type: .leftMouseDragged, location: CGPoint(x: 160, y: 140)))
+    canvas.mouseUp(with: makeMouseEvent(type: .leftMouseUp, location: CGPoint(x: 160, y: 140)))
+    XCTAssertEqual(dragCount, 0)
+    XCTAssertEqual(state.annotations.count, 1)
+    state.selectedTool = .selection
+    canvas.mouseDown(with: makeMouseEvent(type: .leftMouseDown, location: CGPoint(x: 130, y: 100)))
+    canvas.mouseDragged(with: makeMouseEvent(type: .leftMouseDragged, location: CGPoint(x: 150, y: 120)))
+    canvas.mouseUp(with: makeMouseEvent(type: .leftMouseUp, location: CGPoint(x: 150, y: 120)))
+    XCTAssertEqual(dragCount, 0, "An existing annotation must own its drag")
+    XCTAssertEqual(state.annotations.first?.bounds.origin, CGPoint(x: 120, y: 120))
   }
 
   @MainActor

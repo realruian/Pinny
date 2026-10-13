@@ -1,6 +1,30 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "annotate.element-hierarchy-hint": {
+      "comment": "Hint while hovering an automatically detected screenshot component",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tab: parent · Shift-Tab: child"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tab 扩大选区 · ⇧Tab 缩小选区"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tab 擴大選區 · ⇧Tab 縮小選區"
+          }
+        }
+      }
+    },
     "annotate-context.defaults": {
       "extractionState": "stale",
       "localizations": {
@@ -5652,6 +5676,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "預覽"
+          }
+        }
+      }
+    },
+    "annotate.drag-selection" : {
+      "comment": "Label for directly dragging the screenshot selection",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drag"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拖动"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拖動"
+          }
+        }
+      }
+    },
+    "annotate.move-selection-direct" : {
+      "comment": "Tooltip for direct selection movement and resizing",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drag to move selected area; drag edges to resize"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "直接拖动选区；拖动边缘调整大小"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "直接拖動選區；拖動邊緣調整大小"
           }
         }
       }

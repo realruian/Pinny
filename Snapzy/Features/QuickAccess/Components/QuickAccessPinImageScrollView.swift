@@ -157,7 +157,7 @@ final class QuickAccessPinImageScrollView: NSScrollView {
     case .magnify:
       let localPoint = convert(event.locationInWindow, from: nil)
       let contentPoint = contentView.convert(event.locationInWindow, from: nil)
-      applyMagnificationDelta(-event.scrollingDeltaY * 0.01, centeredAtContentPoint: contentPoint, windowPoint: localPoint)
+      applyMagnificationDelta(Self.scrollZoomDelta(event.scrollingDeltaY, precise: event.hasPreciseScrollingDeltas), centeredAtContentPoint: contentPoint, windowPoint: localPoint)
     case .pan:
       applyScrollPan(for: event) { super.scrollWheel(with: event) }
     }
@@ -167,6 +167,7 @@ final class QuickAccessPinImageScrollView: NSScrollView {
     let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
     guard !isLockedProvider() else { return .reject("locked") }
     if modifiers == .command {
+      guard event.momentumPhase.isEmpty else { return .reject("momentum") }
       guard abs(event.scrollingDeltaY) > abs(event.scrollingDeltaX), abs(event.scrollingDeltaY) > 0 else {
         return .reject("horizontalOrZeroDelta")
       }
@@ -174,6 +175,7 @@ final class QuickAccessPinImageScrollView: NSScrollView {
     }
     guard modifiers.isEmpty else { return .reject("modifiers") }
     if zoomMode == .windowFollowsImage {
+      guard event.momentumPhase.isEmpty else { return .reject("momentum") }
       guard abs(event.scrollingDeltaY) > abs(event.scrollingDeltaX), abs(event.scrollingDeltaY) > 0 else {
         return .reject("horizontalOrZeroDelta")
       }
@@ -312,8 +314,22 @@ final class QuickAccessPinImageScrollView: NSScrollView {
     body()
   }
 
+  /// Trackpad deltas are pixels; wheel deltas are coarse steps. Bound each event
+  /// so a long scroll cannot jump straight to the maximum zoom.
+  static func scrollZoomDelta(_ verticalDelta: CGFloat, precise: Bool) -> CGFloat {
+    guard verticalDelta.isFinite else { return 0 }
+    return min(max(-verticalDelta * (precise ? 0.002 : 0.01), -0.1), 0.1)
+  }
+
   func applyMagnificationDelta(_ delta: CGFloat, centeredAtContentPoint point: CGPoint, windowPoint: CGPoint) {
-    let target = min(max(magnification * (1 + delta), minMagnification), maxMagnification)
+    guard delta.isFinite else { return }
+    let maximum: CGFloat
+    if zoomMode == .windowFollowsImage, let screen = window?.screen {
+      maximum = QuickAccessPinWindowSizing.maximumZoom(baseSize: configuredImageSize, visibleSize: screen.visibleFrame.size)
+    } else {
+      maximum = maxMagnification
+    }
+    let target = min(max(magnification * (1 + delta), minMagnification), maximum)
     let before = magnification
     guard target != before else { return }
 
@@ -427,11 +443,11 @@ final class QuickAccessPinImageDocumentView: NSView {
   }
 
   override var needsPanelToBecomeKey: Bool {
-    !isLockedProvider()
+    false
   }
 
   override var acceptsFirstResponder: Bool {
-    needsPanelToBecomeKey
+    false
   }
 
   override func magnify(with event: NSEvent) {

@@ -23,168 +23,211 @@ struct QuickAccessSettingsView: View {
   @AppStorage(PreferencesKeys.quickAccessPlaySounds) private var playSounds = true
 
   @State private var positionIsLeft: Bool = false
+  @State private var showsLegacyCards = false
 
   var body: some View {
     Form {
-      QuickAccessActionCustomizationView(manager: manager)
-
-      Section(L10n.PreferencesQuickAccess.pinZoomSection) {
-        PinZoomModeComparisonPreview(
-          selectedMode: pinZoomModeStore.mode,
-          onSelect: { mode in
-            pinZoomModeStore.setMode(mode)
-            QuickAccessPinWindowManager.shared.setPinZoomMode(mode)
+      Section(L10n.PreferencesWorkflow.captureSection) {
+        SettingRow(icon: "viewfinder", title: L10n.PreferencesWorkflow.captureTitle,
+                   description: L10n.PreferencesWorkflow.captureDescription) {
+          Button(L10n.Preferences.shortcutsTab) {
+            PreferencesNavigationState.shared.select(.shortcuts)
           }
-        )
+        }
+        SettingRow(icon: "rectangle.dashed", title: L10n.PreferencesWorkflow.componentTitle,
+                   description: L10n.PreferencesWorkflow.componentDescription) {
+          Button(L10n.PreferencesWorkflow.recognitionSettings) {
+            PreferencesNavigationState.shared.select(.capture)
+          }
+        }
+        SettingRow(icon: "arrow.up.left.and.arrow.down.right", title: L10n.PreferencesWorkflow.adjustTitle,
+                   description: L10n.PreferencesWorkflow.adjustDescription) { EmptyView() }
       }
 
-      Section(L10n.PreferencesQuickAccess.positionSection) {
-        SettingRow(icon: "rectangle.leadinghalf.inset.filled", title: L10n.PreferencesQuickAccess.screenEdgeTitle, description: L10n.PreferencesQuickAccess.screenEdgeDescription) {
-          Picker("", selection: $positionIsLeft) {
-            Text(L10n.PreferencesQuickAccess.left).tag(true)
-            Text(L10n.PreferencesQuickAccess.right).tag(false)
+      Section(L10n.PreferencesQuickAccess.pinZoomSection) {
+        SettingRow(icon: "pin", title: L10n.PreferencesWorkflow.pinTitle,
+                   description: L10n.PreferencesWorkflow.pinDescription) { EmptyView() }
+        SettingRow(icon: "hand.tap", title: L10n.PreferencesWorkflow.doubleClickTitle,
+                   description: L10n.PreferencesWorkflow.doubleClickDescription) { EmptyView() }
+        SettingRow(icon: "arrow.up.left.and.arrow.down.right", title: L10n.PreferencesWorkflow.zoomTitle,
+                   description: L10n.PreferencesWorkflow.zoomDescription) {
+          Picker(L10n.PreferencesWorkflow.zoomTitle, selection: Binding(
+            get: { pinZoomModeStore.mode },
+            set: { mode in
+              pinZoomModeStore.setMode(mode)
+              QuickAccessPinWindowManager.shared.setPinZoomMode(mode)
+            }
+          )) {
+            ForEach(QuickAccessPinZoomMode.allCases) { mode in
+              Text(mode.title).tag(mode)
+            }
           }
           .labelsHidden()
           .pickerStyle(.menu)
-          .onChange(of: positionIsLeft) { newValue in
-            manager.setPosition(newValue ? .bottomLeft : .bottomRight)
-          }
         }
       }
 
-      Section(L10n.PreferencesQuickAccess.appearanceSection) {
-        SettingRow(icon: "arrow.up.left.and.arrow.down.right", title: L10n.PreferencesQuickAccess.overlaySizeTitle, description: L10n.PreferencesQuickAccess.overlaySizeDescription) {
+      Section {
+        DisclosureGroup(L10n.PreferencesWorkflow.legacyCardsTitle, isExpanded: $showsLegacyCards) {
+          Text(L10n.PreferencesWorkflow.legacyCardsDescription)
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        }
+      }
+      if showsLegacyCards {
+        legacyCardSettings
+      }
+    }
+    .formStyle(.grouped)
+    .onAppear { positionIsLeft = manager.position.isLeftSide }
+  }
+
+  @ViewBuilder
+  private var legacyCardSettings: some View {
+    QuickAccessActionCustomizationView(manager: manager)
+
+    Section(L10n.PreferencesQuickAccess.positionSection) {
+      SettingRow(icon: "rectangle.leadinghalf.inset.filled", title: L10n.PreferencesQuickAccess.screenEdgeTitle, description: L10n.PreferencesQuickAccess.screenEdgeDescription) {
+        Picker("", selection: $positionIsLeft) {
+          Text(L10n.PreferencesQuickAccess.left).tag(true)
+          Text(L10n.PreferencesQuickAccess.right).tag(false)
+        }
+        .labelsHidden()
+        .pickerStyle(.menu)
+        .onChange(of: positionIsLeft) { newValue in
+          manager.setPosition(newValue ? .bottomLeft : .bottomRight)
+        }
+      }
+    }
+
+    Section(L10n.PreferencesQuickAccess.appearanceSection) {
+      SettingRow(icon: "arrow.up.left.and.arrow.down.right", title: L10n.PreferencesQuickAccess.overlaySizeTitle, description: L10n.PreferencesQuickAccess.overlaySizeDescription) {
+        HStack(spacing: 8) {
+          Text(verbatim: "S")
+            .font(.caption)
+            .foregroundColor(.secondary)
+          Slider(value: $manager.overlayScale.stepped(by: 0.25, in: 0.75...1.5), in: 0.75...1.5)
+            .frame(width: 100)
+          Text(verbatim: "L")
+            .font(.caption)
+            .foregroundColor(.secondary)
+        }
+      }
+    }
+
+    Section(L10n.PreferencesQuickAccess.behaviorsSection) {
+      SettingRow(icon: "square.on.square", title: L10n.PreferencesQuickAccess.floatingOverlayTitle, description: L10n.PreferencesQuickAccess.floatingOverlayDescription) {
+        Toggle("", isOn: $manager.isEnabled)
+          .labelsHidden()
+      }
+
+      SettingRow(icon: "timer", title: L10n.PreferencesQuickAccess.autoCloseTitle, description: autoCloseDescription) {
+        Toggle("", isOn: $manager.autoDismissEnabled)
+          .labelsHidden()
+      }
+
+      SettingRow(icon: "eye.slash", title: L10n.PreferencesQuickAccess.hideCardWhenWindowOpenTitle, description: L10n.PreferencesQuickAccess.hideCardWhenWindowOpenDescription) {
+        Toggle("", isOn: $manager.hideCardWhenWindowOpen)
+          .labelsHidden()
+      }
+
+      SettingRow(icon: "sparkles", title: L10n.PreferencesQuickAccess.animationStyleTitle, description: L10n.PreferencesQuickAccess.animationStyleDescription) {
+        Picker("", selection: $manager.animationStyle) {
+          ForEach(QuickAccessAnimationStyle.allCases) { style in
+            Text(style.displayName).tag(style)
+          }
+        }
+        .labelsHidden()
+        .pickerStyle(.menu)
+        .fixedSize()
+        .frame(width: 150, alignment: .trailing)
+      }
+
+      SettingRow(icon: "speaker.wave.2", title: L10n.PreferencesQuickAccess.soundEffectsTitle, description: L10n.PreferencesQuickAccess.soundEffectsDescription) {
+        Toggle("", isOn: $playSounds)
+          .labelsHidden()
+      }
+
+      if manager.autoDismissEnabled {
+        HStack(spacing: 12) {
+          Image(systemName: "clock")
+            .font(.title2)
+            .foregroundColor(.secondary)
+            .frame(width: 28)
+
+          Text(L10n.PreferencesQuickAccess.closeAfter)
+            .fontWeight(.medium)
+
+          Spacer()
+
+          Slider(value: $manager.autoDismissDelay.stepped(by: 1, in: 3...30), in: 3...30)
+            .frame(width: 120)
+
+          Text("\(Int(manager.autoDismissDelay))s")
+            .frame(width: 35)
+            .monospacedDigit()
+            .foregroundColor(.secondary)
+        }
+        .padding(.vertical, 4)
+      }
+
+      if manager.autoDismissEnabled {
+        SettingRow(icon: "cursorarrow.motionlines", title: L10n.PreferencesQuickAccess.pauseOnHoverTitle, description: L10n.PreferencesQuickAccess.pauseOnHoverDescription) {
+          Toggle("", isOn: $manager.pauseCountdownOnHover)
+            .labelsHidden()
+        }
+      }
+
+      SettingRow(icon: "hand.draw", title: L10n.PreferencesQuickAccess.dragAndDropTitle, description: L10n.PreferencesQuickAccess.dragAndDropDescription) {
+        Toggle("", isOn: $manager.dragDropEnabled)
+          .labelsHidden()
+      }
+
+      SettingRow(icon: "hand.point.right", title: L10n.PreferencesQuickAccess.twoFingerSwipeTitle, description: L10n.PreferencesQuickAccess.twoFingerSwipeDescription) {
+        Toggle("", isOn: $manager.twoFingerSwipeToDismissEnabled)
+          .labelsHidden()
+      }
+
+      if manager.twoFingerSwipeToDismissEnabled {
+        SettingRow(icon: "gauge.with.dots.needle.33percent", title: L10n.PreferencesQuickAccess.swipeSensitivityTitle, description: L10n.PreferencesQuickAccess.swipeSensitivityDescription) {
           HStack(spacing: 8) {
-            Text(verbatim: "S")
-              .font(.caption)
-              .foregroundColor(.secondary)
-            Slider(value: $manager.overlayScale.stepped(by: 0.25, in: 0.75...1.5), in: 0.75...1.5)
+            Slider(value: $manager.swipeSensitivity.stepped(by: 0.25, in: 0.5...3.0), in: 0.5...3.0)
               .frame(width: 100)
-            Text(verbatim: "L")
-              .font(.caption)
+            Text("\(Int(manager.swipeSensitivity * 100))%")
+              .frame(width: 42)
+              .monospacedDigit()
               .foregroundColor(.secondary)
           }
         }
       }
+    }
 
-      Section(L10n.PreferencesQuickAccess.behaviorsSection) {
-        SettingRow(icon: "square.on.square", title: L10n.PreferencesQuickAccess.floatingOverlayTitle, description: L10n.PreferencesQuickAccess.floatingOverlayDescription) {
-          Toggle("", isOn: $manager.isEnabled)
-            .labelsHidden()
-        }
-
-        SettingRow(icon: "timer", title: L10n.PreferencesQuickAccess.autoCloseTitle, description: autoCloseDescription) {
-          Toggle("", isOn: $manager.autoDismissEnabled)
-            .labelsHidden()
-        }
-
-        SettingRow(icon: "eye.slash", title: L10n.PreferencesQuickAccess.hideCardWhenWindowOpenTitle, description: L10n.PreferencesQuickAccess.hideCardWhenWindowOpenDescription) {
-          Toggle("", isOn: $manager.hideCardWhenWindowOpen)
-            .labelsHidden()
-        }
-
-        SettingRow(icon: "sparkles", title: L10n.PreferencesQuickAccess.animationStyleTitle, description: L10n.PreferencesQuickAccess.animationStyleDescription) {
-          Picker("", selection: $manager.animationStyle) {
-            ForEach(QuickAccessAnimationStyle.allCases) { style in
-              Text(style.displayName).tag(style)
+    if manager.twoFingerSwipeToDismissEnabled {
+      Section(L10n.PreferencesQuickAccess.swipeActionsSection) {
+        SettingRow(
+          icon: "arrow.left.arrow.right",
+          title: L10n.PreferencesQuickAccess.trackpadSwipeModeTitle,
+          description: L10n.PreferencesQuickAccess.trackpadSwipeModeDescription
+        ) {
+          Picker("", selection: Binding(
+            get: { trackpadSwipeModeStore.mode },
+            set: { trackpadSwipeModeStore.setMode($0) }
+          )) {
+            ForEach(QuickAccessTrackpadSwipeMode.allCases) { mode in
+              Text(mode.displayName).tag(mode)
             }
           }
           .labelsHidden()
           .pickerStyle(.menu)
           .fixedSize()
-          .frame(width: 150, alignment: .trailing)
+          .frame(width: 200, alignment: .trailing)
         }
 
-        SettingRow(icon: "speaker.wave.2", title: L10n.PreferencesQuickAccess.soundEffectsTitle, description: L10n.PreferencesQuickAccess.soundEffectsDescription) {
-          Toggle("", isOn: $playSounds)
-            .labelsHidden()
-        }
-
-        if manager.autoDismissEnabled {
-          HStack(spacing: 12) {
-            Image(systemName: "clock")
-              .font(.title2)
-              .foregroundColor(.secondary)
-              .frame(width: 28)
-
-            Text(L10n.PreferencesQuickAccess.closeAfter)
-              .fontWeight(.medium)
-
-            Spacer()
-
-            Slider(value: $manager.autoDismissDelay.stepped(by: 1, in: 3...30), in: 3...30)
-              .frame(width: 120)
-
-            Text("\(Int(manager.autoDismissDelay))s")
-              .frame(width: 35)
-              .monospacedDigit()
-              .foregroundColor(.secondary)
-          }
-          .padding(.vertical, 4)
-        }
-
-        if manager.autoDismissEnabled {
-          SettingRow(icon: "cursorarrow.motionlines", title: L10n.PreferencesQuickAccess.pauseOnHoverTitle, description: L10n.PreferencesQuickAccess.pauseOnHoverDescription) {
-            Toggle("", isOn: $manager.pauseCountdownOnHover)
-              .labelsHidden()
-          }
-        }
-
-        SettingRow(icon: "hand.draw", title: L10n.PreferencesQuickAccess.dragAndDropTitle, description: L10n.PreferencesQuickAccess.dragAndDropDescription) {
-          Toggle("", isOn: $manager.dragDropEnabled)
-            .labelsHidden()
-        }
-
-        SettingRow(icon: "hand.point.right", title: L10n.PreferencesQuickAccess.twoFingerSwipeTitle, description: L10n.PreferencesQuickAccess.twoFingerSwipeDescription) {
-          Toggle("", isOn: $manager.twoFingerSwipeToDismissEnabled)
-            .labelsHidden()
-        }
-
-        if manager.twoFingerSwipeToDismissEnabled {
-          SettingRow(icon: "gauge.with.dots.needle.33percent", title: L10n.PreferencesQuickAccess.swipeSensitivityTitle, description: L10n.PreferencesQuickAccess.swipeSensitivityDescription) {
-            HStack(spacing: 8) {
-              Slider(value: $manager.swipeSensitivity.stepped(by: 0.25, in: 0.5...3.0), in: 0.5...3.0)
-                .frame(width: 100)
-              Text("\(Int(manager.swipeSensitivity * 100))%")
-                .frame(width: 42)
-                .monospacedDigit()
-                .foregroundColor(.secondary)
-            }
-          }
-        }
+        Text(L10n.PreferencesQuickAccess.swipeActionsDescription)
+          .font(.caption)
+          .foregroundColor(.secondary)
+          .padding(.vertical, 2)
       }
-
-      if manager.twoFingerSwipeToDismissEnabled {
-        Section(L10n.PreferencesQuickAccess.swipeActionsSection) {
-          SettingRow(
-            icon: "arrow.left.arrow.right",
-            title: L10n.PreferencesQuickAccess.trackpadSwipeModeTitle,
-            description: L10n.PreferencesQuickAccess.trackpadSwipeModeDescription
-          ) {
-            Picker("", selection: Binding(
-              get: { trackpadSwipeModeStore.mode },
-              set: { trackpadSwipeModeStore.setMode($0) }
-            )) {
-              ForEach(QuickAccessTrackpadSwipeMode.allCases) { mode in
-                Text(mode.displayName).tag(mode)
-              }
-            }
-            .labelsHidden()
-            .pickerStyle(.menu)
-            .fixedSize()
-            .frame(width: 200, alignment: .trailing)
-          }
-
-          Text(L10n.PreferencesQuickAccess.swipeActionsDescription)
-            .font(.caption)
-            .foregroundColor(.secondary)
-            .padding(.vertical, 2)
-        }
-      }
-    }
-    .formStyle(.grouped)
-    .onAppear {
-      positionIsLeft = manager.position.isLeftSide
     }
   }
 

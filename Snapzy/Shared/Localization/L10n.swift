@@ -23,6 +23,7 @@ nonisolated enum L10n {
     ("sponsor.", "Onboarding"),
     ("preferences.tab.", "Settings"),
     ("preferences-general.", "Settings"),
+    ("preferences-workflow.", "Settings"),
     ("preferences-menubar.", "Settings"),
     ("preferences-capture.", "Capture"),
     ("preferences-shortcuts.", "Shortcuts"),
@@ -168,7 +169,7 @@ nonisolated enum L10n {
     )
     static let quickAccessTab = string(
       "preferences.tab.quick-access",
-      defaultValue: "Quick Access",
+      defaultValue: "Pinned Images",
       comment: "Preferences tab title"
     )
     static let historyTab = string(
@@ -2944,9 +2945,30 @@ nonisolated enum L10n {
   enum PreferencesPermissions {
     static let intro = string(
       "preferences-permissions.intro",
-      defaultValue: "Snapzy requires certain permissions to capture your screen and audio.",
+      defaultValue: "Screen recording access is needed for screenshots; Accessibility access is needed for component detection. Microphone access is only for audio recording.",
       comment: "Introductory text for the permissions preferences tab"
     )
+  }
+
+  enum PreferencesWorkflow {
+    static let captureSection = string("preferences-workflow.capture-section", defaultValue: "Capture in place", comment: "Screenshot and pin workflow settings")
+    static let captureTitle = string("preferences-workflow.capture-title", defaultValue: "Screenshot & Annotate", comment: "Screenshot and pin workflow settings")
+    static let captureDescription = string("preferences-workflow.capture-description", defaultValue: "Keep the selection in place to adjust and annotate before finishing. Configure its shortcut in Keyboard Shortcuts.", comment: "Screenshot and pin workflow settings")
+    static let componentTitle = string("preferences-workflow.component-title", defaultValue: "Select a component", comment: "Screenshot and pin workflow settings")
+    static let componentDescription = string("preferences-workflow.component-description", defaultValue: "Hover to detect components. During selection, Tab selects the parent and Shift-Tab selects the child. Available regions depend on the target app.", comment: "Screenshot and pin workflow settings")
+    static let recognitionSettings = string("preferences-workflow.recognition-settings", defaultValue: "Detection Settings", comment: "Screenshot and pin workflow settings")
+    static let adjustTitle = string("preferences-workflow.adjust-title", defaultValue: "Move and resize the selection", comment: "Screenshot and pin workflow settings")
+    static let adjustDescription = string("preferences-workflow.adjust-description", defaultValue: "With the selection tool, drag an empty part of the image to move the region. Drag any edge or corner to resize it.", comment: "Screenshot and pin workflow settings")
+    static let pinTitle = string("preferences-workflow.pin-title", defaultValue: "Pin in place", comment: "Screenshot and pin workflow settings")
+    static let pinDescription = string("preferences-workflow.pin-description", defaultValue: "Click the pin beside the selection to keep its original position and size. The pinned image has no controls and can be dragged directly.", comment: "Screenshot and pin workflow settings")
+    static let doubleClickTitle = string("preferences-workflow.double-click-title", defaultValue: "Double-click to copy and close", comment: "Screenshot and pin workflow settings")
+    static let doubleClickDescription = string("preferences-workflow.double-click-description", defaultValue: "Double-click a pinned image to copy its original-resolution content and close that image. Zoom does not change the copied resolution.", comment: "Screenshot and pin workflow settings")
+    static let zoomTitle = string("preferences-workflow.zoom-title", defaultValue: "Scroll to zoom", comment: "Screenshot and pin workflow settings")
+    static let zoomDescription = string("preferences-workflow.zoom-description", defaultValue: "Choose whether the window resizes with the image when you scroll to zoom.", comment: "Screenshot and pin workflow settings")
+    static let legacyCardsTitle = string("preferences-workflow.legacy-cards-title", defaultValue: "Screen-corner cards (legacy workflow)", comment: "Screenshot and pin workflow settings")
+    static let legacyCardsDescription = string("preferences-workflow.legacy-cards-description", defaultValue: "These settings apply only to corner cards shown after capture. Card position, action buttons, and automatic dismissal do not affect inline selections or pinned images.", comment: "Screenshot and pin workflow settings")
+    static let accessibilityPermission = string("preferences-workflow.accessibility-permission", defaultValue: "Required to detect components inside windows. macOS also grants the ability to control other apps.", comment: "Screenshot and pin workflow settings")
+    static let savePermission = string("preferences-workflow.save-permission", defaultValue: "Save screenshots to the selected folder.", comment: "Screenshot and pin workflow settings")
   }
 
   enum PreferencesQuickAccess {
@@ -3385,7 +3407,7 @@ nonisolated enum L10n {
     )
     static let autoDetectWindowUnderCursorTitle = string(
       "preferences-capture.auto-detect-window-under-cursor-title",
-      defaultValue: "Automatically detect window under cursor",
+      defaultValue: "Detect windows automatically",
       comment: "Capture preferences setting title"
     )
     static let autoDetectWindowUnderCursorDescription = string(
@@ -3395,12 +3417,12 @@ nonisolated enum L10n {
     )
     static let autoDetectElementUnderCursorTitle = string(
       "preferences-capture.auto-detect-element-under-cursor-title",
-      defaultValue: "Also detect specific elements, not just windows",
+      defaultValue: "Prefer components inside windows",
       comment: "Capture preferences setting title"
     )
     static let autoDetectElementUnderCursorDescription = string(
       "preferences-capture.auto-detect-element-under-cursor-description",
-      defaultValue: "Highlight a specific button, popup, or webpage element when hovering, instead of the whole window. Requires the setting above.",
+      defaultValue: "With window detection enabled, prefer components such as sidebars and cards. Requires Accessibility access. In Screenshot & Annotate, use Tab / Shift-Tab to switch levels.",
       comment: "Capture preferences setting description"
     )
     static let reverseMagnifierZoomDirectionTitle = string(
@@ -4016,7 +4038,7 @@ nonisolated enum L10n {
     )
     static let defaultToolDescription = string(
       "preferences-capture.annotate-default-tool-description",
-      defaultValue: "Tool selected when remembering the last tool is turned off",
+      defaultValue: "Used in the separate annotation editor. Inline screenshots start with the selection tool for moving the region.",
       comment: "Annotate preferences setting description for the initial screenshot annotation tool"
     )
     static let rememberLastToolTitle = string(
@@ -4026,7 +4048,7 @@ nonisolated enum L10n {
     )
     static let rememberLastToolDescription = string(
       "preferences-capture.annotate-remember-last-tool-description",
-      defaultValue: "Start each screenshot annotation with the last tool you chose",
+      defaultValue: "Reuse the last tool in the separate annotation editor. Inline screenshots still start with the selection tool.",
       comment: "Annotate preferences setting description for remembering the last screenshot annotation tool"
     )
     static let quickPropertiesSyncTitle = string(
@@ -5815,9 +5837,14 @@ nonisolated enum L10n {
       defaultValue: "Please set up your cloud credentials in Preferences -> Cloud before uploading.",
       comment: "Alert message shown when annotate cloud upload is unavailable because cloud is not configured"
     )
+    static let dragSelection = string(
+      "annotate.drag-selection",
+      defaultValue: "Drag",
+      comment: "Label for directly dragging the screenshot selection"
+    )
     static let moveSelection = string(
-      "annotate.move-selection",
-      defaultValue: "Move selected area (Space + mouse drag)",
+      "annotate.move-selection-direct",
+      defaultValue: "Drag to move selected area; drag edges to resize",
       comment: "Tooltip for dragging the inline area annotate selected region"
     )
     static let overwriteCloudFileTitle = string(
@@ -8145,7 +8172,7 @@ nonisolated enum L10n {
 
     static let showQuickAccessDescription = string(
       "after-capture.show-quick-access-description",
-      defaultValue: "Display overlay with quick actions",
+      defaultValue: "Show a corner card after capture. Configure cards under the legacy workflow in Pinned Images.",
       comment: "After capture action description"
     )
     static let copyFileDescription = string(
@@ -8176,6 +8203,11 @@ nonisolated enum L10n {
   }
 
   enum Annotate {
+    static let elementHierarchyHint = string(
+      "annotate.element-hierarchy-hint",
+      defaultValue: "Tab: parent · Shift-Tab: child",
+      comment: "Hint while hovering an automatically detected screenshot component"
+    )
     static let selectionTool = string(
       "annotate.tool.selection",
       defaultValue: "Selection",
