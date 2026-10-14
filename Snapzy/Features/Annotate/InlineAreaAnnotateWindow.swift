@@ -27,6 +27,7 @@ final class InlineAreaAnnotateCoordinator {
     excludeOwnApplication: Bool = false,
     onComplete: @escaping (InlineCaptureOutcome) -> Void
   ) {
+    CaptureTiming.mark("coordinator start")
     closeActiveWindows()
     let availableScreens = screens.filter { screen in
       guard let displayID = screen.displayID else { return false }
@@ -68,6 +69,7 @@ final class InlineAreaAnnotateCoordinator {
       return
     }
 
+    CaptureTiming.mark("display records built")
     let session = InlineAreaAnnotateSession(
       primaryDisplayID: primaryDisplayID,
       desktopFrame: desktopFrame,
@@ -82,9 +84,11 @@ final class InlineAreaAnnotateCoordinator {
       onComplete: wrappedOnComplete
     )
 
+    CaptureTiming.mark("session created")
     let windows = displays.map { display in
       InlineAreaAnnotatePanel(display: display, session: session)
     }
+    CaptureTiming.mark("panels created")
     activeWindows = windows
 
     for window in windows {
@@ -100,6 +104,10 @@ final class InlineAreaAnnotateCoordinator {
     }
     if !windows.contains(where: { $0.displayID == primaryDisplayID }) {
       windows.first?.makeKey()
+    }
+    CaptureTiming.mark("panels ordered front")
+    DispatchQueue.main.async {
+      CaptureTiming.end("next main run loop turn (first frame committed)")
     }
   }
 

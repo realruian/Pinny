@@ -790,7 +790,10 @@ final class AppStatusBarController: ObservableObject {
   }
 
   @objc private func pinClipboardAction() {
-    QuickAccessPinWindowManager.shared.showClipboardImage()
+    Task { @MainActor in
+      await ClipboardHelper.waitForPendingImageCopy()
+      QuickAccessPinWindowManager.shared.showClipboardImage()
+    }
   }
 
   @objc private func captureAreaAnnotateAction() {

@@ -275,11 +275,21 @@ enum WindowSelectionQueryService {
   /// `isOnScreen == false`. Capturing its pixels from the display snapshot is
   /// therefore more reliable than asking ScreenCaptureKit for the window.
   static func captureImmediateQuickLookCaptures() -> [ImmediateQuickLookCapture] {
+    captureImmediateQuickLookCaptures(from: quickLookWindowInfos())
+  }
+
+  /// The window-list scan behind Quick Look restoration (~14 ms with many windows). It touches
+  /// no AppKit state, so the F1 path runs it off the main actor alongside the capture.
+  nonisolated static func quickLookWindowInfos() -> [RawWindowInfo] {
+    rawWindowInfoList(includeOffscreen: true).filter(isQuickLookWindow)
+  }
+
+  static func captureImmediateQuickLookCaptures(from quickLookInfos: [RawWindowInfo]) -> [ImmediateQuickLookCapture] {
     var captures: [ImmediateQuickLookCapture] = []
     var displaySnapshots: [CGDirectDisplayID: CGImage] = [:]
 
-    for info in rawWindowInfoList(includeOffscreen: true) {
-      guard isQuickLookWindow(info), let quartzBounds = info.quartzBounds else { continue }
+    for info in quickLookInfos {
+      guard let quartzBounds = info.quartzBounds else { continue }
 
       let frame = appKitGlobalRect(fromQuartzGlobalRect: quartzBounds).integral
       guard frame.width > 32, frame.height > 32, info.alpha > 0 else { continue }
@@ -405,7 +415,7 @@ enum WindowSelectionQueryService {
     )
   }
 
-  private static func isQuickLookWindow(_ info: RawWindowInfo) -> Bool {
+  nonisolated private static func isQuickLookWindow(_ info: RawWindowInfo) -> Bool {
     let ownerName = info.ownerName?.lowercased() ?? ""
     if ownerName.contains("quicklook") {
       return true

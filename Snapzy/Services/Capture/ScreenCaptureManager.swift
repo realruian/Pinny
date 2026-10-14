@@ -410,6 +410,7 @@ final class ScreenCaptureManager: ObservableObject {
       throw unavailableError
     }
 
+    CaptureTiming.mark("  capture availability checked")
     isCapturing = true
     defer { isCapturing = false }
     DiagnosticLogger.shared.log(.info, .capture, "Frozen display snapshot capture started")
@@ -435,12 +436,15 @@ final class ScreenCaptureManager: ObservableObject {
     excludeOwnApplication: Bool = false,
     prefetchedContentTask: ShareableContentPrefetchTask? = nil
   ) async throws -> [CGDirectDisplayID: FrozenDisplaySnapshot] {
-    let quickLookCaptures = WindowSelectionQueryService.captureImmediateQuickLookCaptures()
+    let quickLookInfosTask = Task.detached(priority: .userInitiated) {
+      WindowSelectionQueryService.quickLookWindowInfos()
+    }
     let includeDesktopWindows = excludeDesktopIcons || excludeDesktopWidgets
     let content = try await loadShareableContent(
       prefetchedContentTask: prefetchedContentTask,
       includeDesktopWindows: includeDesktopWindows
     )
+    CaptureTiming.mark("  shareable content loaded")
 
     let screensToCapture = NSScreen.screens.filter { screen in
       guard let displayID = screen.displayID else { return false }
@@ -503,13 +507,19 @@ final class ScreenCaptureManager: ObservableObject {
         }
       }
 
+      CaptureTiming.mark("  filters built, screenshots requested")
       var result: [CGDirectDisplayID: FrozenDisplaySnapshot] = [:]
       for try await (displayID, snapshot) in group {
         result[displayID] = snapshot
+        CaptureTiming.mark("  display \(displayID) screenshot received")
       }
       return result
     }
 
+    let quickLookCaptures = WindowSelectionQueryService.captureImmediateQuickLookCaptures(
+      from: await quickLookInfosTask.value
+    )
+    CaptureTiming.mark("  Quick Look windows checked")
     if !quickLookCaptures.isEmpty {
       for (displayID, snapshot) in snapshots {
         let restoredImage = Self.imageByCompositingQuickLookWindows(

@@ -349,7 +349,11 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
   func shortcutTriggered(_ action: ShortcutAction) {
     switch action {
     case .pinClipboard:
-      QuickAccessPinWindowManager.shared.showClipboardImage()
+      Task { @MainActor in
+        // A just-finished F1 copy may still be encoding; pin that image, not the previous one.
+        await ClipboardHelper.waitForPendingImageCopy()
+        QuickAccessPinWindowManager.shared.showClipboardImage()
+      }
     case .captureFullscreen:
       captureFullscreen()
     case .captureArea:
@@ -727,6 +731,7 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
       return
     }
 
+    CaptureTiming.begin("F1 flow start")
     let captureContext = CaptureContext.fromFrontmostApp()
     isAreaSelectionActive = true
     DiagnosticLogger.shared.log(.info, .capture, "Inline area annotate flow started", context: [
@@ -743,6 +748,7 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
     )
     let hiddenWindowSession = hideVisibleNormalWindowsIfNeeded(excludeOwnApplication)
     let snapshotDelay = hiddenWindowSession.didHideWindows ? frozenSnapshotWindowHideSettleDelay : 0
+    CaptureTiming.mark("own windows hidden: \(hiddenWindowSession.didHideWindows)")
 
     DispatchQueue.main.asyncAfter(deadline: .now() + snapshotDelay) { [weak self] in
       guard let self else {
@@ -755,6 +761,7 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
         do {
           self.isCapturing = true
           let snapshotStartedAt = Date()
+          CaptureTiming.mark("snapshot capture begin")
           let preparedSession = try await self.prepareInlineAreaAnnotateFrozenSession(
             showCursor: showCursor,
             excludeDesktopIcons: excludeDesktopIcons,
@@ -763,6 +770,7 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
             prefetchedContentTask: prefetchedContentTask
           )
           frozenSession = preparedSession.session
+          CaptureTiming.mark("snapshots ready (\(preparedSession.mode))")
           let snapshotDurationMs = Int(Date().timeIntervalSince(snapshotStartedAt) * 1000)
           DiagnosticLogger.shared.log(
             .info,

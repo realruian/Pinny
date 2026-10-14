@@ -87,7 +87,7 @@ final class InlineAreaAnnotateSessionTests: XCTestCase {
   }
 
   @MainActor
-  func testCopyExitsOnceWithoutResolvingSaveDirectory() throws {
+  func testCopyExitsOnceWithoutResolvingSaveDirectory() async throws {
     var outcomes: [InlineCaptureOutcome] = []
     var askedForDirectory = false
     let session = try makeSelectionSession(
@@ -100,6 +100,7 @@ final class InlineAreaAnnotateSessionTests: XCTestCase {
     XCTAssertFalse(askedForDirectory)
     XCTAssertEqual(outcomes.count, 1)
     guard case .copied = outcomes.first else { return XCTFail("Expected copied outcome") }
+    await ClipboardHelper.waitForPendingImageCopy()
     XCTAssertEqual(PinClipboardGeometry.sourceRect(from: .general), CGRect(x: 100, y: 350, width: 200, height: 150))
     let image = try XCTUnwrap(NSImage(pasteboard: .general))
     let pixels = try XCTUnwrap(AnnotateExporter.bestCGImage(from: image))
@@ -144,6 +145,7 @@ final class InlineAreaAnnotateSessionTests: XCTestCase {
     session.copyCurrentImage()
     XCTAssertEqual(outcomes.count, 1)
     guard case .copied = outcomes.first else { return XCTFail("Expected copied outcome") }
+    await ClipboardHelper.waitForPendingImageCopy()
     XCTAssertEqual(PinClipboardGeometry.sourceRect(from: .general), CGRect(x: 100, y: 350, width: 200, height: 150))
   }
 

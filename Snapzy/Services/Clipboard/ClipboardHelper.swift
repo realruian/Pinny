@@ -266,6 +266,71 @@ enum ClipboardHelper {
     logger.info("Clipboard: copied rendered image as \(ext) via temp file")
   }
 
+  /// Latest copy started by `copyImageInBackground`; F2 waits on it so it pins the new image.
+  private static var pendingBackgroundCopy: Task<Void, Never>?
+
+  /// Same clipboard result as `copyImage(_:format:sourceScreenRect:)`, but the PNG/TIFF encoding
+  /// and temp-file write run off the main actor, so the overlay can close and the pin appear
+  /// without waiting for them (tens of ms for a full-screen selection, more for larger ones).
+  /// The pasteboard is only written if nothing else changed it in the meantime.
+  static func copyImageInBackground(_ image: NSImage, format: ImageFormatOption? = nil, sourceScreenRect: CGRect? = nil) {
+    let resolvedFormat = format ?? currentFormat()
+    let ext = resolvedFormat.format.fileExtension
+    guard let cgImage = AnnotateExporter.bestCGImage(from: image) else {
+      copyImage(image, format: resolvedFormat, sourceScreenRect: sourceScreenRect)
+      return
+    }
+    let imageSize = image.size
+    let tempDir = TempCaptureManager.shared.tempCaptureDirectory
+    let tempURL = tempDir.appendingPathComponent("Pinny_clipboard_\(UUID().uuidString).\(ext)")
+    let startChangeCount = NSPasteboard.general.changeCount
+    DiagnosticLogger.shared.log(.info, .clipboard, "Copy rendered image (background)", context: ["format": resolvedFormat.rawValue])
+
+    pendingBackgroundCopy = Task { @MainActor in
+      let encoded = await Task.detached(priority: .userInitiated) { () -> (data: Data, tiff: Data?)? in
+        let rendered = NSImage(cgImage: cgImage, size: imageSize)
+        guard let data = AnnotateExporter.imageData(from: rendered, for: ext) else { return nil }
+        do {
+          try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+          try data.write(to: tempURL, options: .atomic)
+        } catch {
+          return nil
+        }
+        let rep = NSBitmapImageRep(cgImage: cgImage)
+        rep.size = imageSize
+        return (data, rep.tiffRepresentation)
+      }.value
+
+      let pasteboard = NSPasteboard.general
+      guard pasteboard.changeCount == startChangeCount else {
+        // Something newer (another copy, or the user in another app) owns the clipboard now.
+        try? FileManager.default.removeItem(at: tempURL)
+        return
+      }
+      guard let encoded else {
+        copyImage(image, format: resolvedFormat, sourceScreenRect: sourceScreenRect)
+        return
+      }
+      pasteboard.clearContents()
+      writeSingleImageItem(
+        to: pasteboard,
+        fileURL: tempURL,
+        image: image,
+        tiffData: encoded.tiff,
+        encodedData: encoded.data,
+        encodedType: pasteboardImageType(for: ext),
+        sourceScreenRect: sourceScreenRect
+      )
+      CaptureTiming.mark("background clipboard write finished")
+      logger.info("Clipboard: copied rendered image as \(ext) via temp file (background)")
+    }
+  }
+
+  /// Waits for a copy started by `copyImageInBackground`, if one is still running.
+  static func waitForPendingImageCopy() async {
+    await pendingBackgroundCopy?.value
+  }
+
   // MARK: - Helpers
 
   private static func writeSingleImageItem(

@@ -132,7 +132,19 @@ final class AppIdentityManager: ObservableObject {
     return values?.quarantineProperties != nil
   }
 
+  /// Static validation hashes the whole bundle (~55 ms for Pinny's Release binary) and used to
+  /// run on every capture through `refresh()`. The running bundle can't change underneath this
+  /// process (an update relaunches the app), so a successful result is kept for its lifetime.
+  private static var verifiedSignatureBundleURL: URL?
+
   private static func hasValidBundleSignature(_ bundleURL: URL) -> Bool {
+    if verifiedSignatureBundleURL == bundleURL { return true }
+    let isValid = verifyBundleSignature(bundleURL)
+    if isValid { verifiedSignatureBundleURL = bundleURL }
+    return isValid
+  }
+
+  private static func verifyBundleSignature(_ bundleURL: URL) -> Bool {
     var staticCode: SecStaticCode?
     let createStatus = SecStaticCodeCreateWithPath(bundleURL as CFURL, SecCSFlags(), &staticCode)
     guard createStatus == errSecSuccess, let staticCode else {

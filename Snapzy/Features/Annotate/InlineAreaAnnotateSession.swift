@@ -635,24 +635,40 @@ final class InlineAreaAnnotateSession: ObservableObject {
   }
 
   func finishAndPin() async {
+    CaptureTiming.begin("pin action")
     guard phase == .annotating, !didComplete, !isFinishing,
           let sourceRect = selectionRect.map({ screenRect(for: $0) }),
           let image = renderedSelection() else { return }
+    CaptureTiming.mark("selection rendered")
     // The window owns this full-resolution image. No saved URL or thumbnail work is needed.
     isFinishing = true
     let shouldCopy = defaults.object(forKey: "inlinePinCopiesImage") as? Bool ?? true
-    if shouldCopy { ClipboardHelper.copyImage(image, sourceScreenRect: sourceRect) }
     complete(.pinned)
+    CaptureTiming.mark("overlay closed")
     pinImage(image, sourceRect)
+    CaptureTiming.mark("pin window shown")
+    if shouldCopy { ClipboardHelper.copyImageInBackground(image, sourceScreenRect: sourceRect) }
+    Task { @MainActor in
+      await ClipboardHelper.waitForPendingImageCopy()
+      CaptureTiming.end("clipboard ready")
+    }
     isFinishing = false
   }
 
   func copyCurrentImage() {
+    CaptureTiming.begin("copy action")
     guard phase == .annotating, !didComplete, !isFinishing,
           let image = renderedSelection() else { return }
-    ClipboardHelper.copyImage(image, sourceScreenRect: selectionRect.map { screenRect(for: $0) })
-    SoundManager.play("Pop")
+    CaptureTiming.mark("selection rendered")
+    let sourceRect = selectionRect.map { screenRect(for: $0) }
     complete(.copied)
+    CaptureTiming.mark("overlay closed")
+    SoundManager.play("Pop")
+    ClipboardHelper.copyImageInBackground(image, sourceScreenRect: sourceRect)
+    Task { @MainActor in
+      await ClipboardHelper.waitForPendingImageCopy()
+      CaptureTiming.end("clipboard ready")
+    }
   }
 
   private func cropImage(for localRect: CGRect) -> InlineAreaCrop? {
@@ -839,11 +855,17 @@ final class InlineAreaAnnotateSession: ObservableObject {
     NSCursor.arrow.set()
 
     if closeWindow {
-      for window in windows.allObjects {
-        window.close()
+      // Hide first so the overlay disappears this frame; tearing down the full-screen
+      // SwiftUI panels can take tens of ms and runs on the next turn of the run loop.
+      let closingWindows = windows.allObjects
+      closingWindows.forEach { $0.orderOut(nil) }
+      CaptureTiming.mark("overlay hidden")
+      DispatchQueue.main.async {
+        closingWindows.forEach { $0.close() }
       }
     }
     onComplete(result)
+    CaptureTiming.mark("completion handler done")
   }
 
   private func persistCommittedSession(for url: URL) {
