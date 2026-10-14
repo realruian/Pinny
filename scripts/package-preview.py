@@ -2,11 +2,11 @@
 """Package the existing Debug build with a stable local signing identity.
 
 Usage: python3 scripts/package-preview.py --identity 'V2Do Dev'
-Produces build/preview-staged/Pinny.app; installation is separate.
+Produces build/preview-staged/Pinny.app, replacing the previous staged copy (the
+installed app's rollback backup is made at install time); installation is separate.
 Never falls back to ad-hoc signing or modifies the keychain / TCC database.
 """
 import argparse
-from datetime import datetime
 from pathlib import Path
 import plistlib
 import shutil
@@ -23,8 +23,8 @@ destination = workspace / 'build/preview-staged/Pinny.app'
 if not (source / 'Contents/MacOS/Snapzy').is_file():
     parser.error('Build the Snapzy Debug scheme in build/in-place-pin before packaging.')
 if destination.exists():
-    backup = destination.with_name('Pinny.' + datetime.now().strftime('%Y%m%d-%H%M%S-%f') + '.app.bak')
-    shutil.move(destination, backup)
+    # Not kept: extra launchable copies with the same bundle ID confuse Launch Services.
+    shutil.rmtree(destination)
 destination.parent.mkdir(parents=True, exist_ok=True)
 subprocess.run(['ditto', str(source), str(destination)], check=True)
 info_path = destination / 'Contents/Info.plist'
