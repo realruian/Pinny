@@ -269,7 +269,9 @@ private struct InlineAreaAnnotateRootView: View {
         .flatMap { viewportBounds.contains($0) ? $0 : nil }
 
       ZStack(alignment: .topLeading) {
-        ForEach(session.displays) { backdropDisplay in
+        // Only backdrops that intersect this panel's display; the others sit entirely
+        // off-window and would just add a full-resolution image layer per extra display.
+        ForEach(session.displays.filter { $0.localFrame.intersects(display.localFrame) }) { backdropDisplay in
           Image(nsImage: backdropDisplay.backdropImage)
             .resizable()
             .frame(width: backdropDisplay.localFrame.width, height: backdropDisplay.localFrame.height)
@@ -490,14 +492,11 @@ private struct InlineAreaAnnotateRootView: View {
   }
 
   private func selectionDimLayer(size: CGSize, rect: CGRect?) -> some View {
-    Canvas { context, canvasSize in
-      var path = Path(CGRect(origin: .zero, size: canvasSize))
-      if let rect {
-        path.addPath(Path(rect.standardized))
-      }
-      context.fill(path, with: .color(.black.opacity(0.42)), style: FillStyle(eoFill: true))
-    }
-    .frame(width: size.width, height: size.height)
+    // A value-typed Shape instead of a `Canvas`: SwiftUI skips re-rasterizing it when the
+    // hole hasn't moved, so pointer hover no longer repaints a display-sized bitmap.
+    InlineAreaSelectionDimShape(hole: rect?.standardized)
+      .fill(Color.black.opacity(0.42), style: FillStyle(eoFill: true))
+      .frame(width: size.width, height: size.height)
   }
 
   private func annotateSurface(rect: CGRect, usesBackdropPreview: Bool) -> some View {
@@ -2901,5 +2900,17 @@ private struct InlineAreaCaptureActions: View {
     .overlay {
       if session.isFinishing { ProgressView().controlSize(.small).allowsHitTesting(false) }
     }
+  }
+}
+
+private struct InlineAreaSelectionDimShape: Shape {
+  var hole: CGRect?
+
+  func path(in rect: CGRect) -> Path {
+    var path = Path(rect)
+    if let hole {
+      path.addRect(hole)
+    }
+    return path
   }
 }

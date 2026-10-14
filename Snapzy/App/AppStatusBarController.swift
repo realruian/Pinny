@@ -62,8 +62,9 @@ final class AppStatusBarController: ObservableObject {
     buildMenu()
     observeRecordingState()
 
-    // Pre-allocate area selection windows for instant activation (<150ms)
-    AreaSelectionController.shared.prepareWindowPool()
+    // F1/F2 use the inline overlay, so the legacy area-selection pool is built on first use
+    // (`AreaSelectionController.startSelection`) instead of at launch; this also keeps idle
+    // Space switches from rebuilding full-screen panels nobody shows.
     DiagnosticLogger.shared.log(
       .info,
       .ui,

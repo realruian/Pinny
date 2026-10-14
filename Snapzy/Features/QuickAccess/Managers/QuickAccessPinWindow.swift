@@ -233,7 +233,11 @@ final class QuickAccessPinWindow: NSPanel {
     }
 
     let isInside = frame.contains(mouseLocation)
-    pinState.isMouseInside = isInside
+    // Global mouse monitors fire on every pointer move anywhere on screen; only publish a
+    // real change so the pin's SwiftUI tree (and its image redraw) stays idle.
+    if pinState.isMouseInside != isInside {
+      pinState.isMouseInside = isInside
+    }
     guard pinState.isLocked else {
       // Hovering an image must not steal keyboard focus or cancel a drag when
       // the system pointer differs from a queued event's location.

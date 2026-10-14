@@ -25,9 +25,11 @@ nonisolated enum AppBundleIdentity {
   static func matches(_ identifier: String?, debugBuild: Bool = isDebugBuild) -> Bool {
     // Local development builds may retain the normal app identity and signing
     // certificate to preserve existing macOS capture permissions across rebuilds.
-    // Release builds still require the release identity; arbitrary IDs are rejected.
+    // Pinny ships an optimized Release build under the preview identity, so that identity is
+    // accepted in both configurations; arbitrary IDs are still rejected.
     identifier == releaseIdentifier
-      || (debugBuild && (identifier == debugIdentifier || identifier == previewIdentifier))
+      || identifier == previewIdentifier
+      || (debugBuild && identifier == debugIdentifier)
   }
 }
 

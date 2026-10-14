@@ -124,7 +124,9 @@ final class QuickAccessPinImageScrollView: NSScrollView {
       configuredImage = image
       self.zoomMode = zoomMode
       configuredImageSize = imageSize
-      imageView.image = image
+      if imageChanged {
+        imageView.image = image
+      }
       imageView.onMagnify = { [weak self] event in self?.handleMagnify(event) }
 
       if imageChanged || viewportChanged {
