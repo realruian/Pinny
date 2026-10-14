@@ -165,18 +165,18 @@ final class InlineAreaAnnotateSessionTests: XCTestCase {
       phase: .selecting, hasTextResponder: false, hasKeyWindow: false), .passThrough)
   }
 
-  func testPlainRSelectsWindowOnlyWhileChoosingArea() throws {
+  func testPlainRRecallsLastRegionOnlyWhileChoosingArea() throws {
     let r = try makeKeyEvent(keyCode: 15, characters: "r", flags: [])
     XCTAssertEqual(InlineAreaAnnotateSession.keyAction(for: r, source: .local,
-      phase: .selecting, hasTextResponder: false, hasKeyWindow: true), .selectWindow)
+      phase: .selecting, hasTextResponder: false, hasKeyWindow: true), .recallRegion(older: true))
     // After a selection exists, R falls through to the rectangle tool shortcut.
     XCTAssertEqual(InlineAreaAnnotateSession.keyAction(for: r, source: .local,
       phase: .annotating, hasTextResponder: false, hasKeyWindow: true), .passThrough)
     XCTAssertEqual(InlineAreaAnnotateSession.keyAction(for: r, source: .global,
       phase: .selecting, hasTextResponder: false, hasKeyWindow: false), .passThrough)
     let commandR = try makeKeyEvent(keyCode: 15, characters: "r", flags: .command)
-    XCTAssertNotEqual(InlineAreaAnnotateSession.keyAction(for: commandR, source: .local,
-      phase: .selecting, hasTextResponder: false, hasKeyWindow: true), .selectWindow)
+    XCTAssertEqual(InlineAreaAnnotateSession.keyAction(for: commandR, source: .local,
+      phase: .selecting, hasTextResponder: false, hasKeyWindow: true), .passThrough)
   }
 
   func testSelectionNudgeMovesExpandsAndShrinks() {
@@ -211,11 +211,12 @@ final class InlineAreaAnnotateSessionTests: XCTestCase {
       hasTextResponder: false, hasKeyWindow: true), .passThrough)
   }
 
-  func testCommaRecallsRegionAndPeriodStepsNewer() throws {
+  func testCommaAndPeriodStepThroughRegionsAfterRecall() throws {
     let comma = try makeKeyEvent(keyCode: 43, characters: ",", flags: [])
     let period = try makeKeyEvent(keyCode: 47, characters: ".", flags: [])
+    // R recalls before selecting; "," / "." only step through history afterwards.
     XCTAssertEqual(InlineAreaAnnotateSession.keyAction(for: comma, source: .local, phase: .selecting,
-      hasTextResponder: false, hasKeyWindow: true), .recallRegion(older: true))
+      hasTextResponder: false, hasKeyWindow: true), .passThrough)
     XCTAssertEqual(InlineAreaAnnotateSession.keyAction(for: period, source: .local, phase: .annotating,
       hasTextResponder: false, hasKeyWindow: true), .recallRegion(older: false))
     XCTAssertEqual(InlineAreaAnnotateSession.keyAction(for: comma, source: .local, phase: .annotating,
@@ -619,14 +620,15 @@ final class InlineAreaAnnotateSessionTests: XCTestCase {
     XCTAssertEqual(session.phase, .selecting)
   }
 
-  func testElementHierarchyKeysOnlyApplyDuringSelection() throws {
+  func testTabSelectsWholeWindowOnlyDuringSelection() throws {
     let tab = try makeKeyEvent(keyCode: 48, characters: "\t", flags: [])
     let backTab = try makeKeyEvent(keyCode: 48, characters: "\t", flags: .shift)
     let appSwitch = try makeKeyEvent(keyCode: 48, characters: "\t", flags: .command)
     XCTAssertEqual(InlineAreaAnnotateSession.keyAction(for: tab, source: .local, phase: .selecting,
-      hasTextResponder: false, hasKeyWindow: true), .changeElementLevel(towardParent: true))
+      hasTextResponder: false, hasKeyWindow: true), .selectWindow)
+    // Pinny removed expand / shrink of the detected element.
     XCTAssertEqual(InlineAreaAnnotateSession.keyAction(for: backTab, source: .local, phase: .selecting,
-      hasTextResponder: false, hasKeyWindow: true), .changeElementLevel(towardParent: false))
+      hasTextResponder: false, hasKeyWindow: true), .passThrough)
     for event in [tab, backTab, appSwitch] {
       XCTAssertEqual(InlineAreaAnnotateSession.keyAction(for: event, source: .global, phase: .selecting,
         hasTextResponder: false, hasKeyWindow: false), .passThrough)

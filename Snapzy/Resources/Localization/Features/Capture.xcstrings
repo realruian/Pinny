@@ -4078,7 +4078,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "With window detection enabled, prefer components such as sidebars and cards. Requires Accessibility access. Press Tab to expand to the parent and Shift-Tab to shrink to the child."
+            "value": "With window detection enabled, prefer components such as sidebars and cards. Requires Accessibility access. Press Tab to take the whole window."
           }
         },
         "es": {
@@ -4120,7 +4120,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "开启窗口识别后，优先选择侧栏、卡片等组件。需要辅助功能权限；按 Tab 扩大到父级，⇧Tab 缩小到子级。"
+            "value": "开启窗口识别后，优先选择侧栏、卡片等组件。需要辅助功能权限；按 Tab 选整个窗口。"
           }
         },
         "zh-Hant": {

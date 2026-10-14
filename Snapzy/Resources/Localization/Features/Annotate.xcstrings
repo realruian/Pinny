@@ -8,19 +8,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "R: whole window · Tab: expand · Shift-Tab: shrink"
+            "value": "R: last region · Tab: whole window"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "R 整个窗口 · Tab 扩大选区 · ⇧Tab 缩小选区"
+            "value": "R 上次选区 · Tab 整个窗口"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "R 整個視窗 · Tab 擴大選區 · ⇧Tab 縮小選區"
+            "value": "R 上次選區 · Tab 整個視窗"
           }
         }
       }
@@ -11014,13 +11014,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Last region (,)"
+            "value": "Last region (R)"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "上次区域（,）"
+            "value": "上次区域（R）"
           }
         }
       }

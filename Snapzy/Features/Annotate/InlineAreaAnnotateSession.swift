@@ -48,7 +48,6 @@ nonisolated enum InlineAreaKeyAction: Equatable {
   case copyMagnifierColor
   case selectDisplay
   case selectWindow
-  case changeElementLevel(towardParent: Bool)
   /// Arrow keys after a selection exists; see `InlineAreaSelectionNudge`.
   case adjustSelection(InlineAreaSelectionNudge)
   /// `,` (older) / `.` (newer) through recently captured regions.
@@ -517,9 +516,6 @@ final class InlineAreaAnnotateSession: ObservableObject {
       return adjustSelection(nudge)
     case .recallRegion(let older):
       return recallRegion(older: older)
-    case .changeElementLevel(let towardParent):
-      guard autoDetectElementUnderCursor else { return false }
-      return SmartElementQueryService.shared.selectAdjacentCandidate(towardParent: towardParent)
     case .setMoveModifierActive(let active):
       isMoveModifierActive = active
       return true
@@ -914,24 +910,16 @@ final class InlineAreaAnnotateSession: ObservableObject {
     let ownsKeyboard = source == .local || hasKeyWindow
     let plainKey = event.modifierFlags.intersection([.command, .control, .option, .shift]).isEmpty
     guard phase == .annotating else {
-      // Pinny: "," reuses the last captured region.
-      if event.type == .keyDown, ownsKeyboard, !hasTextResponder, plainKey, event.keyCode == 43 {
-        return .recallRegion(older: true)
-      }
       if event.type == .keyDown, event.keyCode == 0,
          event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command,
          source == .local || hasKeyWindow { return .selectDisplay }
-      // Pinny: plain R captures the whole window under the pointer while choosing an area.
-      // After a selection exists, R is the rectangle tool again.
-      if event.type == .keyDown, !hasTextResponder, source == .local || hasKeyWindow,
-         event.modifierFlags.intersection([.command, .control, .option, .shift]).isEmpty,
-         event.keyCode == 15 || event.charactersIgnoringModifiers?.lowercased() == "r" {
-        return .selectWindow
-      }
-      if event.type == .keyDown, event.keyCode == 48, !hasTextResponder,
-         source == .local || hasKeyWindow,
-         event.modifierFlags.intersection([.command, .control, .option]).isEmpty {
-        return .changeElementLevel(towardParent: !event.modifierFlags.contains(.shift))
+      // Pinny, while choosing an area: R reuses the last captured region, Tab takes the whole
+      // window under the pointer. After a selection exists, R is the rectangle tool again.
+      if event.type == .keyDown, ownsKeyboard, !hasTextResponder, plainKey {
+        if event.keyCode == 15 || event.charactersIgnoringModifiers?.lowercased() == "r" {
+          return .recallRegion(older: true)
+        }
+        if event.keyCode == 48 { return .selectWindow }
       }
       if matchesCancelShortcut(event) {
         return .cancel

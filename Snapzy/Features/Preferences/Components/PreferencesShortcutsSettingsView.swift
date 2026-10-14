@@ -649,10 +649,9 @@ struct ShortcutsSettingsView: View {
         }
 
         Section {
-          ReadOnlyShortcutRow(icon: "macwindow", label: L10n.PinnyKeyReference.selectWindow, shortcut: "R")
+          ReadOnlyShortcutRow(icon: "macwindow", label: L10n.PinnyKeyReference.selectWindow, shortcut: "Tab")
           ReadOnlyShortcutRow(icon: "rectangle.dashed", label: L10n.PinnyKeyReference.selectDisplay, shortcut: "⌘ A")
-          ReadOnlyShortcutRow(icon: "clock.arrow.circlepath", label: L10n.PinnyKeyReference.lastRegion, shortcut: ",")
-          ReadOnlyShortcutRow(icon: "square.stack.3d.up", label: L10n.PinnyKeyReference.elementLevel, shortcut: "Tab / ⇧ Tab")
+          ReadOnlyShortcutRow(icon: "clock.arrow.circlepath", label: L10n.PinnyKeyReference.lastRegion, shortcut: "R")
           ReadOnlyShortcutRow(icon: "eyedropper", label: L10n.PinnyKeyReference.copyColor, shortcut: "C")
           ReadOnlyShortcutRow(icon: "xmark", label: L10n.PinnyKeyReference.cancel, shortcut: "⎋")
         } header: {

@@ -2957,7 +2957,6 @@ nonisolated enum L10n {
     static let selectWindow = string("preferences-shortcuts.pinny-select-window", defaultValue: "Capture the whole window", comment: "Pinny capture key reference")
     static let selectDisplay = string("preferences-shortcuts.pinny-select-display", defaultValue: "Capture the whole display", comment: "Pinny capture key reference")
     static let lastRegion = string("preferences-shortcuts.pinny-last-region", defaultValue: "Use the last captured region", comment: "Pinny capture key reference")
-    static let elementLevel = string("preferences-shortcuts.pinny-element-level", defaultValue: "Larger / smaller detected area", comment: "Pinny capture key reference")
     static let copyColor = string("preferences-shortcuts.pinny-copy-color", defaultValue: "Copy the color under the cursor", comment: "Pinny capture key reference")
     static let selectedSection = string("preferences-shortcuts.pinny-selected-section", defaultValue: "After selecting", comment: "Pinny capture key reference")
     static let moveSelection = string("preferences-shortcuts.pinny-move-selection", defaultValue: "Move the selection (⇧ for 10 points)", comment: "Pinny capture key reference")
@@ -2986,7 +2985,7 @@ nonisolated enum L10n {
     static let captureTitle = string("preferences-workflow.capture-title", defaultValue: "Screenshot & Annotate", comment: "Screenshot and pin workflow settings")
     static let captureDescription = string("preferences-workflow.capture-description", defaultValue: "Keep the selection in place to adjust and annotate before finishing. Configure its shortcut in Keyboard Shortcuts.", comment: "Screenshot and pin workflow settings")
     static let componentTitle = string("preferences-workflow.component-title", defaultValue: "Select a component", comment: "Screenshot and pin workflow settings")
-    static let componentDescription = string("preferences-workflow.component-description", defaultValue: "Hover to detect components. Press Tab to expand to the parent and Shift-Tab to shrink to the child.", comment: "Screenshot and pin workflow settings")
+    static let componentDescription = string("preferences-workflow.component-description", defaultValue: "Hover to detect components. Press Tab to take the whole window.", comment: "Screenshot and pin workflow settings")
     static let recognitionSettings = string("preferences-workflow.recognition-settings", defaultValue: "Detection Settings", comment: "Screenshot and pin workflow settings")
     static let adjustTitle = string("preferences-workflow.adjust-title", defaultValue: "Move and resize the selection", comment: "Screenshot and pin workflow settings")
     static let adjustDescription = string("preferences-workflow.adjust-description", defaultValue: "With the selection tool, drag an empty part of the image to move the region. Drag any edge or corner to resize it.", comment: "Screenshot and pin workflow settings")
@@ -3453,7 +3452,7 @@ nonisolated enum L10n {
     )
     static let autoDetectElementUnderCursorDescription = string(
       "preferences-capture.auto-detect-element-under-cursor-description",
-      defaultValue: "With window detection enabled, prefer components such as sidebars and cards. Requires Accessibility access. Press Tab to expand to the parent and Shift-Tab to shrink to the child.",
+      defaultValue: "With window detection enabled, prefer components such as sidebars and cards. Requires Accessibility access. Press Tab to take the whole window.",
       comment: "Capture preferences setting description"
     )
     static let reverseMagnifierZoomDirectionTitle = string(
@@ -8244,11 +8243,11 @@ nonisolated enum L10n {
   }
 
   enum Annotate {
-    static let previousRegion = string("annotate.previous-region", defaultValue: "Last region (,)", comment: "Reuse the most recently captured region in the unified screenshot overlay")
+    static let previousRegion = string("annotate.previous-region", defaultValue: "Last region (R)", comment: "Reuse the most recently captured region in the unified screenshot overlay")
     static let selectDisplay = string("annotate.select-display", defaultValue: "Select this display (⌘A)", comment: "Select entire display in the unified screenshot overlay")
     static let elementHierarchyHint = string(
       "annotate.element-hierarchy-hint",
-      defaultValue: "Tab: expand · Shift-Tab: shrink",
+      defaultValue: "R: last region · Tab: whole window",
       comment: "Hint while hovering an automatically detected screenshot component"
     )
     static let selectionTool = string(
