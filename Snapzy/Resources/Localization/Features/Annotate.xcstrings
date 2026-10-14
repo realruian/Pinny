@@ -10997,13 +10997,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Select this display (⌘A)"
+            "value": "Select this display (R)"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "选择全屏（⌘A）"
+            "value": "选择全屏（R）"
           }
         }
       }

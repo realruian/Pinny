@@ -165,6 +165,20 @@ final class InlineAreaAnnotateSessionTests: XCTestCase {
       phase: .selecting, hasTextResponder: false, hasKeyWindow: false), .passThrough)
   }
 
+  func testPlainRSelectsDisplayOnlyWhileChoosingArea() throws {
+    let r = try makeKeyEvent(keyCode: 15, characters: "r", flags: [])
+    XCTAssertEqual(InlineAreaAnnotateSession.keyAction(for: r, source: .local,
+      phase: .selecting, hasTextResponder: false, hasKeyWindow: true), .selectDisplay)
+    // After a selection exists, R falls through to the rectangle tool shortcut.
+    XCTAssertEqual(InlineAreaAnnotateSession.keyAction(for: r, source: .local,
+      phase: .annotating, hasTextResponder: false, hasKeyWindow: true), .passThrough)
+    XCTAssertEqual(InlineAreaAnnotateSession.keyAction(for: r, source: .global,
+      phase: .selecting, hasTextResponder: false, hasKeyWindow: false), .passThrough)
+    let commandR = try makeKeyEvent(keyCode: 15, characters: "r", flags: .command)
+    XCTAssertNotEqual(InlineAreaAnnotateSession.keyAction(for: commandR, source: .local,
+      phase: .selecting, hasTextResponder: false, hasKeyWindow: true), .selectDisplay)
+  }
+
   // MARK: - desktopFrame
 
   func testDesktopFrame_unionsScreenFrames() {

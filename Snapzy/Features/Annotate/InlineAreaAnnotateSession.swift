@@ -764,6 +764,13 @@ final class InlineAreaAnnotateSession: ObservableObject {
       if event.type == .keyDown, event.keyCode == 0,
          event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command,
          source == .local || hasKeyWindow { return .selectDisplay }
+      // Pinny: plain R also captures the whole display while choosing an area. After a
+      // selection exists, R is the rectangle tool again.
+      if event.type == .keyDown, !hasTextResponder, source == .local || hasKeyWindow,
+         event.modifierFlags.intersection([.command, .control, .option, .shift]).isEmpty,
+         event.keyCode == 15 || event.charactersIgnoringModifiers?.lowercased() == "r" {
+        return .selectDisplay
+      }
       if event.type == .keyDown, event.keyCode == 48, !hasTextResponder,
          source == .local || hasKeyWindow,
          event.modifierFlags.intersection([.command, .control, .option]).isEmpty {
