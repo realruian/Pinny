@@ -13,6 +13,7 @@ Rasterising needs `rsvg-convert` (Homebrew librsvg).
 """
 import io
 import re
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -118,4 +119,6 @@ if __name__ == '__main__':
     write_menubar(ROOT / 'Snapzy/Resources/Assets.xcassets/MenubarIcon.imageset')
     preview = ROOT.parent / 'build/pinny-icon-preview.png'
     write_preview(preview)
+    shutil.copyfile(preview, ROOT / 'banner.png')
     print(preview)
+

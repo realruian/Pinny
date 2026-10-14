@@ -1,150 +1,87 @@
-# Manual Build Guide
+# 编译与打包指南 (Build & Packaging)
 
-Build Snapzy from source on your local machine.
+本文记录 **Pinny** 的图标资源生成、Release 优化编译、稳定证书签名打包与本地安装流程。
 
-> If you only need first-time local setup and a basic debug run, start with [DEVELOPMENT.md](DEVELOPMENT.md).
+## 1. 重新生成图标与工具栏资源
 
-## Prerequisites
-
-- macOS 13.0+
-- Xcode 15.0+
-- Command Line Tools: `xcode-select --install`
-
-## Quick Build (Xcode)
+### 应用图标与菜单栏光圈图标
+Pinny 的应用图标（`Snapzy/PinnyIcon.icon`）与菜单栏图标（`MenubarIcon.imageset`）由 `scripts/generate-pinny-icon.py` 生成：
 
 ```bash
-open Snapzy.xcodeproj
+brew install librsvg   # 首次运行需提供 rsvg-convert
+python3 scripts/generate-pinny-icon.py
 ```
 
-Press ⌘R to build and run.
+生成产物：
+- `Snapzy/PinnyIcon.icon/Assets/Aperture.svg`：Icon Composer 前景层（Hugeicons Pro `Aperture` Solid Rounded）
+- `Snapzy/Resources/Assets.xcassets/MenubarIcon.imageset/*.png`：菜单栏模板图标（保持 `75.28%` 占空比）
+- `../build/pinny-icon-preview.png` 与仓库根目录 `banner.png`：`1024 × 1024` 预览图
 
-## Regenerate App Icon Assets
-
-After editing `Snapzy/SnapzyIcon.icon` in Icon Composer, regenerate the padded macOS asset catalog before building a release:
+### 内联截图工具栏图标
+内联工具栏的主栏与二级属性栏矢量图标由 `scripts/generate-toolbar-icons.py` 生成：
 
 ```bash
-brew install imagemagick # one-time dependency if magick is missing
-scripts/generate-app-icon-assets.sh
+python3 scripts/generate-toolbar-icons.py
 ```
 
-The script renders the `.icon` package with Icon Composer's bundled `ictool`, then centers the rendered artwork in an 832 × 832 px box on a 1024 × 1024 px transparent canvas. This preserves the Icon Composer artwork while keeping Finder/Dock margins consistent with other macOS apps.
+生成产物写入 `Snapzy/Resources/Assets.xcassets/CaptureTool-*.imageset`（详见 [HUGEICONS.md](HUGEICONS.md)）。
 
-If you only have a manually exported Icon Composer PNG, use:
+---
 
-```bash
-scripts/generate-app-icon-assets.sh --source-png /path/to/IconComposerExport.png
-```
+## 2. 编译 Release 优化版
 
-For other projects, copy `scripts/generate-icon-composer-appiconset.sh` and run it directly:
-
-```bash
-./generate-icon-composer-appiconset.sh /path/to/MyIcon.icon
-```
-
-By default it writes `AppIcon.appiconset` next to the input `.icon` package. To target an existing asset catalog:
-
-```bash
-./generate-icon-composer-appiconset.sh /path/to/MyIcon.icon \
-  --appiconset /path/to/Assets.xcassets/AppIcon.appiconset
-```
-
-## Command Line Build
-
-### Development Build
-
-```bash
-xcodebuild -project Snapzy.xcodeproj \
-  -scheme Snapzy \
-  -configuration Debug \
-  -destination "platform=macOS,arch=$(uname -m)" \
-  build
-```
-
-Output: `~/Library/Developer/Xcode/DerivedData/Snapzy-*/Build/Products/Debug/Snapzy.app`
-
-### Release Build (Unsigned)
+Pinny 正式自用包统一采用 `Release` 配置编译（开启 `-O` 与整模块优化，大幅降低空闲内存与 `F1` 浮层内存开销）：
 
 ```bash
 xcodebuild -project Snapzy.xcodeproj \
   -scheme Snapzy \
   -configuration Release \
-  CODE_SIGN_IDENTITY="" \
-  CODE_SIGNING_REQUIRED=NO \
+  -destination 'platform=macOS,arch=arm64' \
+  -derivedDataPath ../build/release \
+  -clonedSourcePackagesDirPath ../build/packages \
+  -disableAutomaticPackageResolution \
+  CODE_SIGN_IDENTITY=- \
+  CODE_SIGN_STYLE=Manual \
+  DEVELOPMENT_TEAM= \
+  ONLY_ACTIVE_ARCH=YES \
   build
 ```
 
-### Release Archive (Signed)
+编译产物位于：`../build/release/Build/Products/Release/Snapzy.app`。
 
-Requires Apple Developer account.
+---
 
-```bash
-# 1. Create archive
-xcodebuild -project Snapzy.xcodeproj \
-  -scheme Snapzy \
-  -configuration Release \
-  archive -archivePath Snapzy.xcarchive
+## 3. 打包并重签名为 `Pinny.app`
 
-# 2. Export app bundle
-xcodebuild -exportArchive \
-  -archivePath Snapzy.xcarchive \
-  -exportPath ./exported_app \
-  -exportOptionsPlist ExportOptions.plist
-```
-
-### Create DMG
-
-After exporting, create distributable DMG:
+使用 `scripts/package-preview.py` 将编译产物打包为 `Pinny.app` 并使用本机稳定开发证书签名：
 
 ```bash
-# Using create-dmg (brew install create-dmg)
-create-dmg \
-  --volname "Snapzy" \
-  --background "assets/dmg-background.png" \
-  --window-size 660 400 \
-  --icon-size 120 \
-  --icon "Snapzy.app" 180 170 \
-  --app-drop-link 480 170 \
-  --no-internet-enable \
-  "Snapzy.dmg" \
-  "./exported_app/Snapzy.app"
+python3 scripts/package-preview.py --identity 'V2Do Dev' --configuration Release
 ```
 
-## Build Locations
+- **切勿使用 ad-hoc 签名（`-`）安装**：ad-hoc 签名每次重编译都会改变标识，导致 macOS TCC 权限（屏幕录制、辅助功能）失效。
+- **同证书 + 同 Bundle ID 保持权限**：只要保持 Bundle ID 为 `com.tianruian.openshot.preview` 且使用同一稳定证书签名，覆盖安装后系统权限自动保留。
+- **禁用上游更新**：脚本会自动移除 `Info.plist` 中的 `SUFeedURL` 并将 `SUEnableAutomaticChecks` 设为 `false`。
+- **输出位置**：`../build/preview-staged/Pinny.app`（脚本每次直接覆盖该 staged 副本，不留多余副本以免干扰 Launch Services）。
 
-| Build Type | Location |
-|------------|----------|
-| Debug | `DerivedData/Snapzy-*/Build/Products/Debug/` |
-| Release | `DerivedData/Snapzy-*/Build/Products/Release/` |
-| Archive | `./Snapzy.xcarchive` |
-| Export | `./exported_app/Snapzy.app` |
+---
 
-## Troubleshooting
+## 4. 安装到 `/Applications/Pinny.app`
 
-### "archive not found" Error
-
-You used `build` instead of `archive`. The `build` command outputs to DerivedData, not `.xcarchive`.
+本机唯一安装位置为 `/Applications/Pinny.app`：
 
 ```bash
-# Wrong
-xcodebuild ... build
-xcodebuild -exportArchive -archivePath Snapzy.xcarchive ...  # Fails!
+# 1. 退出当前运行的 Pinny
+osascript -e 'tell application id "com.tianruian.openshot.preview" to quit'
 
-# Correct
-xcodebuild ... archive -archivePath Snapzy.xcarchive
-xcodebuild -exportArchive -archivePath Snapzy.xcarchive ...  # Works!
+# 2. 备份旧包（仅保留单份 .bak 回退包，删除更早的备份）
+ditto /Applications/Pinny.app ../build/preview/Pinny.before-update.$(date +%Y%m%d).app.bak
+
+# 3. 安装新包并启动
+ditto ../build/preview-staged/Pinny.app /Applications/Pinny.app
+open /Applications/Pinny.app
 ```
 
-### Code Signing Issues
-
-For local testing without signing:
-
-```bash
-xcodebuild ... CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO build
-```
-
-### Clean Build
-
-```bash
-xcodebuild -project Snapzy.xcodeproj -scheme Snapzy clean
-rm -rf ~/Library/Developer/Xcode/DerivedData/Snapzy-*
-```
+安装完成后，请确认：
+1. **设置 → 权限**：屏幕录制、保存文件夹访问权限、辅助功能均为「授予」；
+2. **设置 → 截图**：自动检测窗口、识别窗口内部元素两个开关均为开启状态。

@@ -1,41 +1,16 @@
-# Capture Editing Context
+# Pinny 核心概念与术语约定 (Context)
 
-This context describes how captured media moves between Quick Access and an editor while its file ownership remains clear.
+本文定义 Pinny 截图、原位标注与纯图贴图流程中的核心概念边界。
 
-## Language
+## 核心术语
 
-**Capture**:
-A screenshot, video, or GIF produced by Snapzy and shown through the capture lifecycle.
-_Avoid_: asset, document
-
-**Quick Access card**:
-A transient representation of a capture that provides immediate actions such as edit, copy, and save.
-_Avoid_: editor session, file browser
-
-**Editing session**:
-The in-progress changes for one capture before the user commits or discards them.
-_Avoid_: window state, draft file
-
-**Temporary capture**:
-A capture kept under Snapzy's temporary ownership until the user chooses its persistent destination.
-_Avoid_: unsaved file, cache
-
-**Export destination**:
-The persistent user-selected location where a capture is stored after leaving temporary ownership.
-_Avoid_: source file, temp path
-
-**Editor commit**:
-Applying the current editing session to the capture's current file without changing its ownership or destination.
-_Avoid_: export, promote
-
-**Edit recipe**:
-The persisted video-editor instructions—ordered clips, trims, zoom, speed, and export context—that can be reopened and changed again.
-_Avoid_: rendered output, baked file
-
-**Source snapshot**:
-A private copy of the unrendered video source kept so later editor commits can reapply the edit recipe without stacking edits on a rendered file.
-_Avoid_: destination, preview
-
-**Promotion**:
-Moving a temporary capture into its export destination and ending temporary ownership.
-_Avoid_: editor save, commit
+- **统一原位截图（Unified Inline Capture，`F1`）**：
+  按下 `F1` 后在每块显示器上创建的原位截图会话（`InlineAreaAnnotateSession`）。用户在同一个会话内完成窗口/组件点选或区域框选、选区四边四角调整、内联单栏工具栏标注，并最终执行复制、原位钉图或保存。
+- **组件与窗口识别（Element & Window Detection）**：
+  选区未确定前，后台线程通过窗口列表与 macOS `AXUIElement`（`0.5 s` 超时）识别光标下的窗口与面板级界面块，绝不在主线程同步调用跨进程辅助功能查询。
+- **纯图贴图（Pinned Image Window）**：
+  无论是从 `F1` 截图工具栏点击「钉图」直接在原位创建的贴图，还是按 `F2` 从剪贴板贴出的图片，均使用统一的直角纯图像窗口：无悬浮控制按钮、支持直接拖拽移动、滚轮整图缩放、双击复制原始分辨率图像并关闭当前贴图。
+- **剪贴板源几何元数据（Clipboard Source Geometry）**：
+  Pinny 复制截图或双击关闭贴图时，在剪贴板项中一并写入当时的屏幕坐标与逻辑尺寸。随后按 `F2` 贴图时可据此在原位置按原尺寸恢复；外部应用写入的普通剪贴板图片不包含该元数据，按自然逻辑尺寸在当前屏幕居中显示（仅超屏图片等比缩小）。
+- **导出目录（Export Destination）**：
+  用户显式保存（`⌘S` 或保存按钮）时的持久化目录，当前为 `~/Downloads/Pinny`（新装默认为 `~/Desktop/Pinny`），文件名前缀为 `Pinny_`。

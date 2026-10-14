@@ -1,124 +1,59 @@
-# Documentation Map
+# Pinny 文档总览 (Documentation Map)
 
-Flow-first entrypoint for humans and agents working in Snapzy. Docs are separated by domain and cross-linked; start here, then jump to the doc that owns your topic.
+本目录汇总 Pinny（基于 Snapzy 深度定制的个人自用 macOS 原位截图、标注与纯图贴图工具）的流程说明、构建指南与底层模块文档。
 
-## Read First
+## 核心必读（Pinny 主流程）
 
-| Doc | Why it exists | Read when |
+| 文档 | 内容说明 | 何时阅读 |
 | --- | --- | --- |
-| [`../README.md`](../README.md) | Public product summary, install, feature list | Any new session |
-| [`DEVELOPMENT.md`](DEVELOPMENT.md) | First-time local setup and source-based development | Running from source |
-| [`STRUCTURE.md`](STRUCTURE.md) | Real source-tree map, runtime architecture, persistence, test architecture, edit guide | Any code change |
+| [`../README.md`](../README.md) | Pinny 功能概览、快捷键速查、Release 编译打包与安装规范 | 任何新会话 / 日常使用与维护 |
+| [`UNIFIED-CAPTURE.md`](UNIFIED-CAPTURE.md) | 统一原位截图（`F1`）、原位标注与纯图直角贴图（`F2`）核心交互说明 | 修改截图、选区、工具栏或贴图逻辑时 |
+| [`HUGEICONS.md`](HUGEICONS.md) | 内联工具栏 Hugeicons Pro 矢量图标生成与映射说明 | 修改或新增工具栏图标时 |
+| [`DEVELOPMENT.md`](DEVELOPMENT.md) | 本地开发环境、单元测试运行与 Release 稳定签名打包流程 | 本地编译、调试或运行测试时 |
+| [`BUILD.md`](BUILD.md) | Release 编译、应用光圈图标生成、`package-preview.py` 打包与安装 | 更新 `/Applications/Pinny.app` 时 |
+| [`STRUCTURE.md`](STRUCTURE.md) | 源码目录结构、运行时架构、数据持久化与测试组织 | 了解代码结构或定位模块时 |
 
-## Architecture & Platform
+## 核心模块文档
 
-| Doc | Covers |
-| --- | --- |
-| [`APP_LIFECYCLE.md`](APP_LIFECYCLE.md) | Launch sequence, onboarding, menu bar, app identity, theme, migrations, entitlements |
-| [`LIQUID_GLASS.md`](LIQUID_GLASS.md) | Liquid Glass architecture, 4-layer composite model, buttons, segments, and custom views |
-| [`PREFERENCES.md`](PREFERENCES.md) | Settings tabs reference, after-capture matrix, preferences storage pattern |
-| [`SHORTCUTS.md`](SHORTCUTS.md) | Global/overlay/annotate shortcuts, conflict detection, `snapzy://` URL scheme |
-| [`UPDATES.md`](UPDATES.md) | Sparkle updates and channels, diagnostics logging, problem reporting |
-| [`LOCALIZATION.md`](LOCALIZATION.md) | Localization architecture, catalog ownership, verification |
-| [`CONFIGURATION.md`](CONFIGURATION.md) | TOML export/import schema, sync, security boundaries |
+| 文档 | 覆盖范围 | Pinny 当前状态 |
+| --- | --- | --- |
+| [`CAPTURE.md`](CAPTURE.md) | 截图底层机制、选区浮层、窗口与 `AXUIElement` 组件识别 | **核心启用**（统一收敛至 `F1` 原位流程，辅助功能查询已移至后台线程并设 `0.5 s` 超时） |
+| [`ANNOTATE.md`](ANNOTATE.md) | 原位标注工具（Inline Capture Markup）与独立标注器架构 | **核心启用**（`F1` 内联单栏工具栏默认在选区下方，文字固定使用 `PingFang SC`） |
+| [`QUICK_ACCESS.md`](QUICK_ACCESS.md) | 贴图窗口（Pin Window）与旧版角落悬浮卡片 | **仅启用纯图贴图**（直角纯图像、拖拽移动、滚轮缩放、双击复制原图并关闭；右下角卡片已停用） |
+| [`PREFERENCES.md`](PREFERENCES.md) | 设置面板页签与偏好项存储机制 | **已精简为 7 页**（通用 / 截图、标注、贴图 / 快捷键、权限、高级 / 关于） |
+| [`SHORTCUTS.md`](SHORTCUTS.md) | 全局快捷键（仅保留 `F1`/`F2`）、选区与标注快捷键、`snapzy://` 深链接 | **核心启用**（旧版分散截图与录屏全局快捷键已全部退役） |
+| [`APP_LIFECYCLE.md`](APP_LIFECYCLE.md) | 启动流程、引导页、菜单栏图标与权限检查 | **核心启用**（菜单栏已精简，签名身份校验在每进程缓存一次以加速 `F1` 响应） |
+| [`LIQUID_GLASS.md`](LIQUID_GLASS.md) | Liquid Glass 视觉组件体系 | **核心启用** |
+| [`LOCALIZATION.md`](LOCALIZATION.md) | 多语言目录结构与本地化文案规范（界面文案已替换为 Pinny） | **核心启用** |
+| [`CONFIGURATION.md`](CONFIGURATION.md) | `~/.config/snapzy/config.toml` 配置导入导出与同步 | **保留可用**（设置 → 高级） |
 
-## Capture & Recording
+## 源码保留但界面已隐藏的原版模块
 
-| Doc | Covers |
-| --- | --- |
-| [`CAPTURE.md`](CAPTURE.md) | Screenshot modes, selection overlay, OCR/QR, object cutout, Smart Element |
-| [`SCROLLING_CAPTURE.md`](SCROLLING_CAPTURE.md) | Long-screenshot stitching subsystem |
-| [`RECORDING.md`](RECORDING.md) | Screen recording, audio, overlays, GIF output, Smart Camera metadata |
-| [`POST_CAPTURE.md`](POST_CAPTURE.md) | After-capture action matrix, temp vs export destinations, formats, clipboard |
+以下模块在源码中保留以维持工程与测试完整，但在 Pinny 的菜单栏、设置页与全局快捷键中已隐藏/退役：
 
-## Editors & Post-Capture UX
+- **录屏与视频编辑**：[`RECORDING.md`](RECORDING.md) · [`VIDEO_EDITOR.md`](VIDEO_EDITOR.md)
+- **滚动长截图**：[`SCROLLING_CAPTURE.md`](SCROLLING_CAPTURE.md)
+- **旧版截图后动作矩阵**：[`POST_CAPTURE.md`](POST_CAPTURE.md)
+- **历史记录面板**：[`HISTORY.md`](HISTORY.md)
+- **云上传（S3 / R2 / Google Drive）**：[`CLOUD.md`](CLOUD.md)
+- **Sparkle 自动更新与公开发布流程**：[`UPDATES.md`](UPDATES.md) · [`RELEASES.md`](RELEASES.md) · [`UPDATE_TESTING.md`](UPDATE_TESTING.md)（Pinny 打包时已移除 `SUFeedURL` 并禁用自动更新）
 
-| Doc | Covers |
-| --- | --- |
-| [`QUICK_ACCESS.md`](QUICK_ACCESS.md) | Floating post-capture panel, card actions, gestures, pin windows |
-| [`HISTORY.md`](HISTORY.md) | Capture history panel, restore flow, GRDB storage, retention |
-| [`ANNOTATE.md`](ANNOTATE.md) | Annotation editor, tools, mockups, redaction, session sidecars, inline Capture Markup |
-| [`VIDEO_EDITOR.md`](VIDEO_EDITOR.md) | Trim, zoom segments, Follow Mouse, speed, backgrounds, export, GIF |
-| [`CLOUD.md`](CLOUD.md) | S3/R2/Google Drive uploads, credentials, uploads window, history |
-
-## Build & Release
-
-| Doc | Covers |
-| --- | --- |
-| [`BUILD.md`](BUILD.md) | Archive, export, and DMG packaging commands |
-| [`RELEASES.md`](RELEASES.md) | Release and appcast workflow |
-| [`UPDATE_TESTING.md`](UPDATE_TESTING.md) | Local Sparkle update test harness |
-| [`SELF_SIGNED_CERT.md`](SELF_SIGNED_CERT.md) | Local signing setup |
-
-## Product Flow Map
+## Pinny 主流程图
 
 ```mermaid
 flowchart TD
-    A["Launch Snapzy"] --> B["AppDelegate + AppCoordinator"]
-    B --> C{"Need splash / onboarding?"}
-    C -->|Yes| D["SplashWindowController + SplashOnboardingRootView"]
-    C -->|No| E["Menu bar ready"]
-    D --> E
+    A["启动 Pinny (/Applications/Pinny.app)"] --> B["菜单栏就绪 + 注册全局快捷键 F1 / F2"]
+    B --> C["按 F1：唤起原位截图浮层 (每显示器独立窗口)"]
+    B --> D["按 F2：读取剪贴板图片/图片文件直接生成纯图贴图"]
 
-    E --> F["Status bar menu + global shortcuts"]
-    F --> G["Screenshot / OCR / Cutout / Scrolling capture"]
-    F --> H["Recording"]
-    F --> I["Tools: Annotate, Video Editor, Cloud Uploads, Preferences, Updates"]
+    C --> E["自动识别窗口与面板级 UI 组件 / 手动框选 / R 上次区域 / Tab 整窗 / ⌘A 全屏"]
+    E --> F["原位调整选区四边四角 + 底部单栏工具栏原位标注"]
 
-    G --> J["ScreenCaptureViewModel"]
-    H --> K["RecordingCoordinator"]
+    F --> G["复制 (↩ / 双击空白 / 复制按钮)：立即隐藏浮层 + 后台编码写剪贴板 (含原坐标元数据)"]
+    F --> H["钉图 (Pin 按钮)：在选区原位直接生成纯图直角贴图"]
+    F --> I["保存 (⌘S / 保存按钮)：保存至 ~/Downloads/Pinny (前缀 Pinny_)"]
 
-    J --> L["ScreenCaptureManager"]
-    J --> M["ScrollingCaptureCoordinator"]
-    J --> N["OCRService / ForegroundCutoutService"]
-    K --> O["ScreenRecordingManager"]
-
-    L --> P["TempCaptureManager + PostCaptureActionHandler"]
-    M --> P
-    N --> P
-    O --> P
-
-    P --> Q["Quick Access"]
-    P --> R["Clipboard"]
-    P --> S["Annotate auto-open"]
-
-    Q --> T["Annotate"]
-    Q --> U["Video Editor"]
-    Q --> V["Cloud upload"]
-
-    I --> W["PreferencesManager + Theme + Shortcuts + Cloud + Sparkle"]
+    G -. "携带原位置与逻辑尺寸" .-> D
+    H --> J["纯图直角贴图：拖拽移动 / 滚轮整图缩放 / 双击复制原图并关闭"]
+    D --> J
 ```
-
-## Agent Reading Order
-
-- Screenshot capture, selection overlay, OCR, cutout, smart element: `STRUCTURE.md` → `CAPTURE.md`
-- Scrolling capture: `CAPTURE.md` → `SCROLLING_CAPTURE.md`
-- Recording, GIF, Smart Camera: `CAPTURE.md` → `RECORDING.md` → `VIDEO_EDITOR.md`
-- Post-capture actions, temp files, formats: `POST_CAPTURE.md` → `QUICK_ACCESS.md`
-- Capture history, retention, restore: `HISTORY.md` → `ANNOTATE.md` (sidecar section)
-- Annotate editor, inline markup: `ANNOTATE.md`; video editor: `VIDEO_EDITOR.md`
-- Onboarding, menu bar, startup, entitlements: `APP_LIFECYCLE.md`
-- Preferences UI or the after-capture matrix: `PREFERENCES.md`
-- Shortcuts or `snapzy://` automation: `SHORTCUTS.md`
-- Cloud storage and upload UX: `CLOUD.md`
-- TOML config export/import: `CONFIGURATION.md` (+ `APP_LIFECYCLE.md` onboarding grant)
-- Updates, diagnostics, problem reports: `UPDATES.md`
-- Tests: `STRUCTURE.md` → `DEVELOPMENT.md`
-- Localization or user-facing copy: `LOCALIZATION.md` → the feature doc for the affected flow
-- Build, release, updater: `DEVELOPMENT.md` → `BUILD.md` → `RELEASES.md` → `UPDATE_TESTING.md`
-
-## Current Behavior Notes
-
-- `AfterCaptureAction.save` decides whether captures go straight to the export folder or into `~/Library/Application Support/Snapzy/Captures/` as temp files. Details in `POST_CAPTURE.md`.
-- Cloud upload is **manual-only** since commit `dd4ccd5` removed the after-capture auto-upload preference. Manual entry points: Quick Access card, Annotate (`⌘U`), Video Editor, History — enabled via the `uploadToCloud` Quick Access action (Preferences → Quick Access → Quick Actions) and gated on `CloudManager.isConfigured`. Details in `CLOUD.md`.
-- GIF recording flow first creates a video, inserts it into Quick Access, converts it, then swaps the card to the GIF output. Details in `RECORDING.md`.
-- Quick Access cards can be dismissed with the visible dismiss action, mouse swipe, or an optional two-finger horizontal swipe on the preview card. Details in `QUICK_ACCESS.md`.
-- Annotate and Video Editor temporarily elevate Snapzy from accessory mode to regular app mode so the editor windows appear in Dock and Cmd+Tab.
-- Screenshot annotations that have been committed are persisted as sidecar packages in `Application Support/Snapzy/AnnotationSessions/`, so History restore can reopen editable annotations instead of only the flattened image. Details in `ANNOTATE.md` and `HISTORY.md`.
-- Open History floating cards support direct native file drag-out in both compact and expanded modes; single-click selection and double-click editor opening remain available, primary-axis list scrolling is preserved, and missing files stay non-draggable. Details in `HISTORY.md`.
-- Full Annotate drag-to-app closes the editor by default. Settings → Annotate → `Close after drop` can be turned off to keep the editor session alive after sharing a rendered copy; `Reactivate after drop` controls whether that preserved editor is activated after drop.
-- During recording, the menu bar item stays menu-first instead of left-click-to-stop. It shows the live timer, keeps Preferences reachable, and temporarily excludes the Settings window from own-app recordings when needed. Details in `RECORDING.md`.
-- URL Scheme automation triggers via `snapzy://` deep links can be disabled under Settings → Advanced → URL Scheme integration (enabled by default). When disabled, incoming automation requests are logged and ignored. Full route table in `SHORTCUTS.md`.
-- Settings → Advanced exports and imports portable TOML preferences at `~/.config/snapzy/config.toml`; folder access is granted once (onboarding config step or Settings → Advanced), background sync is debounced and signature-guarded, and valid direct edits apply on next launch. Details in `CONFIGURATION.md`.
-
-If one of these behaviors changes, update this file, the owning feature doc, [`STRUCTURE.md`](STRUCTURE.md), and the root [`README.md`](../README.md) in the same change.
