@@ -106,6 +106,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     AppIdentityManager.shared.refresh()
+    // Pinny: an unresponsive app must not stall window/element detection for 6 seconds.
+    MinimizedWindowFilter.installGlobalMessagingTimeout()
 
     guard ensureSandboxOffDataMigrationReadyForLaunch() else {
       return

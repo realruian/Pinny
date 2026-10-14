@@ -10,6 +10,15 @@ import ApplicationServices
 import Foundation
 
 enum MinimizedWindowFilter {
+  /// Upper bound for one Accessibility request to another app. The system default is 6 s,
+  /// so a single unresponsive app could stall capture; a miss only skips one detection.
+  static let messagingTimeout: Float = 0.5
+
+  /// Applies `messagingTimeout` to every Accessibility request this process makes.
+  static func installGlobalMessagingTimeout() {
+    AXUIElementSetMessagingTimeout(AXUIElementCreateSystemWide(), messagingTimeout)
+  }
+
   /// Quartz (top-left) frames of the app's windows that Accessibility reports as minimized.
   /// Empty when Accessibility is unavailable, so nothing is filtered without permission.
   nonisolated static func minimizedFrames(pid: pid_t) -> [CGRect] {

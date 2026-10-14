@@ -98,9 +98,14 @@ enum WindowSelectionQueryService {
         }
       }.value
 
+      // Accessibility calls go to other apps and can stall; never make them on the main actor.
+      let ownerPIDs = Set(rawWindowInfoList.filter { ($0.layer ?? 0) == 0 }.compactMap(\.ownerPID))
+      let minimizedFramesByPID = await Task.detached {
+        Dictionary(uniqueKeysWithValues: ownerPIDs.map { ($0, MinimizedWindowFilter.minimizedFrames(pid: $0)) })
+      }.value
+
       var seenWindowIDs = Set<CGWindowID>()
       var orderedCandidates: [WindowSelectionCandidate] = []
-      var minimizedFramesByPID: [pid_t: [CGRect]] = [:]
 
       for info in rawWindowInfoList {
         let windowID = info.windowID
@@ -114,10 +119,9 @@ enum WindowSelectionQueryService {
         guard let displayID = displayID(for: frame) else { continue }
         guard info.alpha > 0 else { continue }
         // A minimized window still listed on screen (WeChat) draws nothing; skip it.
-        if let pid = info.ownerPID, windowLayer == 0 {
-          let minimized = minimizedFramesByPID[pid] ?? MinimizedWindowFilter.minimizedFrames(pid: pid)
-          minimizedFramesByPID[pid] = minimized
-          if MinimizedWindowFilter.matches(quartzBounds, anyOf: minimized) { continue }
+        if let pid = info.ownerPID, windowLayer == 0,
+           MinimizedWindowFilter.matches(quartzBounds, anyOf: minimizedFramesByPID[pid] ?? []) {
+          continue
         }
 
         let bundleIdentifier = shareableWindow?.owningApplication?.bundleIdentifier
