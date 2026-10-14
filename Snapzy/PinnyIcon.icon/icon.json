@@ -38,8 +38,8 @@
           },
           "glass" : true,
           "hidden" : false,
-          "image-name" : "Clover.svg",
-          "name" : "Clover",
+          "image-name" : "Aperture.svg",
+          "name" : "Aperture",
           "opacity" : 1,
           "position" : {
             "scale" : 1.25,
