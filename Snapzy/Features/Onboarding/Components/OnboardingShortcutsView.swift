@@ -41,9 +41,8 @@ struct ShortcutsView: View {
       // Shortcut groups
       VStack(spacing: 14) {
         ShortcutGroup(title: captureSectionTitle, shortcuts: [
-          ShortcutItem(keys: "⇧⌘3", action: captureFullscreenTitle),
-          ShortcutItem(keys: "⇧⌘4", action: captureAreaTitle),
-          ShortcutItem(keys: "⇧⌘2", action: captureTextOCRTitle),
+          ShortcutItem(keys: "F1", action: L10n.Actions.captureAreaAnnotate),
+          ShortcutItem(keys: "F2", action: L10n.Actions.pinClipboard),
         ])
 
         ShortcutGroup(title: recordingSectionTitle, shortcuts: [
@@ -238,7 +237,7 @@ struct ShortcutsView: View {
   private var shortcutsSubtitle: String {
     onboardingLocalization.string(
       "onboarding.shortcuts.subtitle",
-      defaultValue: "Assign system shortcuts to Snapzy for quick access.",
+      defaultValue: "Assign system shortcuts to Pinny for quick access.",
       comment: "Onboarding shortcuts step subtitle"
     )
   }
@@ -350,7 +349,7 @@ struct ShortcutsView: View {
   private var guideStep3Title: String {
     onboardingLocalization.string(
       "onboarding.shortcuts.guide-step-3",
-      defaultValue: "Uncheck the macOS screenshot shortcuts that overlap with the Snapzy shortcuts you want to keep on",
+      defaultValue: "Uncheck the macOS screenshot shortcuts that overlap with the Pinny shortcuts you want to keep on",
       comment: "Step 3 in onboarding shortcut conflict resolution guide"
     )
   }

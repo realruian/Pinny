@@ -16,7 +16,7 @@ final class ShortcutCoreTests: XCTestCase {
     XCTAssertEqual(ShortcutConfig.defaultFullscreen.keyCode, UInt32(kVK_ANSI_3))
     XCTAssertEqual(ShortcutConfig.defaultArea.keyCode, UInt32(kVK_ANSI_4))
     XCTAssertEqual(ShortcutConfig.defaultRepeatArea.keyCode, UInt32(kVK_ANSI_4))
-    XCTAssertEqual(ShortcutConfig.defaultAreaAnnotate.keyCode, UInt32(kVK_ANSI_7))
+    XCTAssertEqual(ShortcutConfig.defaultAreaAnnotate.keyCode, UInt32(kVK_F1))
     XCTAssertEqual(ShortcutConfig.defaultRecording.keyCode, UInt32(kVK_ANSI_5))
     XCTAssertEqual(ShortcutConfig.defaultScrollingCapture.keyCode, UInt32(kVK_ANSI_6))
     XCTAssertEqual(ShortcutConfig.defaultOCR.keyCode, UInt32(kVK_ANSI_2))
@@ -30,7 +30,7 @@ final class ShortcutCoreTests: XCTestCase {
     let expectedModifiers = UInt32(cmdKey | shiftKey)
     XCTAssertEqual(ShortcutConfig.defaultRepeatArea.modifiers, UInt32(controlKey | cmdKey | shiftKey))
     XCTAssertEqual(ShortcutConfig.defaultFullscreen.modifiers, expectedModifiers)
-    XCTAssertEqual(ShortcutConfig.defaultAreaAnnotate.modifiers, expectedModifiers)
+    XCTAssertEqual(ShortcutConfig.defaultAreaAnnotate.modifiers, 0)
     XCTAssertEqual(ShortcutConfig.defaultHistory.modifiers, expectedModifiers)
   }
 
@@ -79,6 +79,38 @@ final class ShortcutCoreTests: XCTestCase {
 
     let existingDisabledPreference = KeyboardShortcutManager.disabledShortcutSet(from: ["areaAnnotate"])
     XCTAssertTrue(existingDisabledPreference.contains(.areaAnnotate))
+  }
+
+  func testUnmodifiedFunctionKeysRecordWithoutIntrinsicFnFlag() throws {
+    for code in [kVK_F1, kVK_F2, kVK_F20] {
+      for flags: NSEvent.ModifierFlags in [[], [.function]] {
+        let event = try XCTUnwrap(makeKeyEvent(keyCode: UInt16(code), modifierFlags: flags))
+        let config = try XCTUnwrap(ShortcutConfig(from: event))
+        XCTAssertEqual(config.modifiers, 0)
+        XCTAssertTrue(config.matches(event: event))
+        XCTAssertTrue(config.canRegisterGlobally)
+      }
+    }
+    let letter = try XCTUnwrap(makeKeyEvent(keyCode: UInt16(kVK_ANSI_A), modifierFlags: []))
+    XCTAssertNil(ShortcutConfig(from: letter))
+    XCTAssertFalse(ShortcutConfig(keyCode: UInt32(kVK_ANSI_A), modifiers: 0).canRegisterGlobally)
+    XCTAssertEqual(ShortcutConfig.defaultPinClipboard, ShortcutConfig(keyCode: UInt32(kVK_F2), modifiers: 0))
+    XCTAssertEqual(SnapzyConfigurationShortcutCodec.shortcut(key: "F2", modifiers: [], requireModifier: true), .defaultPinClipboard)
+  }
+
+  @MainActor
+  func testRetiredCaptureBindingsCannotReappearOrConflict() {
+    let manager = KeyboardShortcutManager.shared
+    manager.setAreaShortcut(.defaultAreaAnnotate)
+    manager.setShortcutEnabled(true, for: .area)
+    for kind in GlobalShortcutKind.allCases where kind.isRetiredCaptureShortcut {
+      XCTAssertNil(manager.shortcut(for: kind))
+      XCTAssertFalse(manager.isShortcutEnabled(for: kind))
+      XCTAssertFalse(manager.shouldRegisterNow(for: kind))
+    }
+    if case .reject(let issue) = ShortcutValidationService.shared.validateGlobalShortcut(.defaultAreaAnnotate, for: .areaAnnotate) {
+      XCTFail("Retired binding still occupies F1: \(issue.message)")
+    }
   }
 
   // MARK: - F13–F20 key support (issue #305)

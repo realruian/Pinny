@@ -17,6 +17,7 @@ struct CanvasDrawingView: NSViewRepresentable {
   var acceptsFirstMouse = false
   var interactionBridge: CanvasInteractionBridge?
   /// Inline capture only: drag empty selection-tool space to move the capture region.
+  var onCaptureDoubleClick: (() -> Void)?
   var onSelectionBackgroundDrag: ((CGSize, Bool) -> Void)?
 
   func makeNSView(context _: Context) -> DrawingCanvasNSView {
@@ -24,6 +25,7 @@ struct CanvasDrawingView: NSViewRepresentable {
     view.displayScale = displayScale
     view.canvasBounds = canvasBounds
     view.interactionBridge = interactionBridge
+    view.onCaptureDoubleClick = onCaptureDoubleClick
     view.onSelectionBackgroundDrag = onSelectionBackgroundDrag
     interactionBridge?.drawingCanvas = view
     return view
@@ -43,6 +45,7 @@ struct CanvasDrawingView: NSViewRepresentable {
     }
     nsView.acceptsInactiveWindowMouse = acceptsFirstMouse
     nsView.interactionBridge = interactionBridge
+    nsView.onCaptureDoubleClick = onCaptureDoubleClick
     nsView.onSelectionBackgroundDrag = onSelectionBackgroundDrag
     interactionBridge?.drawingCanvas = nsView
   }
@@ -296,6 +299,7 @@ final class DrawingCanvasNSView: NSView {
   var canvasBounds: CGRect = .zero
   var acceptsInactiveWindowMouse: Bool
   weak var interactionBridge: CanvasInteractionBridge?
+  var onCaptureDoubleClick: (() -> Void)?
   var onSelectionBackgroundDrag: ((CGSize, Bool) -> Void)?
   private var selectionBackgroundDragStart: CGPoint?
   private var selectionBackgroundDidMove = false
@@ -969,6 +973,12 @@ final class DrawingCanvasNSView: NSView {
     let displayPoint = convert(event.locationInWindow, from: nil)
     updateCanvasMouseLocation(for: displayPoint)
     let imagePoint = interactionPoint(from: displayPoint)
+    if event.clickCount == 2, state.selectedTool == .selection,
+       state.editingTextAnnotationId == nil, hitTestAnnotation(at: imagePoint) == nil,
+       let onCaptureDoubleClick {
+      onCaptureDoubleClick()
+      return
+    }
     dragStart = imagePoint // Store in image coords
     // The just-drawn marker lasts until the next press: read the selection
     // drawing-tool routing honours first, then drop the marker.

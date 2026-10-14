@@ -57,7 +57,7 @@ final class QuickAccessPinImageScrollView: NSScrollView {
   }
 
   var onViewportChange: ViewportChangeHandler?
-  var minimumDisplaySize = QuickAccessPinWindowSizing.minimumInteractiveSize
+  var minimumDisplaySize = CGSize(width: 1, height: 1)
   var isLockedProvider: () -> Bool = { false } {
     didSet {
       imageView.isLockedProvider = isLockedProvider

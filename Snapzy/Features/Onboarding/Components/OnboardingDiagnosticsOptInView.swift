@@ -93,7 +93,7 @@ struct DiagnosticsOptInView: View {
   private var diagnosticsTitle: String {
     onboardingLocalization.string(
       "onboarding.diagnostics.title",
-      defaultValue: "Help improve Snapzy?",
+      defaultValue: "Help improve Pinny?",
       comment: "Diagnostics onboarding step title"
     )
   }
@@ -101,7 +101,7 @@ struct DiagnosticsOptInView: View {
   private var diagnosticsDescription: String {
     onboardingLocalization.string(
       "onboarding.diagnostics.description",
-      defaultValue: "Allow local diagnostic logs so Snapzy can recover better when something goes wrong.",
+      defaultValue: "Allow local diagnostic logs so Pinny can recover better when something goes wrong.",
       comment: "Diagnostics onboarding step description"
     )
   }

@@ -10,7 +10,7 @@ enum QuickAccessPinZoomMode: String, CaseIterable, Identifiable {
   case windowFollowsImage
   case fixedViewport
 
-  nonisolated static let defaultMode: Self = .fixedViewport
+  nonisolated static let defaultMode: Self = .windowFollowsImage
 
   var id: String { rawValue }
 }
@@ -26,13 +26,15 @@ final class QuickAccessPinZoomModeStore: ObservableObject {
     self.defaults = defaults
     if let rawValue = defaults.string(forKey: PreferencesKeys.quickAccessPinZoomMode),
        let stored = QuickAccessPinZoomMode(rawValue: rawValue) {
-      mode = stored
+      mode = .windowFollowsImage
+      if stored != mode { defaults.set(mode.rawValue, forKey: PreferencesKeys.quickAccessPinZoomMode) }
     } else {
       mode = .defaultMode
     }
   }
 
   func setMode(_ value: QuickAccessPinZoomMode) {
+    let value: QuickAccessPinZoomMode = .windowFollowsImage
     guard mode != value else { return }
     mode = value
     defaults.set(value.rawValue, forKey: PreferencesKeys.quickAccessPinZoomMode)

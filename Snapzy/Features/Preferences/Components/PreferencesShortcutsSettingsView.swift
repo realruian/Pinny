@@ -14,6 +14,7 @@ struct ShortcutsSettingsView: View {
   @State private var areaShortcut: ShortcutConfig?
   @State private var repeatAreaShortcut: ShortcutConfig?
   @State private var delayedCaptureShortcut: ShortcutConfig?
+  @State private var pinClipboardShortcut: ShortcutConfig?
   @State private var areaAnnotateShortcut: ShortcutConfig?
   @State private var activeWindowShortcut: ShortcutConfig?
   @State private var areaApplicationCaptureShortcut: CaptureOverlayShortcut?
@@ -62,6 +63,7 @@ struct ShortcutsSettingsView: View {
     _areaShortcut = State(initialValue: KeyboardShortcutManager.shared.shortcut(for: .area))
     _repeatAreaShortcut = State(initialValue: KeyboardShortcutManager.shared.shortcut(for: .repeatArea))
     _delayedCaptureShortcut = State(initialValue: KeyboardShortcutManager.shared.shortcut(for: .delayedCapture))
+    _pinClipboardShortcut = State(initialValue: KeyboardShortcutManager.shared.shortcut(for: .pinClipboard))
     _areaAnnotateShortcut = State(initialValue: KeyboardShortcutManager.shared.shortcut(for: .areaAnnotate))
     _activeWindowShortcut = State(initialValue: KeyboardShortcutManager.shared.shortcut(for: .activeWindow))
     _areaApplicationCaptureShortcut = State(
@@ -327,61 +329,6 @@ struct ShortcutsSettingsView: View {
       if shortcutsEnabled {
         Section {
           ShortcutRecorderView(
-            label: L10n.Actions.captureFullscreen,
-            icon: "rectangle.dashed.and.paperclip",
-            description: L10n.PreferencesShortcuts.captureFullscreenDescription,
-            shortcut: $fullscreenShortcut,
-            defaultShortcut: .defaultFullscreen,
-            isEnabled: globalEnabledBinding(for: .fullscreen),
-            validationIssue: globalValidationIssues[.fullscreen],
-            onShortcutChanged: { handleGlobalShortcutChange($0, for: .fullscreen) }
-          )
-
-          ShortcutRecorderView(
-            label: L10n.Actions.captureArea,
-            icon: "rectangle.dashed",
-            description: L10n.PreferencesShortcuts.captureAreaDescription,
-            shortcut: $areaShortcut,
-            defaultShortcut: .defaultArea,
-            isEnabled: globalEnabledBinding(for: .area),
-            validationIssue: globalValidationIssues[.area],
-            onShortcutChanged: { handleGlobalShortcutChange($0, for: .area) }
-          )
-
-          CaptureOverlayShortcutRecorderRow(
-            label: L10n.PreferencesShortcuts.applicationCaptureTitle,
-            description: L10n.PreferencesShortcuts.applicationCaptureDescription,
-            shortcut: $areaApplicationCaptureShortcut,
-            defaultShortcut: CaptureOverlayShortcutSettings.defaultApplicationCaptureShortcut,
-            isEnabled: globalEnabledBinding(for: .area),
-            validationIssue: captureOverlayValidationIssues[.applicationCapture]
-          ) { newShortcut in
-            handleCaptureOverlayShortcutChange(newShortcut, for: .applicationCapture)
-          }
-
-          ShortcutRecorderView(
-            label: L10n.Actions.captureRepeatArea,
-            icon: "arrow.clockwise",
-            description: L10n.PreferencesShortcuts.captureRepeatAreaDescription,
-            shortcut: $repeatAreaShortcut,
-            defaultShortcut: .defaultRepeatArea,
-            isEnabled: globalEnabledBinding(for: .repeatArea),
-            validationIssue: globalValidationIssues[.repeatArea],
-            onShortcutChanged: { handleGlobalShortcutChange($0, for: .repeatArea) }
-          )
-
-          ShortcutRecorderView(
-            label: L10n.Actions.captureDelayed,
-            icon: "timer",
-            description: L10n.PreferencesShortcuts.captureDelayedDescription,
-            shortcut: $delayedCaptureShortcut,
-            defaultShortcut: nil,
-            isEnabled: globalEnabledBinding(for: .delayedCapture),
-            validationIssue: globalValidationIssues[.delayedCapture],
-            onShortcutChanged: { handleGlobalShortcutChange($0, for: .delayedCapture) }
-          )
-
-          ShortcutRecorderView(
             label: L10n.Actions.captureAreaAnnotate,
             icon: "pencil.and.scribble",
             description: L10n.PreferencesShortcuts.captureAreaAnnotateDescription,
@@ -391,61 +338,17 @@ struct ShortcutsSettingsView: View {
             validationIssue: globalValidationIssues[.areaAnnotate],
             onShortcutChanged: { handleGlobalShortcutChange($0, for: .areaAnnotate) }
           )
-
           ShortcutRecorderView(
-            label: L10n.Actions.captureActiveWindow,
-            icon: "macwindow",
-            description: L10n.PreferencesShortcuts.captureActiveWindowDescription,
-            shortcut: $activeWindowShortcut,
-            defaultShortcut: .defaultActiveWindowCapture,
-            isEnabled: globalEnabledBinding(for: .activeWindow),
-            validationIssue: globalValidationIssues[.activeWindow],
-            onShortcutChanged: { handleGlobalShortcutChange($0, for: .activeWindow) }
+            label: L10n.Actions.pinClipboard,
+            icon: "pin",
+            description: L10n.PreferencesWorkflow.pinClipboardDescription,
+            shortcut: $pinClipboardShortcut,
+            defaultShortcut: .defaultPinClipboard,
+            isEnabled: globalEnabledBinding(for: .pinClipboard),
+            validationIssue: globalValidationIssues[.pinClipboard],
+            onShortcutChanged: { handleGlobalShortcutChange($0, for: .pinClipboard) }
           )
 
-          ShortcutRecorderView(
-            label: GlobalShortcutKind.scrollingCapture.displayName,
-            icon: "arrow.up.and.down",
-            description: "Guided session for long screenshots",
-            shortcut: $scrollingCaptureShortcut,
-            defaultShortcut: .defaultScrollingCapture,
-            isEnabled: globalEnabledBinding(for: .scrollingCapture),
-            validationIssue: globalValidationIssues[.scrollingCapture],
-            onShortcutChanged: { handleGlobalShortcutChange($0, for: .scrollingCapture) }
-          )
-
-          ShortcutRecorderView(
-            label: GlobalShortcutKind.objectCutout.displayName,
-            icon: "person.crop.rectangle",
-            description: "Select an area, isolate the subject, and optionally auto-crop",
-            shortcut: $objectCutoutShortcut,
-            defaultShortcut: .defaultObjectCutout,
-            isEnabled: globalEnabledBinding(for: .objectCutout),
-            validationIssue: globalValidationIssues[.objectCutout],
-            onShortcutChanged: { handleGlobalShortcutChange($0, for: .objectCutout) }
-          )
-
-          ShortcutRecorderView(
-            label: L10n.Actions.captureTextOCR,
-            icon: "text.viewfinder",
-            description: L10n.PreferencesShortcuts.captureTextDescription,
-            shortcut: $ocrShortcut,
-            defaultShortcut: .defaultOCR,
-            isEnabled: globalEnabledBinding(for: .ocr),
-            validationIssue: globalValidationIssues[.ocr],
-            onShortcutChanged: { handleGlobalShortcutChange($0, for: .ocr) }
-          )
-
-          ShortcutRecorderView(
-            label: L10n.Actions.captureSmartElement,
-            icon: "dot.viewfinder",
-            description: L10n.PreferencesShortcuts.smartElementCaptureDescription,
-            shortcut: $smartElementShortcut,
-            defaultShortcut: .defaultSmartElement,
-            isEnabled: globalEnabledBinding(for: .smartElement),
-            validationIssue: globalValidationIssues[.smartElement],
-            onShortcutChanged: { handleGlobalShortcutChange($0, for: .smartElement) }
-          )
         } header: {
           ShortcutSectionHeader(
             title: L10n.PreferencesShortcuts.captureSection,
@@ -790,40 +693,15 @@ struct ShortcutsSettingsView: View {
   }
 
   private func resetCaptureSection(refresh: Bool = true) {
-    fullscreenShortcut = .defaultFullscreen
-    areaShortcut = .defaultArea
-    repeatAreaShortcut = .defaultRepeatArea
-    delayedCaptureShortcut = nil
     areaAnnotateShortcut = .defaultAreaAnnotate
-    activeWindowShortcut = .defaultActiveWindowCapture
-    areaApplicationCaptureShortcut = CaptureOverlayShortcutSettings.defaultApplicationCaptureShortcut
-    scrollingCaptureShortcut = .defaultScrollingCapture
-    objectCutoutShortcut = .defaultObjectCutout
-    ocrShortcut = .defaultOCR
-    smartElementShortcut = .defaultSmartElement
-
-    let captureKinds: [GlobalShortcutKind] = [
-      .fullscreen, .area, .repeatArea, .delayedCapture, .areaAnnotate, .activeWindow, .scrollingCapture, .objectCutout, .ocr,
-      .smartElement,
-    ]
-    for kind in captureKinds {
+    pinClipboardShortcut = .defaultPinClipboard
+    for kind in [GlobalShortcutKind.areaAnnotate, .pinClipboard] {
       globalShortcutEnabled[kind] = true
       manager.setShortcutEnabled(true, for: kind)
       globalValidationIssues.removeValue(forKey: kind)
     }
-    captureOverlayValidationIssues.removeValue(forKey: .applicationCapture)
-
-    manager.setFullscreenShortcut(.defaultFullscreen)
-    manager.setAreaShortcut(.defaultArea)
-    manager.setRepeatAreaShortcut(.defaultRepeatArea)
-    manager.setDelayedCaptureShortcut(nil)
     manager.setAreaAnnotateShortcut(.defaultAreaAnnotate)
-    manager.setActiveWindowShortcut(.defaultActiveWindowCapture)
-    manager.setScrollingCaptureShortcut(.defaultScrollingCapture)
-    manager.setObjectCutoutShortcut(.defaultObjectCutout)
-    manager.setOCRShortcut(.defaultOCR)
-    manager.setSmartElementShortcut(.defaultSmartElement)
-    CaptureOverlayShortcutSettings.resetApplicationCaptureShortcut()
+    manager.setPinClipboardShortcut(.defaultPinClipboard)
 
     if refresh {
       manager.refreshShortcutRegistration()
@@ -1072,6 +950,9 @@ struct ShortcutsSettingsView: View {
       case .delayedCapture:
         delayedCaptureShortcut = config
         manager.setDelayedCaptureShortcut(config)
+      case .pinClipboard:
+        pinClipboardShortcut = config
+        manager.setPinClipboardShortcut(config)
       case .areaAnnotate:
         areaAnnotateShortcut = config
         manager.setAreaAnnotateShortcut(config)

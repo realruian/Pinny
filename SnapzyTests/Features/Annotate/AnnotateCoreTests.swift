@@ -1660,11 +1660,13 @@ final class AnnotateCoreTests: XCTestCase {
     state.activateTool(.highlighter)
     state.prepareTextLineProfileIfNeeded()
 
-    for _ in 0 ..< 200 where state.textLineProfile == nil {
+    // The first text request after boot or an OS update compiles the system
+    // recognition model (measured 26s locally); warm requests take ~0.1s.
+    for _ in 0 ..< 1200 where state.textLineProfile == nil {
       try await Task.sleep(nanoseconds: 50_000_000)
     }
-    let profile = try XCTUnwrap(state.textLineProfile, "Vision found no text in the rendered sample")
-    let line = try XCTUnwrap(profile.lines.first)
+    let profile = try XCTUnwrap(state.textLineProfile, "Vision text detection did not return within 60s")
+    let line = try XCTUnwrap(profile.lines.first, "Vision returned no text lines for the rendered sample")
 
     let highlight = AnnotationItem(
       type: .highlight([
@@ -3246,7 +3248,7 @@ final class AnnotateCoreTests: XCTestCase {
     guard case .watermark(let text) = annotation.type else {
       return XCTFail("Expected watermark annotation, got \(annotation.type)")
     }
-    XCTAssertEqual(text, "Snapzy")
+    XCTAssertEqual(text, "Pinny")
     XCTAssertEqual(annotation.bounds, CGRect(x: 290, y: 205, width: 420, height: 90))
   }
 

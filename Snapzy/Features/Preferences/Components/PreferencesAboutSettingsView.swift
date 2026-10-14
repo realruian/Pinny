@@ -56,7 +56,7 @@ struct AboutSettingsView: View {
         .shadow(color: Color.black.opacity(0.06), radius: 3, x: 0, y: 1)
 
       VStack(spacing: 3) {
-        Text(verbatim: "Snapzy")
+        Text(verbatim: "Pinny")
           .font(.system(size: 24, weight: .bold, design: .rounded))
           .foregroundStyle(Color.primary)
 

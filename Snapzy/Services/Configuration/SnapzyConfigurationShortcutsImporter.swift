@@ -382,6 +382,8 @@ private extension KeyboardShortcutManager {
       setAreaShortcut(config)
     case .repeatArea:
       setRepeatAreaShortcut(config)
+    case .pinClipboard:
+      setPinClipboardShortcut(config)
     case .areaAnnotate:
       setAreaAnnotateShortcut(config)
     case .activeWindow:

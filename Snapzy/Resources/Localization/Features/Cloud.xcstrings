@@ -4297,61 +4297,61 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Screenshots and videos will be saved under this folder in your Google Drive (default: Snapzy)."
+            "value": "Screenshots and videos will be saved under this folder in your Google Drive (default: Pinny)."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Screenshots and videos will be saved under this folder in your Google Drive (default: Snapzy)."
+            "value": "Screenshots and videos will be saved under this folder in your Google Drive (default: Pinny)."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Screenshots and videos will be saved under this folder in your Google Drive (default: Snapzy)."
+            "value": "Screenshots and videos will be saved under this folder in your Google Drive (default: Pinny)."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Screenshots and videos will be saved under this folder in your Google Drive (default: Snapzy)."
+            "value": "Screenshots and videos will be saved under this folder in your Google Drive (default: Pinny)."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "スクリーンショットと録画は、Google Drive内のこのフォルダに保存されます（デフォルト: Snapzy）。"
+            "value": "スクリーンショットと録画は、Google Drive内のこのフォルダに保存されます（デフォルト: Pinny）。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Screenshots and videos will be saved under this folder in your Google Drive (default: Snapzy)."
+            "value": "Screenshots and videos will be saved under this folder in your Google Drive (default: Pinny)."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Screenshots and videos will be saved under this folder in your Google Drive (default: Snapzy)."
+            "value": "Screenshots and videos will be saved under this folder in your Google Drive (default: Pinny)."
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ảnh chụp màn hình và video sẽ được lưu dưới thư mục này trong Google Drive của bạn (mặc định: Snapzy)."
+            "value": "Ảnh chụp màn hình và video sẽ được lưu dưới thư mục này trong Google Drive của bạn (mặc định: Pinny)."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Screenshots and videos will be saved under this folder in your Google Drive (default: Snapzy)."
+            "value": "Screenshots and videos will be saved under this folder in your Google Drive (default: Pinny)."
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "Screenshots and videos will be saved under this folder in your Google Drive (default: Snapzy)."
+            "value": "Screenshots and videos will be saved under this folder in your Google Drive (default: Pinny)."
           }
         }
       }
@@ -4557,61 +4557,61 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy lädt die importierten Werte in den Editor. Ihre aktuell gespeicherte Konfiguration bleibt unverändert, bis Sie auf Speichern und Testen klicken."
+            "value": "Pinny lädt die importierten Werte in den Editor. Ihre aktuell gespeicherte Konfiguration bleibt unverändert, bis Sie auf Speichern und Testen klicken."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy will load the imported values into the editor. Your current saved configuration stays unchanged until you click Save & Test."
+            "value": "Pinny will load the imported values into the editor. Your current saved configuration stays unchanged until you click Save & Test."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy cargará los valores importados en el editor. Su configuración guardada actual permanece sin cambios hasta que haga clic en Guardar y probar."
+            "value": "Pinny cargará los valores importados en el editor. Su configuración guardada actual permanece sin cambios hasta que haga clic en Guardar y probar."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy chargera les valeurs importées dans l'éditeur. Votre configuration enregistrée actuelle reste inchangée jusqu'à ce que vous cliquiez sur Enregistrer et tester."
+            "value": "Pinny chargera les valeurs importées dans l'éditeur. Votre configuration enregistrée actuelle reste inchangée jusqu'à ce que vous cliquiez sur Enregistrer et tester."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy はインポートされた値をエディタにロードします。現在保存されている構成は、「保存してテスト」をクリックするまで変更されません。"
+            "value": "Pinny はインポートされた値をエディタにロードします。現在保存されている構成は、「保存してテスト」をクリックするまで変更されません。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy는 가져온 값을 편집기에 로드합니다. 현재 저장된 구성은 저장 및 테스트를 클릭할 때까지 변경되지 않은 상태로 유지됩니다."
+            "value": "Pinny는 가져온 값을 편집기에 로드합니다. 현재 저장된 구성은 저장 및 테스트를 클릭할 때까지 변경되지 않은 상태로 유지됩니다."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy загрузит импортированные значения в редактор. Текущая сохраненная конфигурация остается неизменной, пока вы не нажмете «Сохранить и протестировать»."
+            "value": "Pinny загрузит импортированные значения в редактор. Текущая сохраненная конфигурация остается неизменной, пока вы не нажмете «Сохранить и протестировать»."
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy sẽ nạp các giá trị từ gói nhập vào biểu mẫu chỉnh sửa. Cấu hình đang lưu của bạn sẽ chưa thay đổi cho đến khi bạn bấm Lưu & Kiểm tra."
+            "value": "Pinny sẽ nạp các giá trị từ gói nhập vào biểu mẫu chỉnh sửa. Cấu hình đang lưu của bạn sẽ chưa thay đổi cho đến khi bạn bấm Lưu & Kiểm tra."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy 会将导入的值加载到编辑器中。您当前保存的配置保持不变，直到您单击“保存并测试”。"
+            "value": "Pinny 会将导入的值加载到编辑器中。您当前保存的配置保持不变，直到您单击“保存并测试”。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy 會將導入的值加載到編輯器中。您當前保存的配置保持不變，直到您單擊“保存並測試”。"
+            "value": "Pinny 會將導入的值加載到編輯器中。您當前保存的配置保持不變，直到您單擊“保存並測試”。"
           }
         }
       }
@@ -4817,61 +4817,61 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Laden Sie ein zuvor exportiertes Snapzy-Cloud-Archiv, um dieses Formular vorab auszufüllen."
+            "value": "Laden Sie ein zuvor exportiertes Pinny-Cloud-Archiv, um dieses Formular vorab auszufüllen."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Load a previously exported Snapzy cloud archive to prefill this form."
+            "value": "Load a previously exported Pinny cloud archive to prefill this form."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cargue un archivo en la nube Snapzy previamente exportado para completar previamente este formulario."
+            "value": "Cargue un archivo en la nube Pinny previamente exportado para completar previamente este formulario."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Chargez une archive cloud Snapzy précédemment exportée pour pré-remplir ce formulaire."
+            "value": "Chargez une archive cloud Pinny précédemment exportée pour pré-remplir ce formulaire."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "以前にエクスポートした Snapzy クラウドアーカイブをロードして、このフォームに事前入力します。"
+            "value": "以前にエクスポートした Pinny クラウドアーカイブをロードして、このフォームに事前入力します。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "이 양식을 미리 채우려면 이전에 내보낸 Snapzy 클라우드 아카이브를 로드하세요."
+            "value": "이 양식을 미리 채우려면 이전에 내보낸 Pinny 클라우드 아카이브를 로드하세요."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Загрузите ранее экспортированный облачный архив Snapzy, чтобы предварительно заполнить эту форму."
+            "value": "Загрузите ранее экспортированный облачный архив Pinny, чтобы предварительно заполнить эту форму."
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nạp một gói Cloud của Snapzy đã xuất trước đó để điền sẵn biểu mẫu này."
+            "value": "Nạp một gói Cloud của Pinny đã xuất trước đó để điền sẵn biểu mẫu này."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "加载之前导出的 Snapzy 云存档以预填充此表单。"
+            "value": "加载之前导出的 Pinny 云存档以预填充此表单。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "載入之前匯出的 Snapzy 雲端存檔以預填充此表單。"
+            "value": "載入之前匯出的 Pinny 雲端存檔以預填充此表單。"
           }
         }
       }
@@ -8262,61 +8262,61 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wählen Sie ein mit Snapzy verschlüsseltes Anmeldeinformationsarchiv."
+            "value": "Wählen Sie ein mit Pinny verschlüsseltes Anmeldeinformationsarchiv."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Choose a Snapzy encrypted credential archive."
+            "value": "Choose a Pinny encrypted credential archive."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Elija un archivo de credenciales cifrado Snapzy."
+            "value": "Elija un archivo de credenciales cifrado Pinny."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Choisissez une archive d'informations d'identification cryptées Snapzy."
+            "value": "Choisissez une archive d'informations d'identification cryptées Pinny."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy 暗号化認証情報アーカイブを選択します。"
+            "value": "Pinny 暗号化認証情報アーカイブを選択します。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy 암호화 자격 증명 아카이브를 선택하세요."
+            "value": "Pinny 암호화 자격 증명 아카이브를 선택하세요."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Выберите зашифрованный архив учетных данных Snapzy."
+            "value": "Выберите зашифрованный архив учетных данных Pinny."
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Chọn gói thông tin đăng nhập Snapzy đã mã hóa."
+            "value": "Chọn gói thông tin đăng nhập Pinny đã mã hóa."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "选择 Snapzy 加密凭证存档。"
+            "value": "选择 Pinny 加密凭证存档。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "選擇 Snapzy 加密憑證存檔。"
+            "value": "選擇 Pinny 加密憑證存檔。"
           }
         }
       }
@@ -8457,43 +8457,43 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die ausgewählte Datei ist kein gültiges Snapzy-Cloud-Anmeldeinformationsarchiv."
+            "value": "Die ausgewählte Datei ist kein gültiges Pinny-Cloud-Anmeldeinformationsarchiv."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The selected file is not a valid Snapzy cloud credential archive."
+            "value": "The selected file is not a valid Pinny cloud credential archive."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "El archivo seleccionado no es un archivo de credenciales de nube Snapzy válido."
+            "value": "El archivo seleccionado no es un archivo de credenciales de nube Pinny válido."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Le fichier sélectionné n'est pas une archive d'informations d'identification cloud Snapzy valide."
+            "value": "Le fichier sélectionné n'est pas une archive d'informations d'identification cloud Pinny valide."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "選択したファイルは、有効な Snapzy クラウド認証情報アーカイブではありません。"
+            "value": "選択したファイルは、有効な Pinny クラウド認証情報アーカイブではありません。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "선택한 파일은 유효한 Snapzy 클라우드 자격 증명 아카이브가 아닙니다."
+            "value": "선택한 파일은 유효한 Pinny 클라우드 자격 증명 아카이브가 아닙니다."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Выбранный файл не является действительным облачным архивом учетных данных Snapzy."
+            "value": "Выбранный файл не является действительным облачным архивом учетных данных Pinny."
           }
         },
         "vi": {
@@ -8505,13 +8505,13 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "所选文件不是有效的 Snapzy 云凭证存档。"
+            "value": "所选文件不是有效的 Pinny 云凭证存档。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "所選檔案不是有效的 Snapzy 雲憑證存檔。"
+            "value": "所選檔案不是有效的 Pinny 雲憑證存檔。"
           }
         }
       }
@@ -8847,61 +8847,61 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Erstellen Sie ein verschlüsseltes Archiv, das Sie auf einen anderen Mac importieren können. Snapzy speichert diese Archiv-Passphrase nicht."
+            "value": "Erstellen Sie ein verschlüsseltes Archiv, das Sie auf einen anderen Mac importieren können. Pinny speichert diese Archiv-Passphrase nicht."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Create an encrypted archive you can import on another Mac. Snapzy does not store this archive passphrase."
+            "value": "Create an encrypted archive you can import on another Mac. Pinny does not store this archive passphrase."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cree un archivo cifrado que pueda importar en otra Mac. Snapzy no almacena esta frase de contraseña de archivo."
+            "value": "Cree un archivo cifrado que pueda importar en otra Mac. Pinny no almacena esta frase de contraseña de archivo."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Créez une archive cryptée que vous pouvez importer sur un autre Mac. Snapzy ne stocke pas cette phrase secrète d'archive."
+            "value": "Créez une archive cryptée que vous pouvez importer sur un autre Mac. Pinny ne stocke pas cette phrase secrète d'archive."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "別の Mac にインポートできる暗号化されたアーカイブを作成します。 Snapzy は、このアーカイブパスフレーズを保存しません。"
+            "value": "別の Mac にインポートできる暗号化されたアーカイブを作成します。 Pinny は、このアーカイブパスフレーズを保存しません。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "다른 Mac에서 가져올 수 있는 암호화된 아카이브를 생성하세요. Snapzy는 이 아카이브 암호를 저장하지 않습니다."
+            "value": "다른 Mac에서 가져올 수 있는 암호화된 아카이브를 생성하세요. Pinny는 이 아카이브 암호를 저장하지 않습니다."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Создайте зашифрованный архив, который вы сможете импортировать на другой Mac. Snapzy не сохраняет эту кодовую фразу архива."
+            "value": "Создайте зашифрованный архив, который вы сможете импортировать на другой Mac. Pinny не сохраняет эту кодовую фразу архива."
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tạo một gói đã mã hóa để bạn có thể nhập trên máy Mac khác. Snapzy không lưu mật khẩu này."
+            "value": "Tạo một gói đã mã hóa để bạn có thể nhập trên máy Mac khác. Pinny không lưu mật khẩu này."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "创建一个可以导入到另一台 Mac 上的加密存档。 Snapzy 不存储此存档密码。"
+            "value": "创建一个可以导入到另一台 Mac 上的加密存档。 Pinny 不存储此存档密码。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "創建一個可以導入到另一台 Mac 上的加密存檔。 Snapzy 不存儲此存檔密碼。"
+            "value": "創建一個可以導入到另一台 Mac 上的加密存檔。 Pinny 不存儲此存檔密碼。"
           }
         }
       }
@@ -9432,61 +9432,61 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wählen Sie aus, wo Snapzy das verschlüsselte Anmeldeinformationsarchiv speichern soll."
+            "value": "Wählen Sie aus, wo Pinny das verschlüsselte Anmeldeinformationsarchiv speichern soll."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Choose where Snapzy should save the encrypted credential archive."
+            "value": "Choose where Pinny should save the encrypted credential archive."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Elija dónde Snapzy debe guardar el archivo de credenciales cifradas."
+            "value": "Elija dónde Pinny debe guardar el archivo de credenciales cifradas."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Choisissez où Snapzy doit enregistrer l'archive des informations d'identification cryptées."
+            "value": "Choisissez où Pinny doit enregistrer l'archive des informations d'identification cryptées."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy が暗号化された認証情報アーカイブを保存する場所を選択します。"
+            "value": "Pinny が暗号化された認証情報アーカイブを保存する場所を選択します。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy가 암호화된 자격증명 아카이브를 저장할 위치를 선택하세요."
+            "value": "Pinny가 암호화된 자격증명 아카이브를 저장할 위치를 선택하세요."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Выберите, где Snapzy должен сохранить зашифрованный архив учетных данных."
+            "value": "Выберите, где Pinny должен сохранить зашифрованный архив учетных данных."
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Chọn nơi Snapzy sẽ lưu gói thông tin đăng nhập đã mã hóa."
+            "value": "Chọn nơi Pinny sẽ lưu gói thông tin đăng nhập đã mã hóa."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "选择 Snapzy 保存加密凭证存档的位置。"
+            "value": "选择 Pinny 保存加密凭证存档的位置。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "選擇 Snapzy 保存加密憑證存檔的位置。"
+            "value": "選擇 Pinny 保存加密憑證存檔的位置。"
           }
         }
       }

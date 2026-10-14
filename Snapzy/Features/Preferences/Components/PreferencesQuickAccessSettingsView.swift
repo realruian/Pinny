@@ -19,8 +19,9 @@ extension QuickAccessPinZoomMode {
 struct QuickAccessSettingsView: View {
   @ObservedObject private var manager = QuickAccessManager.shared
   @ObservedObject private var trackpadSwipeModeStore = QuickAccessTrackpadSwipeModeStore.shared
-  @ObservedObject private var pinZoomModeStore = QuickAccessPinZoomModeStore.shared
   @AppStorage(PreferencesKeys.quickAccessPlaySounds) private var playSounds = true
+
+  @AppStorage("inlinePinCopiesImage") private var pinCopiesImage = true
 
   @State private var positionIsLeft: Bool = false
   @State private var showsLegacyCards = false
@@ -45,26 +46,13 @@ struct QuickAccessSettingsView: View {
       }
 
       Section(L10n.PreferencesQuickAccess.pinZoomSection) {
+        Toggle(L10n.PreferencesWorkflow.pinCopiesImage, isOn: $pinCopiesImage)
         SettingRow(icon: "pin", title: L10n.PreferencesWorkflow.pinTitle,
                    description: L10n.PreferencesWorkflow.pinDescription) { EmptyView() }
         SettingRow(icon: "hand.tap", title: L10n.PreferencesWorkflow.doubleClickTitle,
                    description: L10n.PreferencesWorkflow.doubleClickDescription) { EmptyView() }
         SettingRow(icon: "arrow.up.left.and.arrow.down.right", title: L10n.PreferencesWorkflow.zoomTitle,
-                   description: L10n.PreferencesWorkflow.zoomDescription) {
-          Picker(L10n.PreferencesWorkflow.zoomTitle, selection: Binding(
-            get: { pinZoomModeStore.mode },
-            set: { mode in
-              pinZoomModeStore.setMode(mode)
-              QuickAccessPinWindowManager.shared.setPinZoomMode(mode)
-            }
-          )) {
-            ForEach(QuickAccessPinZoomMode.allCases) { mode in
-              Text(mode.title).tag(mode)
-            }
-          }
-          .labelsHidden()
-          .pickerStyle(.menu)
-        }
+                   description: L10n.PreferencesWorkflow.zoomDescription) { EmptyView() }
       }
 
       Section {

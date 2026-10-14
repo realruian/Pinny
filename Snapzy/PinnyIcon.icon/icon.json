@@ -1,0 +1,68 @@
+{
+  "fill" : {
+    "linear-gradient" : [
+      "display-p3:1.00000,1.00000,1.00000,1.00000",
+      "display-p3:0.92941,0.92941,0.93725,1.00000"
+    ],
+    "orientation" : {
+      "start" : {
+        "x" : 0.5,
+        "y" : 0
+      },
+      "stop" : {
+        "x" : 0.5,
+        "y" : 1
+      }
+    }
+  },
+  "groups" : [
+    {
+      "hidden" : false,
+      "layers" : [
+        {
+          "fill" : {
+            "linear-gradient" : [
+              "display-p3:0.29020,0.29020,0.30588,1.00000",
+              "display-p3:0.01961,0.01961,0.02353,1.00000"
+            ],
+            "orientation" : {
+              "start" : {
+                "x" : 0.35,
+                "y" : 0.1
+              },
+              "stop" : {
+                "x" : 0.65,
+                "y" : 0.95
+              }
+            }
+          },
+          "glass" : true,
+          "hidden" : false,
+          "image-name" : "Clover.svg",
+          "name" : "Clover",
+          "opacity" : 1,
+          "position" : {
+            "scale" : 1.25,
+            "translation-in-points" : [
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : false,
+        "value" : 0.5
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "squares" : [
+      "macOS"
+    ]
+  }
+}

@@ -57,7 +57,7 @@ final class InlineAreaAnnotateSessionTests: XCTestCase {
 
   @MainActor
   func testCancelCompletesOnceAndCannotSaveAfterwards() async throws {
-    var results: [CaptureResult] = []
+    var results: [InlineCaptureOutcome] = []
     let session = try makeSelectionSession(onComplete: { results.append($0) })
     session.beginAnnotating(with: CGRect(x: 100, y: 100, width: 200, height: 150))
     session.cancel()
@@ -84,6 +84,85 @@ final class InlineAreaAnnotateSessionTests: XCTestCase {
     XCTAssertNotNil(session.state.sourceImage)
     XCTAssertNotNil(session.actionMessage)
     XCTAssertFalse(session.isFinishing)
+  }
+
+  @MainActor
+  func testCopyExitsOnceWithoutResolvingSaveDirectory() throws {
+    var outcomes: [InlineCaptureOutcome] = []
+    var askedForDirectory = false
+    let session = try makeSelectionSession(
+      saveDirectoryProvider: { askedForDirectory = true; return nil },
+      onComplete: { outcomes.append($0) })
+    session.beginAnnotating(with: CGRect(x: 100, y: 100, width: 200, height: 150))
+    session.copyCurrentImage()
+    session.copyCurrentImage()
+    session.cancel()
+    XCTAssertFalse(askedForDirectory)
+    XCTAssertEqual(outcomes.count, 1)
+    guard case .copied = outcomes.first else { return XCTFail("Expected copied outcome") }
+    XCTAssertEqual(PinClipboardGeometry.sourceRect(from: .general), CGRect(x: 100, y: 350, width: 200, height: 150))
+    let image = try XCTUnwrap(NSImage(pasteboard: .general))
+    let pixels = try XCTUnwrap(AnnotateExporter.bestCGImage(from: image))
+    XCTAssertEqual(pixels.width, 400)
+    XCTAssertEqual(pixels.height, 300)
+  }
+
+  @MainActor
+  func testPinUsesOriginalPixelsAndPositionWithoutResolvingSaveDirectory() async throws {
+    var outcomes: [InlineCaptureOutcome] = []
+    var askedForDirectory = false
+    var images: [NSImage] = []
+    var frames: [CGRect] = []
+    let session = try makeSelectionSession(
+      saveDirectoryProvider: { askedForDirectory = true; return nil },
+      pinImage: { image, rect in images.append(image); frames.append(rect) },
+      onComplete: { outcomes.append($0) })
+    session.beginAnnotating(with: CGRect(x: 100, y: 100, width: 200, height: 150))
+    await session.finishAndPin()
+    await session.finishAndPin()
+    XCTAssertFalse(askedForDirectory)
+    XCTAssertEqual(outcomes.count, 1)
+    guard case .pinned = outcomes.first else { return XCTFail("Expected pinned outcome") }
+    XCTAssertEqual(frames, [CGRect(x: 100, y: 350, width: 200, height: 150)])
+    let pixels = try XCTUnwrap(AnnotateExporter.bestCGImage(from: XCTUnwrap(images.first)))
+    XCTAssertEqual(pixels.width, 400)
+    XCTAssertEqual(pixels.height, 300)
+  }
+
+  @MainActor
+  func testCancelledDirectoryPickerPreservesSelectionAndAllowsCopy() async throws {
+    var asks = 0
+    var outcomes: [InlineCaptureOutcome] = []
+    let session = try makeSelectionSession(
+      saveDirectoryProvider: { asks += 1; return nil }, onComplete: { outcomes.append($0) })
+    session.beginAnnotating(with: CGRect(x: 100, y: 100, width: 200, height: 150))
+    await session.finish()
+    XCTAssertEqual(asks, 1)
+    XCTAssertTrue(outcomes.isEmpty)
+    XCTAssertEqual(session.phase, .annotating)
+    XCTAssertFalse(session.isFinishing)
+    session.copyCurrentImage()
+    XCTAssertEqual(outcomes.count, 1)
+    guard case .copied = outcomes.first else { return XCTFail("Expected copied outcome") }
+    XCTAssertEqual(PinClipboardGeometry.sourceRect(from: .general), CGRect(x: 100, y: 350, width: 200, height: 150))
+  }
+
+  func testReturnCopiesWhileTextReturnStaysNative() throws {
+    let enter = try makeKeyEvent(keyCode: 36, characters: "\r", flags: [])
+    XCTAssertEqual(InlineAreaAnnotateSession.keyAction(for: enter, source: .local,
+      phase: .annotating, hasTextResponder: false, hasKeyWindow: true), .copyCurrentImage)
+    XCTAssertEqual(InlineAreaAnnotateSession.keyAction(for: enter, source: .local,
+      phase: .annotating, hasTextResponder: true, hasKeyWindow: true), .passThrough)
+  }
+
+  func testSelectDisplayShortcutAppliesOnlyBeforeSelection() throws {
+    let selectAll = try makeKeyEvent(keyCode: 0, characters: "a", flags: .command)
+    XCTAssertEqual(InlineAreaAnnotateSession.keyAction(for: selectAll, source: .local,
+      phase: .selecting, hasTextResponder: false, hasKeyWindow: true), .selectDisplay)
+    XCTAssertEqual(InlineAreaAnnotateSession.keyAction(for: selectAll, source: .local,
+      phase: .annotating, hasTextResponder: false, hasKeyWindow: true), .passThrough)
+    XCTAssertEqual(InlineAreaAnnotateSession.keyAction(for: selectAll, source: .global,
+      phase: .selecting, hasTextResponder: false, hasKeyWindow: false), .passThrough)
   }
 
   // MARK: - desktopFrame
@@ -490,7 +569,9 @@ final class InlineAreaAnnotateSessionTests: XCTestCase {
   @MainActor
   private func makeSelectionSession(
     saveDirectory: URL = FileManager.default.temporaryDirectory,
-    onComplete: @escaping (CaptureResult) -> Void = { _ in }
+    saveDirectoryProvider: (() -> URL?)? = nil,
+    pinImage: @escaping @MainActor (NSImage, CGRect) -> Void = { _, _ in },
+    onComplete: @escaping (InlineCaptureOutcome) -> Void = { _ in }
   ) throws -> InlineAreaAnnotateSession {
     // Fake display ID: the session hides the cursor per display at init — a nonexistent
     // display keeps that a harmless no-op instead of hiding the test runner's cursor.
@@ -520,7 +601,9 @@ final class InlineAreaAnnotateSessionTests: XCTestCase {
       )),
       saveDirectory: saveDirectory,
       outputFormat: .png,
+      saveDirectoryProvider: saveDirectoryProvider,
       defaults: try XCTUnwrap(UserDefaults(suiteName: "InlineAreaAnnotateSessionTests.pointer")),
+      pinImage: pinImage,
       onComplete: onComplete
     )
   }

@@ -114,7 +114,7 @@ struct OnboardingLanguageSelectionView: View {
   private var languageSubtitle: String {
     onboardingLocalization.string(
       "onboarding.language.subtitle",
-      defaultValue: "Snapzy can follow your Mac or preview a specific app language during setup.",
+      defaultValue: "Pinny can follow your Mac or preview a specific app language during setup.",
       comment: "Onboarding language step subtitle"
     )
   }

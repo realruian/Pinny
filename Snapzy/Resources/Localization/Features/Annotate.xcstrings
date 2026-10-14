@@ -8,7 +8,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tab: parent · Shift-Tab: child"
+            "value": "Tab: expand · Shift-Tab: shrink"
           }
         },
         "zh-Hans": {
@@ -5680,7 +5680,7 @@
         }
       }
     },
-    "annotate.drag-selection" : {
+    "annotate.drag-selection": {
       "comment": "Label for directly dragging the screenshot selection",
       "localizations": {
         "en": {
@@ -5703,7 +5703,7 @@
         }
       }
     },
-    "annotate.move-selection-direct" : {
+    "annotate.move-selection-direct": {
       "comment": "Tooltip for direct selection movement and resizing",
       "localizations": {
         "en": {
@@ -7487,61 +7487,61 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy konnte nicht an den ausgewählten Speicherort schreiben. Bitte wählen Sie einen anderen Ordner."
+            "value": "Pinny konnte nicht an den ausgewählten Speicherort schreiben. Bitte wählen Sie einen anderen Ordner."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy couldn't write to the selected location. Please choose another folder."
+            "value": "Pinny couldn't write to the selected location. Please choose another folder."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy no pudo escribir en la ubicación seleccionada. Elija otra carpeta."
+            "value": "Pinny no pudo escribir en la ubicación seleccionada. Elija otra carpeta."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy n'a pas pu écrire à l'emplacement sélectionné. Veuillez choisir un autre dossier."
+            "value": "Pinny n'a pas pu écrire à l'emplacement sélectionné. Veuillez choisir un autre dossier."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy は選択された場所に書き込めませんでした。別のフォルダを選択してください。"
+            "value": "Pinny は選択された場所に書き込めませんでした。別のフォルダを選択してください。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy가 선택한 위치에 쓸 수 없습니다. 다른 폴더를 선택하세요."
+            "value": "Pinny가 선택한 위치에 쓸 수 없습니다. 다른 폴더를 선택하세요."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy не удалось выполнить запись в выбранное место. Пожалуйста, выберите другую папку."
+            "value": "Pinny не удалось выполнить запись в выбранное место. Пожалуйста, выберите другую папку."
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy không thể ghi vào vị trí đã chọn. Vui lòng chọn thư mục khác."
+            "value": "Pinny không thể ghi vào vị trí đã chọn. Vui lòng chọn thư mục khác."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy 无法写入所选位置。请选择其他文件夹。"
+            "value": "Pinny 无法写入所选位置。请选择其他文件夹。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy 無法寫入所選位置。請選擇其他檔案夾。"
+            "value": "Pinny 無法寫入所選位置。請選擇其他檔案夾。"
           }
         }
       }
@@ -10987,6 +10987,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Z軸"
+          }
+        }
+      }
+    },
+    "annotate.select-display": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select this display (⌘A)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择全屏（⌘A）"
           }
         }
       }

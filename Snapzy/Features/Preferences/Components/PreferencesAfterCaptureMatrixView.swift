@@ -18,10 +18,6 @@ struct AfterCaptureMatrixView: View {
           .frame(width: 28)
         Spacer()
         HStack(spacing: 16) {
-          Text(CaptureType.screenshot.displayName)
-            .font(.caption2)
-            .foregroundColor(.secondary)
-            .frame(width: 70)
           Text(CaptureType.recording.displayName)
             .font(.caption2)
             .foregroundColor(.secondary)
@@ -55,7 +51,6 @@ struct AfterCaptureMatrixView: View {
       Spacer()
 
       HStack(spacing: 16) {
-        toggleColumn(captureType: .screenshot, action: action, type: .screenshot)
         toggleColumn(captureType: .recording, action: action, type: .recording)
       }
     }

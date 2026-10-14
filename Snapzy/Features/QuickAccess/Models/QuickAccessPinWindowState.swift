@@ -13,7 +13,7 @@ import Foundation
 final class QuickAccessPinWindowState: ObservableObject {
   let id: UUID
 
-  @Published private(set) var url: URL
+  @Published private(set) var url: URL?
   @Published private(set) var image: NSImage
   @Published private(set) var thumbnail: NSImage
   @Published var isLocked = false
@@ -40,7 +40,7 @@ final class QuickAccessPinWindowState: ObservableObject {
     )
   }
 
-  init(id: UUID, url: URL, image: NSImage, thumbnail: NSImage, baseSize: CGSize, zoomMode: QuickAccessPinZoomMode = .defaultMode, preservesSourceSize: Bool = false) {
+  init(id: UUID, url: URL?, image: NSImage, thumbnail: NSImage, baseSize: CGSize, zoomMode: QuickAccessPinZoomMode = .defaultMode, preservesSourceSize: Bool = false) {
     self.id = id
     self.url = url
     self.image = image
@@ -51,7 +51,7 @@ final class QuickAccessPinWindowState: ObservableObject {
   }
 
   var minimumDisplaySize: CGSize {
-    preservesSourceSize ? CGSize(width: 1, height: 1) : QuickAccessPinWindowSizing.minimumInteractiveSize
+    CGSize(width: 1, height: 1)
   }
 
   var displaySize: CGSize {

@@ -297,7 +297,7 @@ struct PermissionsView: View {
     case .outsideApplications(let bundleURL):
       onboardingLocalization.format(
         "app-identity.outside-applications",
-        defaultValue: "Install Snapzy in /Applications before granting permissions. Current path: %@",
+        defaultValue: "Install Pinny in /Applications before granting permissions. Current path: %@",
         comment: "Identity issue message. %@ is the current app bundle path.",
         arguments: [bundleURL.path]
       )
@@ -321,7 +321,7 @@ struct PermissionsView: View {
   private var permissionsSubtitle: String {
     onboardingLocalization.string(
       "onboarding.permissions.subtitle",
-      defaultValue: "Snapzy needs permissions for capture, audio, notifications, and save location.",
+      defaultValue: "Pinny needs permissions for capture, audio, notifications, and save location.",
       comment: "Onboarding permissions step subtitle"
     )
   }
@@ -449,7 +449,7 @@ struct PermissionsView: View {
   private var chooseFolderMessageTitle: String {
     onboardingLocalization.string(
       "onboarding.permissions.choose-folder-message",
-      defaultValue: "Choose a folder for Snapzy captures (default: Desktop/Snapzy)",
+      defaultValue: "Choose a folder for Pinny captures (default: Desktop/Pinny)",
       comment: "Open panel message for selecting export directory during onboarding"
     )
   }

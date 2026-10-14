@@ -208,7 +208,7 @@ enum ClipboardHelper {
   /// then writing the file URL. This ensures the pasted result uses the correct format.
   ///
   /// Used by Annotate / Mockup copy where the image is rendered on-the-fly.
-  static func copyImage(_ image: NSImage, format: ImageFormatOption? = nil) {
+  static func copyImage(_ image: NSImage, format: ImageFormatOption? = nil, sourceScreenRect: CGRect? = nil) {
     DiagnosticLogger.shared.log(
       .info,
       .clipboard,
@@ -229,13 +229,13 @@ enum ClipboardHelper {
       // Fallback: write NSImage directly (will produce PNG but at least something lands)
       let pasteboard = NSPasteboard.general
       pasteboard.clearContents()
-      pasteboard.writeObjects([image])
+      if pasteboard.writeObjects([image]) { PinClipboardGeometry.write(sourceScreenRect, to: pasteboard) }
       return
     }
 
     // Write to a temp file so the pasteboard can reference it
     let tempDir = TempCaptureManager.shared.tempCaptureDirectory
-    let fileName = "Snapzy_clipboard_\(UUID().uuidString).\(ext)"
+    let fileName = "Pinny_clipboard_\(UUID().uuidString).\(ext)"
     let tempURL = tempDir.appendingPathComponent(fileName)
 
     do {
@@ -247,7 +247,7 @@ enum ClipboardHelper {
       // Fallback
       let pasteboard = NSPasteboard.general
       pasteboard.clearContents()
-      pasteboard.writeObjects([image])
+      if pasteboard.writeObjects([image]) { PinClipboardGeometry.write(sourceScreenRect, to: pasteboard) }
       return
     }
 
@@ -259,7 +259,8 @@ enum ClipboardHelper {
       image: image,
       tiffData: image.tiffRepresentation,
       encodedData: data,
-      encodedType: pasteboardImageType(for: ext)
+      encodedType: pasteboardImageType(for: ext),
+      sourceScreenRect: sourceScreenRect
     )
 
     logger.info("Clipboard: copied rendered image as \(ext) via temp file")
@@ -273,7 +274,8 @@ enum ClipboardHelper {
     image: NSImage?,
     tiffData: Data?,
     encodedData: Data?,
-    encodedType: NSPasteboard.PasteboardType?
+    encodedType: NSPasteboard.PasteboardType?,
+    sourceScreenRect: CGRect? = nil
   ) {
     // Use writeObjects with NSURL to ensure macOS grants a sandbox extension
     // to the receiving app. NSPasteboardItem.setString(url, forType: .fileURL)
@@ -308,6 +310,7 @@ enum ClipboardHelper {
     }
 
     if didWriteURL, didWriteRepresentations {
+      PinClipboardGeometry.write(sourceScreenRect, to: pasteboard)
       PasteboardReferenceTracker.record(urls: [fileURL], changeCount: pasteboard.changeCount)
     } else {
       // A silent failure here leaves the pasteboard holding older content —

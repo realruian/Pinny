@@ -21,10 +21,11 @@ final class InlineAreaAnnotateCoordinator {
     frozenSession: FrozenAreaCaptureSession,
     saveDirectory: URL,
     outputFormat: ImageFormat,
+    saveDirectoryProvider: (() -> URL?)? = nil,
     context: CaptureContext = .empty,
     prefetchedContentTask: ShareableContentPrefetchTask? = nil,
     excludeOwnApplication: Bool = false,
-    onComplete: @escaping (CaptureResult) -> Void
+    onComplete: @escaping (InlineCaptureOutcome) -> Void
   ) {
     closeActiveWindows()
     let availableScreens = screens.filter { screen in
@@ -39,7 +40,7 @@ final class InlineAreaAnnotateCoordinator {
     previouslyActiveApplication = NSWorkspace.shared.frontmostApplication
     NSApp.activate(ignoringOtherApps: true)
 
-    let wrappedOnComplete: (CaptureResult) -> Void = { [weak self] result in
+    let wrappedOnComplete: (InlineCaptureOutcome) -> Void = { [weak self] result in
       guard let self else {
         onComplete(result)
         return
@@ -74,6 +75,7 @@ final class InlineAreaAnnotateCoordinator {
       frozenSession: frozenSession,
       saveDirectory: saveDirectory,
       outputFormat: outputFormat,
+      saveDirectoryProvider: saveDirectoryProvider,
       context: context,
       prefetchedContentTask: prefetchedContentTask,
       excludeOwnApplication: excludeOwnApplication,
@@ -174,6 +176,20 @@ final class InlineAreaAnnotatePanel: NSPanel {
     self.minSize = frameRect.size
     self.maxSize = frameRect.size
     super.setFrame(frameRect, display: displayFlag)
+  }
+
+  override func sendEvent(_ event: NSEvent) {
+    if event.type == .leftMouseDown, event.clickCount == 2, session.phase == .annotating,
+       session.state.selectedTool == .selection,
+       session.state.editingTextAnnotationId == nil, session.state.annotations.isEmpty,
+       let rect = session.selectionRect {
+      let screen = convertPoint(toScreen: event.locationInWindow)
+      if session.screenRect(for: rect).contains(screen) {
+        session.copyCurrentImage()
+        return
+      }
+    }
+    super.sendEvent(event)
   }
 
   override func keyDown(with event: NSEvent) {
@@ -277,17 +293,7 @@ private struct InlineAreaAnnotateRootView: View {
             }
           } else {
             selectionBorder(rect: viewportRect)
-            if session.hoveredSmartElementRect != nil,
-               session.controlDisplayID(for: desktopRect) == display.displayID {
-              Text(L10n.Annotate.elementHierarchyHint)
-                .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(.white)
-                .padding(.horizontal, 10).padding(.vertical, 6)
-                .background(.black.opacity(0.75), in: Capsule())
-                .position(x: min(max(viewportRect.midX, 160), max(160, geometry.size.width - 160)),
-                          y: min(max(viewportRect.maxY + 24, 24), geometry.size.height - 24))
-                .allowsHitTesting(false)
-            }
+
           }
         }
 
@@ -296,6 +302,16 @@ private struct InlineAreaAnnotateRootView: View {
         }
 
         if session.phase == .selecting {
+          VStack {
+            HStack {
+              Button(L10n.Annotate.selectDisplay) { session.selectDisplayUnderPointer() }
+                .buttonStyle(.borderedProminent)
+              Text(L10n.Annotate.elementHierarchyHint)
+                .foregroundStyle(.white)
+                .padding(8).background(.black.opacity(0.75), in: Capsule())
+            }.padding(.top, 48)
+            Spacer()
+          }.zIndex(20)
           InlineAreaMagnifierOverlay(
             backdropImage: display.backdropCGImage,
             point: selectingPointerPoint.map { appKitLocalPoint(fromViewportPoint: $0) },
@@ -496,6 +512,7 @@ private struct InlineAreaAnnotateRootView: View {
         displayScale: displayScale,
         canvasBounds: CGRect(origin: .zero, size: imageSize),
         acceptsFirstMouse: true,
+        onCaptureDoubleClick: { session.copyCurrentImage() },
         onSelectionBackgroundDrag: { translation, finished in
           guard let desktopRect = session.selectionRect else { return }
           if movingStartRect == nil { movingStartRect = desktopRect }
@@ -1237,17 +1254,28 @@ struct InlineAreaControlPlacement {
   let propertiesPopoverEdge: Edge
 }
 
-private enum InlineAreaToolbarMetrics {
+enum InlineAreaToolbarMetrics {
   static let iconButtonSize: CGFloat = ToolbarConstants.iconButtonSize
-  static let iconSize: CGFloat = ToolbarConstants.iconSize
+  static let iconSize: CGFloat = 20
   static let buttonCornerRadius: CGFloat = ToolbarConstants.buttonCornerRadius
   static let toolbarCornerRadius: CGFloat = ToolbarConstants.toolbarCornerRadius
   static let dividerHeight: CGFloat = ToolbarConstants.dividerHeight
-  static let itemSpacing: CGFloat = ToolbarConstants.itemSpacing
-  static let groupSpacing: CGFloat = ToolbarConstants.groupSpacing
-  static let horizontalPadding: CGFloat = ToolbarConstants.horizontalPadding
+  static let itemSpacing: CGFloat = 2
+  static let groupSpacing: CGFloat = 8
+  static let horizontalPadding: CGFloat = 8
   static let verticalPadding: CGFloat = ToolbarConstants.verticalPadding
   static let hoverAnimation: Animation = ToolbarConstants.hoverAnimation
+  static let dividerWidth: CGFloat = 1 + groupSpacing * 2
+  static func groupWidth(_ count: Int) -> CGFloat {
+    CGFloat(count) * iconButtonSize + CGFloat(max(0, count - 1)) * itemSpacing
+  }
+  static var toolsWidth: CGFloat {
+    AnnotationToolType.inlineToolGroups.reduce(0) { $0 + groupWidth($1.count) }
+      + CGFloat(AnnotationToolType.inlineToolGroups.count - 1) * dividerWidth
+  }
+  static var idealWidth: CGFloat {
+    horizontalPadding * 2 + toolsWidth + groupWidth(2) + groupWidth(4) + dividerWidth * 2
+  }
 }
 
 enum InlineAreaLayout {
@@ -1323,7 +1351,7 @@ enum InlineAreaControlGeometry {
     for containerSize: CGSize,
     controlInsets: InlineAreaControlInsets
   ) -> CGFloat {
-    min(800, availableControlWidth(for: containerSize, controlInsets: controlInsets))
+    min(InlineAreaToolbarMetrics.idealWidth, availableControlWidth(for: containerSize, controlInsets: controlInsets))
   }
 
   private static func propertiesBarWidth(
@@ -1490,8 +1518,8 @@ private extension View {
       .background(InlineAreaHudMaterialBackground(cornerRadius: InlineAreaChrome.cornerRadius).allowsHitTesting(false))
       .clipShape(RoundedRectangle(cornerRadius: InlineAreaChrome.cornerRadius, style: .continuous))
       .overlay(InlineAreaPanelBorder().allowsHitTesting(false))
-      .shadow(color: Color.black.opacity(0.35), radius: 18, x: 0, y: 8)
-      .shadow(color: Color.black.opacity(0.18), radius: 3, x: 0, y: 1)
+      .shadow(color: Color.black.opacity(0.18), radius: 12, x: 0, y: 4)
+      .shadow(color: Color.black.opacity(0.08), radius: 2, x: 0, y: 1)
   }
 }
 
@@ -1563,15 +1591,15 @@ private enum InlineAreaResizeCursor {
   }
 }
 
-private struct InlineAreaControlDeck: View {
+struct InlineAreaControlDeck: View {
   @ObservedObject var session: InlineAreaAnnotateSession
   let maxWidth: CGFloat
 
   var body: some View {
-    HStack(spacing: InlineAreaToolbarMetrics.itemSpacing) {
-      // Only drawing tools scroll on narrow displays. Output and cancel stay reachable.
-      ScrollView(.horizontal, showsIndicators: false) {
-        HStack(spacing: InlineAreaToolbarMetrics.itemSpacing) {
+    HStack(spacing: 0) {
+      // Tools can scroll, while history and output actions stay in stable, visible groups.
+      ScrollView(.horizontal, showsIndicators: true) {
+        HStack(spacing: 0) {
           ForEach(Array(AnnotationToolType.inlineToolGroups.enumerated()), id: \.offset) { index, tools in
             if index > 0 { InlineAreaDivider() }
             InlineAreaToolGroup(tools: tools, selectedTool: session.state.selectedTool) { tool in
@@ -1579,28 +1607,53 @@ private struct InlineAreaControlDeck: View {
               session.state.activateTool(tool)
             }
           }
-          InlineAreaDivider()
-          InlineAreaIconButton(icon: "arrow.uturn.backward", tooltip: L10n.Common.undo,
-                               isEnabled: session.state.canUndo) {
-            session.actionMessage = nil
-            session.state.undo()
-          }
-          InlineAreaIconButton(icon: "arrow.uturn.forward", tooltip: L10n.Common.redo,
-                               isEnabled: session.state.canRedo) {
-            session.actionMessage = nil
-            session.state.redo()
-          }
         }
         .fixedSize(horizontal: true, vertical: false)
       }
+      .frame(maxWidth: InlineAreaToolbarMetrics.toolsWidth)
+      .overlay(alignment: .trailing) {
+        if maxWidth < InlineAreaToolbarMetrics.idealWidth {
+          Image("CaptureTool-overflow").renderingMode(.template).resizable()
+            .frame(width: 12, height: 12)
+            .foregroundStyle(.secondary)
+            .padding(.vertical, 8)
+            .background(.regularMaterial)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+        }
+      }
       InlineAreaDivider()
-      InlineAreaCaptureActions(session: session)
-        .fixedSize()
+      HStack(spacing: InlineAreaToolbarMetrics.itemSpacing) {
+        InlineAreaIconButton(icon: "undo", tooltip: L10n.Common.undo,
+                             isEnabled: session.state.canUndo) {
+          session.actionMessage = nil
+          session.state.undo()
+        }
+        InlineAreaIconButton(icon: "redo", tooltip: L10n.Common.redo,
+                             isEnabled: session.state.canRedo) {
+          session.actionMessage = nil
+          session.state.redo()
+        }
+      }.fixedSize()
+      InlineAreaDivider()
+      InlineAreaCaptureActions(session: session).fixedSize()
     }
     .padding(.horizontal, InlineAreaToolbarMetrics.horizontalPadding)
     .frame(width: maxWidth, height: InlineAreaLayout.toolbarHeight)
     .accessibilityElement(children: .contain)
     .accessibilityIdentifier("inline.captureToolbar")
+  }
+}
+
+private struct InlineAreaToolbarButtonStyle: ButtonStyle {
+  @Environment(\.accessibilityReduceMotion) private var reduceMotion
+  @Environment(\.isEnabled) private var isEnabled
+
+  func makeBody(configuration: Configuration) -> some View {
+    configuration.label
+      .scaleEffect(configuration.isPressed && isEnabled && !reduceMotion ? 0.96 : 1)
+      .opacity(configuration.isPressed && isEnabled ? 0.8 : 1)
+      .animation(reduceMotion ? nil : .easeOut(duration: 0.15), value: configuration.isPressed)
   }
 }
 
@@ -1610,7 +1663,7 @@ private struct InlineAreaToolGroup: View {
   let action: (AnnotationToolType) -> Void
 
   var body: some View {
-    HStack(spacing: InlineAreaToolbarMetrics.groupSpacing) {
+    HStack(spacing: InlineAreaToolbarMetrics.itemSpacing) {
       ForEach(tools, id: \.self) { tool in
         InlineAreaToolButton(tool: tool, selectedTool: selectedTool) {
           action(tool)
@@ -1629,14 +1682,15 @@ private struct InlineAreaToolButton: View {
 
   var body: some View {
     Button(action: action) {
-      Image(systemName: tool.icon)
-        .font(.system(size: InlineAreaToolbarMetrics.iconSize, weight: .medium))
+      Image("CaptureTool-" + tool.rawValue)
+        .renderingMode(.template).resizable().scaledToFit()
+        .frame(width: InlineAreaToolbarMetrics.iconSize, height: InlineAreaToolbarMetrics.iconSize)
         .foregroundColor(.primary.opacity(isSelected || isHovering ? 1.0 : 0.85))
         .frame(width: InlineAreaChrome.controlSize, height: InlineAreaChrome.controlSize)
         .background(buttonBackground)
         .contentShape(RoundedRectangle(cornerRadius: InlineAreaChrome.controlCornerRadius, style: .continuous))
     }
-    .buttonStyle(.plain)
+    .buttonStyle(InlineAreaToolbarButtonStyle())
     .help(tool.displayName)
     .accessibilityLabel(tool.displayName)
     .onHover { isHovering = $0 }
@@ -1690,14 +1744,15 @@ private struct InlineAreaIconButton: View {
 
   var body: some View {
     Button(action: action) {
-      Image(systemName: icon)
-        .font(.system(size: InlineAreaToolbarMetrics.iconSize, weight: .medium))
+      Image("CaptureTool-" + icon)
+        .renderingMode(.template).resizable().scaledToFit()
+        .frame(width: InlineAreaToolbarMetrics.iconSize, height: InlineAreaToolbarMetrics.iconSize)
         .foregroundColor(foregroundColor)
         .frame(width: InlineAreaChrome.controlSize, height: InlineAreaChrome.controlSize)
         .background(background)
         .contentShape(RoundedRectangle(cornerRadius: InlineAreaChrome.controlCornerRadius, style: .continuous))
     }
-    .buttonStyle(.plain)
+    .buttonStyle(InlineAreaToolbarButtonStyle())
     .disabled(!isEnabled)
     .opacity(isEnabled ? 1 : 0.42)
     .help(tooltip)
@@ -1707,18 +1762,21 @@ private struct InlineAreaIconButton: View {
   }
 
   private var foregroundColor: Color {
-    .primary.opacity(isHovering || isProminent ? 1.0 : 0.85)
+    isProminent ? Color.accentColor : .primary.opacity(isHovering ? 1.0 : 0.85)
   }
 
   private var background: some View {
     RoundedRectangle(cornerRadius: InlineAreaChrome.controlCornerRadius, style: .continuous)
-      .fill(isHovering ? Color.primary.opacity(0.10) : Color.clear)
+      .fill(isProminent ? Color.accentColor.opacity(isHovering ? 0.20 : 0.12) : (isHovering ? Color.primary.opacity(0.10) : Color.clear))
   }
 }
 
 private struct InlineAreaDivider: View {
   var body: some View {
-    RecordingToolbarDivider()
+    Rectangle()
+      .fill(InlineAreaChrome.divider)
+      .frame(width: 1, height: InlineAreaToolbarMetrics.dividerHeight)
+      .padding(.horizontal, InlineAreaToolbarMetrics.groupSpacing)
   }
 }
 
@@ -2811,21 +2869,21 @@ private struct InlineAreaCaptureActions: View {
 
   var body: some View {
     HStack(spacing: InlineAreaToolbarMetrics.itemSpacing) {
-      InlineAreaIconButton(icon: "doc.on.doc",
-        tooltip: L10n.Common.withShortcut(L10n.AnnotateUI.copyToClipboard, "⌘C"),
-        isEnabled: !session.isFinishing) {
+      InlineAreaIconButton(icon: "copy",
+        tooltip: L10n.Common.withShortcut(L10n.AnnotateUI.copyToClipboard, "Enter / ⌘C"),
+        isEnabled: !session.isFinishing, isProminent: true) {
         session.copyCurrentImage()
       }
       InlineAreaIconButton(icon: "pin", tooltip: L10n.PreferencesQuickAccess.pinToScreenAction,
                           isEnabled: !session.isFinishing) {
         Task { await session.finishAndPin() }
       }
-      InlineAreaIconButton(icon: "checkmark",
-        tooltip: L10n.Common.withShortcut(L10n.Common.done, "⌘S"),
-        isEnabled: !session.isFinishing, isProminent: true) {
+      InlineAreaIconButton(icon: "save",
+        tooltip: L10n.Common.withShortcut(L10n.Common.save, "⌘S"),
+        isEnabled: !session.isFinishing) {
         Task { await session.finish() }
       }
-      InlineAreaIconButton(icon: "xmark", tooltip: L10n.Common.cancel,
+      InlineAreaIconButton(icon: "cancel", tooltip: L10n.Common.cancel,
                           isEnabled: !session.isFinishing) {
         session.cancel()
       }

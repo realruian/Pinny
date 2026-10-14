@@ -399,20 +399,22 @@ final class QuickAccessCoreTests: XCTestCase {
     XCTAssertEqual(store.mode, .inverted)
   }
 
-  func testQuickAccessPinZoomModeStore_defaultsToFixedViewportAndPersistsExplicitSelection() {
+  func testQuickAccessPinZoomModeStore_defaultsToUnifiedZoomAndIgnoresLegacyMode() {
     let suiteName = "QuickAccessPinZoomModeStoreTests-\(UUID().uuidString)"
     let defaults = UserDefaults(suiteName: suiteName)!
     defer { defaults.removePersistentDomain(forName: suiteName) }
     let store = QuickAccessPinZoomModeStore(defaults: defaults)
     Self.retainedPinZoomModeStores.append(store)
-    XCTAssertEqual(store.mode, .fixedViewport)
+    XCTAssertEqual(store.mode, .windowFollowsImage)
+    store.setMode(.fixedViewport)
+    XCTAssertEqual(store.mode, .windowFollowsImage)
     store.setMode(.windowFollowsImage)
     let reloadedStore = QuickAccessPinZoomModeStore(defaults: defaults)
     Self.retainedPinZoomModeStores.append(reloadedStore)
     XCTAssertEqual(reloadedStore.mode, .windowFollowsImage)
   }
 
-  func testQuickAccessPinWindowState_defaultsToFixedViewport() {
+  func testQuickAccessPinWindowState_defaultsToWindowFollowsImage() {
     let image = NSImage(size: CGSize(width: 400, height: 300))
     let state = QuickAccessPinWindowState(
       id: UUID(),
@@ -423,7 +425,7 @@ final class QuickAccessCoreTests: XCTestCase {
     )
     Self.retainedPinWindowStates.append(state)
 
-    XCTAssertEqual(state.zoomMode, .fixedViewport)
+    XCTAssertEqual(state.zoomMode, .windowFollowsImage)
   }
 
   func testQuickAccessDragMonitorView_scopesScrollEventsToCardBounds() {
@@ -642,7 +644,7 @@ final class QuickAccessCoreTests: XCTestCase {
     XCTAssertEqual(size.height, 480, accuracy: 0.001)
   }
 
-  func testQuickAccessPinWindowState_keepsMinimumInteractiveFrameAtMinimumZoom() {
+  func testQuickAccessPinWindowState_scalesWindowWithoutLegacyMinimumPadding() {
     let minimumSize = QuickAccessPinWindowSizing.minimumInteractiveSize
     let image = NSImage(size: CGSize(width: 24, height: 16))
     let state = QuickAccessPinWindowState(
@@ -657,7 +659,7 @@ final class QuickAccessCoreTests: XCTestCase {
 
     state.setZoomPercent(10)
 
-    XCTAssertEqual(state.displaySize, minimumSize)
+    XCTAssertEqual(state.displaySize, CGSize(width: minimumSize.width * 0.4, height: minimumSize.height * 0.4))
     XCTAssertEqual(state.imageDisplaySize.width, 96, accuracy: 0.001)
     XCTAssertEqual(state.imageDisplaySize.height, 64, accuracy: 0.001)
     XCTAssertEqual(state.zoomPercent, 40)
@@ -1028,7 +1030,7 @@ final class QuickAccessCoreTests: XCTestCase {
     state.onWindowResize = { size, _ in stateResizeRequests.append(size) }
 
     state.updateZoomFactor(0.4)
-    XCTAssertEqual(stateResizeRequests.last, minimumSize)
+    XCTAssertEqual(stateResizeRequests.last, CGSize(width: minimumSize.width * 0.4, height: minimumSize.height * 0.4))
     state.updateZoomFactor(1)
 
     let scrollView = QuickAccessPinImageScrollView(frame: NSRect(origin: .zero, size: state.displaySize))
@@ -1054,7 +1056,7 @@ final class QuickAccessCoreTests: XCTestCase {
 
     let requestedEventSize = try XCTUnwrap(eventResizeRequest)
     XCTAssertEqual(state.zoomFactor, 0.4, accuracy: 0.001)
-    XCTAssertEqual(state.displaySize, minimumSize)
+    XCTAssertEqual(state.displaySize, CGSize(width: minimumSize.width * 0.4, height: minimumSize.height * 0.4))
     XCTAssertEqual(requestedEventSize, state.displaySize)
     XCTAssertEqual(state.imageDisplaySize, CGSize(width: 96, height: 64))
     XCTAssertEqual(scrollView.currentPanOffset.x, 0, accuracy: 0.001)

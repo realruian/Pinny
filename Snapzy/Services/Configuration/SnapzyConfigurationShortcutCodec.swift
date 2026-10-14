@@ -25,7 +25,7 @@ enum SnapzyConfigurationShortcutCodec {
   static func shortcut(key: String, modifiers: [String], requireModifier: Bool) -> ShortcutConfig? {
     guard let keyCode = keyCode(for: key) else { return nil }
     guard let carbonModifiers = self.carbonModifiers(from: modifiers) else { return nil }
-    guard !requireModifier || carbonModifiers != 0 else { return nil }
+    guard !requireModifier || carbonModifiers != 0 || ShortcutConfig.isFunctionKey(keyCode) else { return nil }
     return ShortcutConfig(keyCode: keyCode, modifiers: carbonModifiers)
   }
 

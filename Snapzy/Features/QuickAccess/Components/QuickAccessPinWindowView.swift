@@ -11,13 +11,10 @@ import SwiftUI
 struct QuickAccessPinWindowView: View {
   @ObservedObject var state: QuickAccessPinWindowState
 
-  private var cornerRadius: CGFloat { state.preservesSourceSize ? 0 : NSWindow.defaultCornerRadius }
-
   var body: some View {
     QuickAccessPinImageViewport(state: state)
       .frame(width: state.displaySize.width, height: state.displaySize.height)
       .clipped()
-      .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
       .background(Color.clear)
   }
 }

@@ -412,7 +412,7 @@ nonisolated enum L10n {
     )
     static let configSyncQueuedDescription = string(
       "preferences-advanced.config-sync-queued-description",
-      defaultValue: "Sync queued. Snapzy will update config.toml shortly.",
+      defaultValue: "Sync queued. Pinny will update config.toml shortly.",
       comment: "Config sync row description when sync is queued"
     )
     static let configSyncWritingDescription = string(
@@ -446,7 +446,7 @@ nonisolated enum L10n {
     static func configAccessWarningDescription(_ path: String) -> String {
       format(
         "preferences-advanced.config-access-warning-description",
-        defaultValue: "Grant access to %@ once so Snapzy can create config.toml and apply direct edits on launch.",
+        defaultValue: "Grant access to %@ once so Pinny can create config.toml and apply direct edits on launch.",
         comment: "Warning description when config folder access is missing. %@ is the expected config directory path.",
         path
       )
@@ -489,7 +489,7 @@ nonisolated enum L10n {
     )
     static let configSyncConfirmationMessage = string(
       "preferences-advanced.config-sync-confirmation-message",
-      defaultValue: "config.toml no longer matches Snapzy settings and may have edits from outside the app. Syncing will replace it with current settings.",
+      defaultValue: "config.toml no longer matches Pinny settings and may have edits from outside the app. Syncing will replace it with current settings.",
       comment: "Confirmation alert message before replacing a config file with external changes"
     )
     static let syncConfigConfirmButton = string(
@@ -524,12 +524,12 @@ nonisolated enum L10n {
     )
     static let exportPanelTitle = string(
       "preferences-advanced.export-panel-title",
-      defaultValue: "Export Snapzy Config",
+      defaultValue: "Export Pinny Config",
       comment: "Config export save panel title"
     )
     static let importPanelTitle = string(
       "preferences-advanced.import-panel-title",
-      defaultValue: "Import Snapzy Config",
+      defaultValue: "Import Pinny Config",
       comment: "Config import open panel title"
     )
     static let configDirectoryPanelTitle = string(
@@ -540,7 +540,7 @@ nonisolated enum L10n {
     static func configDirectoryPanelMessage(_ path: String) -> String {
       format(
         "preferences-advanced.config-directory-panel-message",
-        defaultValue: "Grant access for %@. If the folder is missing, Snapzy will create it automatically.",
+        defaultValue: "Grant access for %@. If the folder is missing, Pinny will create it automatically.",
         comment: "Config directory access panel message. %@ is the suggested directory path.",
         path
       )
@@ -554,7 +554,7 @@ nonisolated enum L10n {
     static func configDirectoryPanelOnboardingMessage(_ path: String) -> String {
       format(
         "preferences-advanced.config-directory-panel-onboarding-message",
-        defaultValue: "Grant access for %@. Snapzy will create config.toml there if it is missing.",
+        defaultValue: "Grant access for %@. Pinny will create config.toml there if it is missing.",
         comment: "Config directory access panel message from onboarding. %@ is the suggested directory path.",
         path
       )
@@ -563,7 +563,7 @@ nonisolated enum L10n {
     static func configDirectoryMismatch(_ path: String) -> String {
       format(
         "preferences-advanced.config-directory-mismatch",
-        defaultValue: "Choose %@ to keep Snapzy config in the default dotfiles location.",
+        defaultValue: "Choose %@ to keep Pinny config in the default dotfiles location.",
         comment: "Config directory mismatch validation message. %@ is the expected directory path.",
         path
       )
@@ -600,7 +600,7 @@ nonisolated enum L10n {
     )
     static let restoreDefaultsConfirmationMessage = string(
       "preferences-advanced.restore-defaults-confirmation-message",
-      defaultValue: "If you confirm, Snapzy will replace config.toml with default values, reset app settings, and clear cloud credentials. Saved captures are not deleted.",
+      defaultValue: "If you confirm, Pinny will replace config.toml with default values, reset app settings, and clear cloud credentials. Saved captures are not deleted.",
       comment: "Restore defaults confirmation alert message"
     )
     static func importFailedWithErrors(_ count: Int) -> String {
@@ -633,6 +633,7 @@ nonisolated enum L10n {
   }
 
   enum Actions {
+    static let pinClipboard = string("action.pin-clipboard", defaultValue: "Pin clipboard image", comment: "Global clipboard image pin action")
     static let captureArea = string(
       "action.capture-area",
       defaultValue: "Capture Area",
@@ -791,7 +792,7 @@ nonisolated enum L10n {
     )
     static let quitSnapzy = string(
       "menu.quit-snapzy",
-      defaultValue: "Quit Snapzy",
+      defaultValue: "Quit Pinny",
       comment: "Status bar menu item title for quitting the app"
     )
   }
@@ -1377,7 +1378,7 @@ nonisolated enum L10n {
   enum Splash {
     static let welcomeTitle = string(
       "splash.welcome-title",
-      defaultValue: "Welcome to Snapzy",
+      defaultValue: "Welcome to Pinny",
       comment: "Splash screen welcome title"
     )
     static let welcomeSubtitle = string(
@@ -1466,7 +1467,7 @@ nonisolated enum L10n {
     )
     static let languageSubtitle = string(
       "onboarding.language.subtitle",
-      defaultValue: "Snapzy can follow your Mac or preview a specific app language during setup.",
+      defaultValue: "Pinny can follow your Mac or preview a specific app language during setup.",
       comment: "Onboarding language step subtitle"
     )
     static let languageAutoTitle = string(
@@ -1501,7 +1502,7 @@ nonisolated enum L10n {
     )
     static let permissionsSubtitle = string(
       "onboarding.permissions.subtitle",
-      defaultValue: "Snapzy needs permissions for capture, audio, notifications, and save location.",
+      defaultValue: "Pinny needs permissions for capture, audio, notifications, and save location.",
       comment: "Onboarding permissions step subtitle"
     )
     static let screenRecording = string(
@@ -1576,7 +1577,7 @@ nonisolated enum L10n {
     )
     static let chooseFolderMessage = string(
       "onboarding.permissions.choose-folder-message",
-      defaultValue: "Choose a folder for Snapzy captures (default: Desktop/Snapzy)",
+      defaultValue: "Choose a folder for Pinny captures (default: Desktop/Pinny)",
       comment: "Open panel message for selecting export directory during onboarding"
     )
     static let screenRecordingIdentityBlocked = string(
@@ -1592,7 +1593,7 @@ nonisolated enum L10n {
     )
     static let configAccessSubtitle = string(
       "onboarding.config-access.subtitle",
-      defaultValue: "Snapzy uses a TOML file for portable settings, backups, and dotfile workflows.",
+      defaultValue: "Pinny uses a TOML file for portable settings, backups, and dotfile workflows.",
       comment: "Onboarding config access step subtitle"
     )
     static let configAccessFolderTitle = string(
@@ -1607,12 +1608,12 @@ nonisolated enum L10n {
     )
     static let configAccessFolderDescription = string(
       "onboarding.config-access.folder-description",
-      defaultValue: "Grant access once. Snapzy will create config.toml if needed and apply valid direct edits on launch.",
+      defaultValue: "Grant access once. Pinny will create config.toml if needed and apply valid direct edits on launch.",
       comment: "Onboarding config access description"
     )
     static let configAccessPrivacyNote = string(
       "onboarding.config-access.privacy-note",
-      defaultValue: "This only grants Snapzy access to its config folder. It does not import secrets or scan your files.",
+      defaultValue: "This only grants Pinny access to its config folder. It does not import secrets or scan your files.",
       comment: "Privacy note on onboarding config access step"
     )
     static let configAccessReady = string(
@@ -1633,7 +1634,7 @@ nonisolated enum L10n {
     )
     static let shortcutsSubtitle = string(
       "onboarding.shortcuts.subtitle",
-      defaultValue: "Assign system shortcuts to Snapzy for quick access.",
+      defaultValue: "Assign system shortcuts to Pinny for quick access.",
       comment: "Onboarding shortcuts step subtitle"
     )
     static let recordingSection = string(
@@ -1668,7 +1669,7 @@ nonisolated enum L10n {
     )
     static let guideStep3 = string(
       "onboarding.shortcuts.guide-step-3",
-      defaultValue: "Uncheck the macOS screenshot shortcuts that overlap with the Snapzy shortcuts you want to keep on",
+      defaultValue: "Uncheck the macOS screenshot shortcuts that overlap with the Pinny shortcuts you want to keep on",
       comment: "Step 3 in onboarding shortcut conflict resolution guide"
     )
     static let noConflictDetected = string(
@@ -1699,7 +1700,7 @@ nonisolated enum L10n {
     )
     static let diagnosticsDescription = string(
       "onboarding.diagnostics.description",
-      defaultValue: "Snapzy can collect anonymous diagnostic logs when something goes wrong. These logs help us find and fix bugs faster.",
+      defaultValue: "Pinny can collect anonymous diagnostic logs when something goes wrong. These logs help us find and fix bugs faster.",
       comment: "Diagnostics opt-in description"
     )
     static let enableDiagnosticLogging = string(
@@ -1751,12 +1752,12 @@ nonisolated enum L10n {
     )
     static let sponsorDescription = string(
       "onboarding.sponsor.description",
-      defaultValue: "Snapzy is now open-source. If it saves you time, consider supporting ongoing development.",
+      defaultValue: "Pinny is now open-source. If it saves you time, consider supporting ongoing development.",
       comment: "Onboarding sponsor step description"
     )
     static let sponsorOptionalNote = string(
       "onboarding.sponsor.optional-note",
-      defaultValue: "Support is optional. Snapzy remains fully usable without sponsoring.",
+      defaultValue: "Support is optional. Pinny remains fully usable without sponsoring.",
       comment: "Note under sponsor options"
     )
 
@@ -1767,7 +1768,7 @@ nonisolated enum L10n {
     )
     static let completionDescription = string(
       "onboarding.completion.description",
-      defaultValue: "Snapzy is ready. Access it from the menu bar or use your keyboard shortcuts.",
+      defaultValue: "Pinny is ready. Access it from the menu bar or use your keyboard shortcuts.",
       comment: "Onboarding completion description"
     )
     static let menuBar = string(
@@ -1981,7 +1982,7 @@ nonisolated enum L10n {
     )
     static let stepShortcutsSubtitle = string(
       "onboarding.step.shortcuts.subtitle",
-      defaultValue: "Go to System Settings > Keyboard > Keyboard Shortcuts > Screenshots to uncheck ⇧⌘3, ⇧⌘4, and ⇧⌘5 to prevent key conflicts with Snapzy. Keep workflows portable with config.toml.",
+      defaultValue: "Go to System Settings > Keyboard > Keyboard Shortcuts > Screenshots to uncheck ⇧⌘3, ⇧⌘4, and ⇧⌘5 to prevent key conflicts with Pinny. Keep workflows portable with config.toml.",
       comment: "Subtitle narrative for Step 3 Shortcuts"
     )
     static let stepShortcutsTip = string(
@@ -2013,7 +2014,7 @@ nonisolated enum L10n {
     )
     static let stepPermissionsSubtitle = string(
       "onboarding.step.permissions.subtitle",
-      defaultValue: "Snapzy runs entirely on your Mac. These macOS grants enable screen capture, audio recording, and global shortcuts.",
+      defaultValue: "Pinny runs entirely on your Mac. These macOS grants enable screen capture, audio recording, and global shortcuts.",
       comment: "Subtitle narrative for Step 4 Permissions"
     )
     static let stepPermissionsTip = string(
@@ -2127,7 +2128,7 @@ nonisolated enum L10n {
     )
     static let permissionsSaveFolderAssurance1 = string(
       "onboarding.permissions.save-folder-assurance-1",
-      defaultValue: "Snapzy only touches its assigned folder (default: Desktop/Snapzy).",
+      defaultValue: "Pinny only touches its assigned folder (default: Desktop/Pinny).",
       comment: "Assurance 1 for Save Folder"
     )
     static let permissionsSaveFolderAssurance2 = string(
@@ -2197,7 +2198,7 @@ nonisolated enum L10n {
     )
     static let permissionsPrivacyTriggerDetail = string(
       "onboarding.permissions.privacy-trigger-detail",
-      defaultValue: "Snapzy stays completely idle until you press a shortcut. There is zero background scanning of your display.",
+      defaultValue: "Pinny stays completely idle until you press a shortcut. There is zero background scanning of your display.",
       comment: "Detail for user-triggered capture guarantee"
     )
     static let permissionsPrivacyLocalTitle = string(
@@ -2217,7 +2218,7 @@ nonisolated enum L10n {
     )
     static let permissionsPrivacySettingsDetail = string(
       "onboarding.permissions.privacy-settings-detail",
-      defaultValue: "Withdraw grants in System Settings whenever you like, and Snapzy gracefully continues with remaining tools.",
+      defaultValue: "Withdraw grants in System Settings whenever you like, and Pinny gracefully continues with remaining tools.",
       comment: "Detail for revocable permissions guarantee"
     )
 
@@ -2234,7 +2235,7 @@ nonisolated enum L10n {
     )
     static let completionCardSubtitle = string(
       "onboarding.completion.card-subtitle",
-      defaultValue: "Snapzy is ready in your menu bar. Take screenshots, record clips, extract text, and annotate anytime.",
+      defaultValue: "Pinny is ready in your menu bar. Take screenshots, record clips, extract text, and annotate anytime.",
       comment: "Subtitle on onboarding completion card"
     )
     static let completionAreaCaptureTitle = string(
@@ -2294,7 +2295,7 @@ nonisolated enum L10n {
     )
     static let completionStartUsing = string(
       "onboarding.completion.start-using",
-      defaultValue: "Start Using Snapzy",
+      defaultValue: "Start Using Pinny",
       comment: "Primary action button title on completion screen"
     )
     static let completionReviewHint = string(
@@ -2405,7 +2406,7 @@ nonisolated enum L10n {
     )
     static let mockShortcutsReady = string(
       "onboarding.mock.shortcuts-ready",
-      defaultValue: "Snapzy shortcuts ready",
+      defaultValue: "Pinny shortcuts ready",
       comment: "Success message in mock system settings window"
     )
     static let mockConflictBadge = string(
@@ -2700,7 +2701,7 @@ nonisolated enum L10n {
     )
     static let startAtLoginDescription = string(
       "preferences-general.start-at-login-description",
-      defaultValue: "Launch Snapzy when you log in",
+      defaultValue: "Launch Pinny when you log in",
       comment: "General preferences setting description"
     )
     static let playSoundsTitle = string(
@@ -2720,7 +2721,7 @@ nonisolated enum L10n {
     )
     static let menuBarIconDescription = string(
       "preferences-general.menu-bar-icon-description",
-      defaultValue: "Access Snapzy from the menu bar. When hidden, open Snapzy again to show settings.",
+      defaultValue: "Access Pinny from the menu bar. When hidden, open Pinny again to show settings.",
       comment: "General preferences setting description"
     )
     static let themeTitle = string(
@@ -2750,7 +2751,7 @@ nonisolated enum L10n {
     )
     static let languageDescription = string(
       "preferences-general.language-description",
-      defaultValue: "Choose the language used across Snapzy",
+      defaultValue: "Choose the language used across Pinny",
       comment: "General preferences setting description"
     )
     static let languageSystem = string(
@@ -2765,22 +2766,22 @@ nonisolated enum L10n {
     )
     static let languageRelaunchConfirmationTitle = string(
       "preferences-general.language-relaunch-confirmation-title",
-      defaultValue: "Relaunch Snapzy?",
+      defaultValue: "Relaunch Pinny?",
       comment: "Alert title shown before the app relaunches to apply a language change"
     )
     static let languageRelaunchConfirmationMessage = string(
       "preferences-general.language-relaunch-confirmation-message",
-      defaultValue: "Snapzy needs to quit and reopen to apply this language change everywhere.",
+      defaultValue: "Pinny needs to quit and reopen to apply this language change everywhere.",
       comment: "Alert message shown before the app relaunches to apply a language change"
     )
     static let languageRelaunchConfirmationAction = string(
       "preferences-general.language-relaunch-confirmation-action",
-      defaultValue: "Relaunch Snapzy",
+      defaultValue: "Relaunch Pinny",
       comment: "Alert button title that confirms relaunching the app after changing language"
     )
     static let languageRelaunchErrorTitle = string(
       "preferences-general.language-relaunch-error-title",
-      defaultValue: "Could Not Relaunch Snapzy",
+      defaultValue: "Could Not Relaunch Pinny",
       comment: "Alert title shown when the app cannot relaunch after changing language"
     )
     static let saveLocationTitle = string(
@@ -2903,7 +2904,7 @@ nonisolated enum L10n {
     )
     static let defaultSaveLocation = string(
       "preferences-general.default-save-location",
-      defaultValue: "Desktop/Snapzy",
+      defaultValue: "Desktop/Pinny",
       comment: "Default export location display label"
     )
     static func accessNotGranted(_ folderName: String) -> String {
@@ -2917,7 +2918,7 @@ nonisolated enum L10n {
 
     static let chooseSaveLocationMessage = string(
       "preferences-general.choose-save-location-message",
-      defaultValue: "Choose where Snapzy saves captures",
+      defaultValue: "Choose where Pinny saves captures",
       comment: "Open panel message for selecting the default export location"
     )
     static let saveHereButton = string(
@@ -2951,11 +2952,13 @@ nonisolated enum L10n {
   }
 
   enum PreferencesWorkflow {
+    static let pinClipboardDescription = string("preferences-workflow.pin-clipboard-description", defaultValue: "Pin the image or image file currently copied to the clipboard.", comment: "Clipboard pin shortcut description")
+    static let pinCopiesImage = string("preferences-workflow.pin-copy", defaultValue: "Copy when pinning", comment: "Whether pinning also copies the image")
     static let captureSection = string("preferences-workflow.capture-section", defaultValue: "Capture in place", comment: "Screenshot and pin workflow settings")
     static let captureTitle = string("preferences-workflow.capture-title", defaultValue: "Screenshot & Annotate", comment: "Screenshot and pin workflow settings")
     static let captureDescription = string("preferences-workflow.capture-description", defaultValue: "Keep the selection in place to adjust and annotate before finishing. Configure its shortcut in Keyboard Shortcuts.", comment: "Screenshot and pin workflow settings")
     static let componentTitle = string("preferences-workflow.component-title", defaultValue: "Select a component", comment: "Screenshot and pin workflow settings")
-    static let componentDescription = string("preferences-workflow.component-description", defaultValue: "Hover to detect components. During selection, Tab selects the parent and Shift-Tab selects the child. Available regions depend on the target app.", comment: "Screenshot and pin workflow settings")
+    static let componentDescription = string("preferences-workflow.component-description", defaultValue: "Hover to detect components. Press Tab to expand to the parent and Shift-Tab to shrink to the child.", comment: "Screenshot and pin workflow settings")
     static let recognitionSettings = string("preferences-workflow.recognition-settings", defaultValue: "Detection Settings", comment: "Screenshot and pin workflow settings")
     static let adjustTitle = string("preferences-workflow.adjust-title", defaultValue: "Move and resize the selection", comment: "Screenshot and pin workflow settings")
     static let adjustDescription = string("preferences-workflow.adjust-description", defaultValue: "With the selection tool, drag an empty part of the image to move the region. Drag any edge or corner to resize it.", comment: "Screenshot and pin workflow settings")
@@ -2964,7 +2967,7 @@ nonisolated enum L10n {
     static let doubleClickTitle = string("preferences-workflow.double-click-title", defaultValue: "Double-click to copy and close", comment: "Screenshot and pin workflow settings")
     static let doubleClickDescription = string("preferences-workflow.double-click-description", defaultValue: "Double-click a pinned image to copy its original-resolution content and close that image. Zoom does not change the copied resolution.", comment: "Screenshot and pin workflow settings")
     static let zoomTitle = string("preferences-workflow.zoom-title", defaultValue: "Scroll to zoom", comment: "Screenshot and pin workflow settings")
-    static let zoomDescription = string("preferences-workflow.zoom-description", defaultValue: "Choose whether the window resizes with the image when you scroll to zoom.", comment: "Screenshot and pin workflow settings")
+    static let zoomDescription = string("preferences-workflow.zoom-description", defaultValue: "Drag to move; scroll to resize the whole image and window together.", comment: "Screenshot and pin workflow settings")
     static let legacyCardsTitle = string("preferences-workflow.legacy-cards-title", defaultValue: "Screen-corner cards (legacy workflow)", comment: "Screenshot and pin workflow settings")
     static let legacyCardsDescription = string("preferences-workflow.legacy-cards-description", defaultValue: "These settings apply only to corner cards shown after capture. Card position, action buttons, and automatic dismissal do not affect inline selections or pinned images.", comment: "Screenshot and pin workflow settings")
     static let accessibilityPermission = string("preferences-workflow.accessibility-permission", defaultValue: "Required to detect components inside windows. macOS also grants the ability to control other apps.", comment: "Screenshot and pin workflow settings")
@@ -3362,7 +3365,7 @@ nonisolated enum L10n {
     )
     static let includeInScreenshotsDescription = string(
       "preferences-capture.include-in-screenshots-description",
-      defaultValue: "Show Snapzy windows such as Annotate in captured images",
+      defaultValue: "Show Pinny windows such as Annotate in captured images",
       comment: "Capture preferences setting description"
     )
     static let includeInRecordingsTitle = string(
@@ -3372,7 +3375,7 @@ nonisolated enum L10n {
     )
     static let includeInRecordingsDescription = string(
       "preferences-capture.include-in-recordings-description",
-      defaultValue: "Show Snapzy windows such as Annotate in recorded videos",
+      defaultValue: "Show Pinny windows such as Annotate in recorded videos",
       comment: "Capture preferences setting description"
     )
     static let hideDesktopIconsTitle = string(
@@ -3422,7 +3425,7 @@ nonisolated enum L10n {
     )
     static let autoDetectElementUnderCursorDescription = string(
       "preferences-capture.auto-detect-element-under-cursor-description",
-      defaultValue: "With window detection enabled, prefer components such as sidebars and cards. Requires Accessibility access. In Screenshot & Annotate, use Tab / Shift-Tab to switch levels.",
+      defaultValue: "With window detection enabled, prefer components such as sidebars and cards. Requires Accessibility access. Press Tab to expand to the parent and Shift-Tab to shrink to the child.",
       comment: "Capture preferences setting description"
     )
     static let reverseMagnifierZoomDirectionTitle = string(
@@ -3560,7 +3563,7 @@ nonisolated enum L10n {
     )
     static let jpegCutoutNote = string(
       "preferences-capture.jpeg-cutout-note",
-      defaultValue: "Object cutout captures require transparency. Snapzy will save them as PNG even when JPEG is selected.",
+      defaultValue: "Object cutout captures require transparency. Pinny will save them as PNG even when JPEG is selected.",
       comment: "Informational note shown when JPEG screenshot format is selected"
     )
     static let defaultPresetTitle = string(
@@ -3864,7 +3867,7 @@ nonisolated enum L10n {
     )
     static let ocrNotificationAllowHint = string(
       "preferences-capture.ocr-notification-allow-hint",
-      defaultValue: "Allow notifications so Snapzy can show you the recognized text.",
+      defaultValue: "Allow notifications so Pinny can show you the recognized text.",
       comment: "Hint shown in OCR preferences when macOS notification permission has not been requested yet"
     )
     static let ocrNotificationAllowAction = string(
@@ -3874,7 +3877,7 @@ nonisolated enum L10n {
     )
     static let ocrNotificationDeniedHint = string(
       "preferences-capture.ocr-notification-denied-hint",
-      defaultValue: "Notifications are turned off for Snapzy in System Settings. OCR still works and copies text to the clipboard.",
+      defaultValue: "Notifications are turned off for Pinny in System Settings. OCR still works and copies text to the clipboard.",
       comment: "Hint shown in OCR preferences when macOS notification permission is denied"
     )
     static let ocrSuccessNotificationTitle = string(
@@ -4113,7 +4116,7 @@ nonisolated enum L10n {
     )
     static let bringForwardAfterDragDescription = string(
       "preferences-capture.annotate-bring-forward-after-drag-description",
-      defaultValue: "When the editor stays open, bring Snapzy to the front and focus Annotate after the drop completes",
+      defaultValue: "When the editor stays open, bring Pinny to the front and focus Annotate after the drop completes",
       comment: "Annotate preferences setting description for activating Annotate after drag-to-app"
     )
   }
@@ -4131,12 +4134,12 @@ nonisolated enum L10n {
     )
     static let systemConflictTitle = string(
       "preferences-shortcuts.system-conflict-title",
-      defaultValue: "macOS screenshot shortcuts overlap with Snapzy",
+      defaultValue: "macOS screenshot shortcuts overlap with Pinny",
       comment: "Title for system shortcut conflict warning"
     )
     static let systemConflictDescription = string(
       "preferences-shortcuts.system-conflict-description",
-      defaultValue: "Turn off the overlapping macOS shortcuts to avoid conflicts with the Snapzy shortcuts you keep enabled.",
+      defaultValue: "Turn off the overlapping macOS shortcuts to avoid conflicts with the Pinny shortcuts you keep enabled.",
       comment: "Description for system shortcut conflict warning"
     )
     static let howToDisable = string(
@@ -4156,7 +4159,7 @@ nonisolated enum L10n {
     )
     static let noConflictsDescription = string(
       "preferences-shortcuts.no-conflicts-description",
-      defaultValue: "No overlapping macOS screenshot shortcuts were found for the Snapzy shortcuts you currently have enabled.",
+      defaultValue: "No overlapping macOS screenshot shortcuts were found for the Pinny shortcuts you currently have enabled.",
       comment: "Description for success state when there are no system shortcut conflicts"
     )
     static let globalSection = string(
@@ -4191,7 +4194,7 @@ nonisolated enum L10n {
     )
     static let disableShortcutsMessage = string(
       "preferences-shortcuts.disable-shortcuts-message",
-      defaultValue: "You won't be able to capture screenshots or recordings using keyboard shortcuts from any app. You'll need to open Snapzy manually to use capture features.",
+      defaultValue: "You won't be able to capture screenshots or recordings using keyboard shortcuts from any app. You'll need to open Pinny manually to use capture features.",
       comment: "Alert message for disabling global shortcuts"
     )
     static let captureSection = string(
@@ -4519,7 +4522,7 @@ nonisolated enum L10n {
     )
     static let supportTitle = string(
       "preferences-about.support-title",
-      defaultValue: "Support Snapzy",
+      defaultValue: "Support Pinny",
       comment: "About screen sponsor card title"
     )
     static let updateChannelTitle = string(
@@ -4713,12 +4716,12 @@ nonisolated enum L10n {
     )
     static let preferencesMessage = string(
       "microphone.preferences-message",
-      defaultValue: "Snapzy needs microphone permission. Please enable it in System Settings > Privacy & Security > Microphone.",
+      defaultValue: "Pinny needs microphone permission. Please enable it in System Settings > Privacy & Security > Microphone.",
       comment: "Alert message when microphone permission is missing from preferences or toolbar"
     )
     static let recordingMessage = string(
       "microphone.recording-message",
-      defaultValue: "Snapzy needs microphone permission to record audio. Please grant access in System Settings.",
+      defaultValue: "Pinny needs microphone permission to record audio. Please grant access in System Settings.",
       comment: "Alert message when microphone permission is missing while starting a recording"
     )
     static let continueWithoutMic = string(
@@ -4776,12 +4779,12 @@ nonisolated enum L10n {
     )
     static let preferencesMessage = string(
       "camera.preferences-message",
-      defaultValue: "Snapzy needs camera permission. Please enable it in System Settings > Privacy & Security > Camera.",
+      defaultValue: "Pinny needs camera permission. Please enable it in System Settings > Privacy & Security > Camera.",
       comment: "Alert message when camera permission is missing from the recording toolbar"
     )
     static let recordingMessage = string(
       "camera.recording-message",
-      defaultValue: "Snapzy needs camera permission to add camera video to the recording. Please grant access in System Settings.",
+      defaultValue: "Pinny needs camera permission to add camera video to the recording. Please grant access in System Settings.",
       comment: "Alert message when camera permission is missing while starting a recording"
     )
     static let doNotUse = string(
@@ -4914,7 +4917,7 @@ nonisolated enum L10n {
     )
     static let exportDescription = string(
       "cloud-transfer.export-description",
-      defaultValue: "Create an encrypted archive you can import on another Mac. Snapzy does not store this archive passphrase.",
+      defaultValue: "Create an encrypted archive you can import on another Mac. Pinny does not store this archive passphrase.",
       comment: "Description for cloud credential export sheet"
     )
     static let archiveContents = string(
@@ -4972,12 +4975,12 @@ nonisolated enum L10n {
     )
     static let savePanelMessage = string(
       "cloud-transfer.save-panel-message",
-      defaultValue: "Choose where Snapzy should save the encrypted credential archive.",
+      defaultValue: "Choose where Pinny should save the encrypted credential archive.",
       comment: "Message shown in the save panel for exporting cloud credentials"
     )
     static let chooserMessage = string(
       "cloud-transfer.chooser-message",
-      defaultValue: "Choose a Snapzy encrypted credential archive.",
+      defaultValue: "Choose a Pinny encrypted credential archive.",
       comment: "Message shown in the open panel for importing cloud credentials"
     )
     static func archiveSaved(_ path: String) -> String {
@@ -5005,7 +5008,7 @@ nonisolated enum L10n {
 
     static let invalidArchive = string(
       "cloud-transfer.error.invalid-archive",
-      defaultValue: "The selected file is not a valid Snapzy cloud credential archive.",
+      defaultValue: "The selected file is not a valid Pinny cloud credential archive.",
       comment: "Error shown when an imported cloud credential archive is invalid"
     )
     static func unsupportedSchemaVersion(_ version: Int) -> String {
@@ -5374,7 +5377,7 @@ nonisolated enum L10n {
     )
     static let importCredentialsMessage = string(
       "cloud-settings.import-credentials-message",
-      defaultValue: "Snapzy will load the imported values into the editor. Your current saved configuration stays unchanged until you click Save & Test.",
+      defaultValue: "Pinny will load the imported values into the editor. Your current saved configuration stays unchanged until you click Save & Test.",
       comment: "Alert message for importing cloud credentials over an existing configuration"
     )
     static let transferAlertTitle = string(
@@ -5482,7 +5485,7 @@ nonisolated enum L10n {
     )
     static let googleFolderDescription = string(
       "cloud-settings.google-folder-description",
-      defaultValue: "Screenshots and videos will be saved under this folder in your Google Drive (default: Snapzy).",
+      defaultValue: "Screenshots and videos will be saved under this folder in your Google Drive (default: Pinny).",
       comment: "Google Drive Folder Name description"
     )
     static let uploadsWindowSection = string(
@@ -5654,7 +5657,7 @@ nonisolated enum L10n {
     )
     static let importEncryptedArchiveDescription = string(
       "cloud-settings.import-encrypted-archive-description",
-      defaultValue: "Load a previously exported Snapzy cloud archive to prefill this form.",
+      defaultValue: "Load a previously exported Pinny cloud archive to prefill this form.",
       comment: "Description for importing an encrypted cloud credential archive"
     )
     static let provider = string(
@@ -6146,7 +6149,7 @@ nonisolated enum L10n {
     )
     static let saveFailedMessage = string(
       "annotate.save-failed-message",
-      defaultValue: "Snapzy couldn't write to the selected location. Please choose another folder.",
+      defaultValue: "Pinny couldn't write to the selected location. Please choose another folder.",
       comment: "Alert message shown when annotate save fails"
     )
     static let overwriteCloudFileOnSaveMessage = string(
@@ -6835,7 +6838,7 @@ nonisolated enum L10n {
     )
     static let followMouseOnlyWorksWithSnapzy = string(
       "video-editor.follow-mouse-only-works-with-snapzy",
-      defaultValue: "Follow Mouse only works with videos recorded by Snapzy after mouse tracking was added.",
+      defaultValue: "Follow Mouse only works with videos recorded by Pinny after mouse tracking was added.",
       comment: "Warning message shown when follow-mouse zoom mode is unavailable"
     )
     static let followMouseActiveDescription = string(
@@ -7079,7 +7082,7 @@ nonisolated enum L10n {
     static func cannotReplaceOriginalMessage(_ details: String) -> String {
       format(
         "video-editor.cannot-replace-original-message",
-        defaultValue: "Snapzy doesn't have write access to this file location. Save as a copy instead.\n\n%@",
+        defaultValue: "Pinny doesn't have write access to this file location. Save as a copy instead.\n\n%@",
         comment: "Alert message shown when replacing the original video file is not allowed. %@ is the lower-level error message.",
         details
       )
@@ -7392,12 +7395,12 @@ nonisolated enum L10n {
     )
     static let previewShowingLatestWhileLockingNewerContent = string(
       "scrolling-capture.preview-showing-latest-while-locking-newer-content",
-      defaultValue: "Showing the latest stitched result while Snapzy locks newer content.",
+      defaultValue: "Showing the latest stitched result while Pinny locks newer content.",
       comment: "Preview description shown while scrolling capture syncs newer content"
     )
     static let previewPausedScrollSlowly = string(
       "scrolling-capture.preview-paused-scroll-slowly",
-      defaultValue: "Preview paused - scroll slowly so Snapzy can re-align.",
+      defaultValue: "Preview paused - scroll slowly so Pinny can re-align.",
       comment: "Preview description shown when scrolling capture needs recovery"
     )
     static let previewFinishingSavingCapture = string(
@@ -7512,7 +7515,7 @@ nonisolated enum L10n {
     )
     static let guidanceSnapzyLockingFirstFrame = string(
       "scrolling-capture.guidance-snapzy-locking-first-frame",
-      defaultValue: "Snapzy is locking the first frame",
+      defaultValue: "Pinny is locking the first frame",
       comment: "Selection guidance detail shown while the first scrolling capture frame is locking"
     )
     static let guidanceSlowDown = string(
@@ -7522,7 +7525,7 @@ nonisolated enum L10n {
     )
     static let guidanceKeepOneDirectionSoSnapzyCanRealign = string(
       "scrolling-capture.guidance-keep-one-direction-so-snapzy-can-realign",
-      defaultValue: "Keep one direction so Snapzy can re-align",
+      defaultValue: "Keep one direction so Pinny can re-align",
       comment: "Selection guidance detail shown when scrolling capture needs recovery"
     )
     static let guidanceKeepSteadierPace = string(
@@ -7577,7 +7580,7 @@ nonisolated enum L10n {
     )
     static let guidanceSnapzySealingStitchedResult = string(
       "scrolling-capture.guidance-snapzy-sealing-stitched-result",
-      defaultValue: "Snapzy is sealing the stitched result",
+      defaultValue: "Pinny is sealing the stitched result",
       comment: "Selection guidance detail shown while scrolling capture finalizes"
     )
     static let guidanceSavingLongScreenshot = string(
@@ -7640,7 +7643,7 @@ nonisolated enum L10n {
 
     static let captionLivePreviewRunning = string(
       "scrolling-capture.caption-live-preview-running",
-      defaultValue: "Live preview running while Snapzy locks the stitched frame.",
+      defaultValue: "Live preview running while Pinny locks the stitched frame.",
       comment: "Preview caption shown while the scrolling capture live preview stream is active"
     )
     static let captionFinalizingStitchedResult = string(
@@ -8005,12 +8008,12 @@ nonisolated enum L10n {
     )
     static let saveLocationAccessRequiredMessage = string(
       "recording.save-location-access-required-message",
-      defaultValue: "Snapzy needs a save folder permission to continue. Please choose a folder in onboarding or grant it now.",
+      defaultValue: "Pinny needs a save folder permission to continue. Please choose a folder in onboarding or grant it now.",
       comment: "Alert message shown when save location access is missing"
     )
     static let chooseSaveLocationMessage = string(
       "recording.choose-save-location-message",
-      defaultValue: "Choose where Snapzy should save screenshots and recordings",
+      defaultValue: "Choose where Pinny should save screenshots and recordings",
       comment: "Prompt shown when asking for an export directory during recording flows"
     )
     static let screenPermissionDenied = string(
@@ -8100,12 +8103,12 @@ nonisolated enum L10n {
     )
     static let alertMessage = string(
       "crash-report.alert-message",
-      defaultValue: "Snapzy bundled your diagnostic logs into one file. Drag the file below to the report page.",
+      defaultValue: "Pinny bundled your diagnostic logs into one file. Drag the file below to the report page.",
       comment: "Alert message shown when presenting a problem report dialog with a log bundle"
     )
     static let alertMessageNoLogBundle = string(
       "crash-report.alert-message-no-log-bundle",
-      defaultValue: "Snapzy could not prepare a diagnostic log bundle. You can still open the report page and describe the problem.",
+      defaultValue: "Pinny could not prepare a diagnostic log bundle. You can still open the report page and describe the problem.",
       comment: "Alert message shown when presenting a problem report dialog without a log bundle"
     )
     static let submit = string(
@@ -8128,7 +8131,7 @@ nonisolated enum L10n {
   enum FileAccess {
     nonisolated static let chooseCapturesFolderMessage = string(
       "file-access.choose-captures-folder-message",
-      defaultValue: "Choose where Snapzy should save screenshots and recordings",
+      defaultValue: "Choose where Pinny should save screenshots and recordings",
       comment: "Open panel message shown when Snapzy asks the user to grant access to a save folder"
     )
     nonisolated static let grantAccessPrompt = string(
@@ -8148,7 +8151,7 @@ nonisolated enum L10n {
     )
     static let bookmarkSaveFailedMessage = string(
       "file-access.bookmark-save-failed-message",
-      defaultValue: "Snapzy could not persist access to this folder. Please choose the folder again and confirm permission.",
+      defaultValue: "Pinny could not persist access to this folder. Please choose the folder again and confirm permission.",
       comment: "Alert message when security-scoped bookmark persistence fails"
     )
   }
@@ -8203,9 +8206,10 @@ nonisolated enum L10n {
   }
 
   enum Annotate {
+    static let selectDisplay = string("annotate.select-display", defaultValue: "Select this display (⌘A)", comment: "Select entire display in the unified screenshot overlay")
     static let elementHierarchyHint = string(
       "annotate.element-hierarchy-hint",
-      defaultValue: "Tab: parent · Shift-Tab: child",
+      defaultValue: "Tab: expand · Shift-Tab: shrink",
       comment: "Hint while hovering an automatically detected screenshot component"
     )
     static let selectionTool = string(
@@ -8630,7 +8634,7 @@ nonisolated enum L10n {
     )
     static let notificationNoTextBody = string(
       "ocr.notification-no-text-body",
-      defaultValue: "Snapzy could not find readable text in the selected area.",
+      defaultValue: "Pinny could not find readable text in the selected area.",
       comment: "System notification body shown when OCR finds no readable text"
     )
     static let notificationFailedTitle = string(
@@ -8640,7 +8644,7 @@ nonisolated enum L10n {
     )
     static let notificationFailedBody = string(
       "ocr.notification-failed-body",
-      defaultValue: "Snapzy could not recognize text from the selected area.",
+      defaultValue: "Pinny could not recognize text from the selected area.",
       comment: "System notification body shown when OCR recognition fails"
     )
     static let qrCodesLabel = string(
@@ -8650,7 +8654,7 @@ nonisolated enum L10n {
     )
     static let qrTextOnlyUnsupported = string(
       "ocr.qr-text-only-unsupported",
-      defaultValue: "QR code detected, but Snapzy can only copy text-based QR content.",
+      defaultValue: "QR code detected, but Pinny can only copy text-based QR content.",
       comment: "Warning shown when OCR capture detects a QR code whose content cannot be represented as text"
     )
     static func recognitionFailed(_ message: String) -> String {
@@ -8913,7 +8917,7 @@ nonisolated enum L10n {
     )
     static let noSavableResultReady = string(
       "scrolling-capture-status.no-savable-result-ready",
-      defaultValue: "Snapzy couldn't lock a savable stitched image yet. You can keep capturing, try Done again, or Cancel.",
+      defaultValue: "Pinny couldn't lock a savable stitched image yet. You can keep capturing, try Done again, or Cancel.",
       comment: "Status shown when Done is pressed before a savable stitched result exists"
     )
     static let savingStitchedImage = string(
@@ -8938,7 +8942,7 @@ nonisolated enum L10n {
     )
     static let autoScrollNeedsAccessibility = string(
       "scrolling-capture-status.auto-scroll-needs-accessibility",
-      defaultValue: "Auto Scroll needs Accessibility permission. Enable Snapzy in System Settings > Privacy & Security > Accessibility.",
+      defaultValue: "Auto Scroll needs Accessibility permission. Enable Pinny in System Settings > Privacy & Security > Accessibility.",
       comment: "Status shown when auto-scroll cannot start because Accessibility permission is missing"
     )
     static let autoScrollPausedMoveMouseInside = string(
@@ -8953,12 +8957,12 @@ nonisolated enum L10n {
     )
     static let mixedDirectionsDetected = string(
       "scrolling-capture-status.mixed-directions-detected",
-      defaultValue: "Mixed scroll directions detected. Keep one direction so Snapzy can align.",
+      defaultValue: "Mixed scroll directions detected. Keep one direction so Pinny can align.",
       comment: "Status shown when mixed scroll directions are detected during scrolling capture"
     )
     static let couldntCaptureLastFrame = string(
       "scrolling-capture-status.couldnt-capture-last-frame",
-      defaultValue: "Couldn't capture the last frame. Snapzy will save the current stitched result.",
+      defaultValue: "Couldn't capture the last frame. Pinny will save the current stitched result.",
       comment: "Status shown when the final scrolling capture frame cannot be captured"
     )
     static let unableToCaptureArea = string(
@@ -8968,7 +8972,7 @@ nonisolated enum L10n {
     )
     static let couldntRefreshLastFrame = string(
       "scrolling-capture-status.couldnt-refresh-last-frame",
-      defaultValue: "Couldn't refresh the last frame. Snapzy will save the current stitched result.",
+      defaultValue: "Couldn't refresh the last frame. Pinny will save the current stitched result.",
       comment: "Status shown when the final scrolling capture refresh fails"
     )
     static let unableToRenderPreview = string(
@@ -9003,7 +9007,7 @@ nonisolated enum L10n {
     )
     static let alignmentPaused = string(
       "scrolling-capture-status.alignment-paused",
-      defaultValue: "Alignment paused. Slow down and keep one direction so Snapzy can recover.",
+      defaultValue: "Alignment paused. Slow down and keep one direction so Pinny can recover.",
       comment: "Status shown when scrolling capture pauses to recover alignment"
     )
     static let couldntAlignFrame = string(
@@ -9027,13 +9031,13 @@ nonisolated enum L10n {
     )
     static let finalizingCurrentCapture = string(
       "scrolling-capture-status.finalizing-current-capture",
-      defaultValue: "Finalizing the current capture. Snapzy is locking the latest stitched result before saving.",
+      defaultValue: "Finalizing the current capture. Pinny is locking the latest stitched result before saving.",
       comment: "Status shown when the scrolling capture result is being finalized"
     )
     static func finalizingFrames(_ count: Int) -> String {
       format(
         "scrolling-capture-status.finalizing-frames",
-        defaultValue: "Locking the current capture. Snapzy is sealing %d stitched frames before saving.",
+        defaultValue: "Locking the current capture. Pinny is sealing %d stitched frames before saving.",
         comment: "Status shown while finalizing a scrolling capture with stitched frames. %d is the number of stitched frames.",
         count
       )
@@ -9041,17 +9045,17 @@ nonisolated enum L10n {
 
     static let finalizingNoNewContent = string(
       "scrolling-capture-status.finalizing-no-new-content",
-      defaultValue: "No new content was detected. Snapzy is saving the current stitched result.",
+      defaultValue: "No new content was detected. Pinny is saving the current stitched result.",
       comment: "Status shown while finalizing a scrolling capture after reaching the end of content"
     )
     static let finalizingCouldntAlignLastFrame = string(
       "scrolling-capture-status.finalizing-couldnt-align-last-frame",
-      defaultValue: "Couldn't align the last frame cleanly. Snapzy will save the current stitched result.",
+      defaultValue: "Couldn't align the last frame cleanly. Pinny will save the current stitched result.",
       comment: "Status shown while finalizing when the last frame could not be aligned"
     )
     static let finalizingHeightLimitReached = string(
       "scrolling-capture-status.finalizing-height-limit-reached",
-      defaultValue: "Height limit reached. Snapzy is saving the current stitched result.",
+      defaultValue: "Height limit reached. Pinny is saving the current stitched result.",
       comment: "Status shown while finalizing after the scrolling capture reaches the height limit"
     )
     static let readyHintToast = string(
@@ -9081,7 +9085,7 @@ nonisolated enum L10n {
     static func outsideApplications(_ bundlePath: String) -> String {
       format(
         "app-identity.outside-applications",
-        defaultValue: "Install Snapzy in /Applications before granting permissions. Current path: %@",
+        defaultValue: "Install Pinny in /Applications before granting permissions. Current path: %@",
         comment: "Identity issue message. %@ is the current app bundle path.",
         bundlePath
       )
@@ -9297,7 +9301,7 @@ nonisolated enum L10n {
     )
     static let clearHistoryAlertMessage = string(
       "preferences-history.clear-history-alert-message",
-      defaultValue: "This will move all capture files to Trash and remove them from History. This action cannot be undone in Snapzy.",
+      defaultValue: "This will move all capture files to Trash and remove them from History. This action cannot be undone in Pinny.",
       comment: "Alert message when clearing history"
     )
     static let clearHistoryConfirm = string(
@@ -9413,7 +9417,7 @@ nonisolated enum L10n {
   enum WhatsNew {
     static let title = string(
       "whats-new.title",
-      defaultValue: "What's new in Snapzy",
+      defaultValue: "What's new in Pinny",
       comment: "Welcome screen title"
     )
     static func desc(_ version: String) -> String {
@@ -9432,7 +9436,7 @@ nonisolated enum L10n {
     )
     static let notarizationDesc = string(
       "whats-new.notarization.desc",
-      defaultValue: "Snapzy is now officially registered with the Apple Developer Program and certified by Apple, bypassing Gatekeeper's protections for a secure launch.",
+      defaultValue: "Pinny is now officially registered with the Apple Developer Program and certified by Apple, bypassing Gatekeeper's protections for a secure launch.",
       comment: "Notarization feature description"
     )
   }

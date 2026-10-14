@@ -42,11 +42,18 @@ struct ShortcutConfig: Equatable, Codable {
     modifiers: UInt32(controlKey | cmdKey | shiftKey)
   )
 
-  /// Cmd + Shift + 7
-  static let defaultAreaAnnotate = ShortcutConfig(
-    keyCode: UInt32(kVK_ANSI_7),
-    modifiers: UInt32(cmdKey | shiftKey)
-  )
+  /// Unified screenshot entry: F1.
+  static let defaultAreaAnnotate = ShortcutConfig(keyCode: UInt32(kVK_F1), modifiers: 0)
+
+  /// Pin the image currently on the clipboard: F2.
+  static let defaultPinClipboard = ShortcutConfig(keyCode: UInt32(kVK_F2), modifiers: 0)
+
+  static func isFunctionKey(_ code: UInt32) -> Bool {
+    [kVK_F1, kVK_F2, kVK_F3, kVK_F4, kVK_F5, kVK_F6, kVK_F7, kVK_F8, kVK_F9, kVK_F10,
+     kVK_F11, kVK_F12, kVK_F13, kVK_F14, kVK_F15, kVK_F16, kVK_F17, kVK_F18, kVK_F19, kVK_F20].contains(Int(code))
+  }
+
+  var canRegisterGlobally: Bool { modifiers != 0 || Self.isFunctionKey(keyCode) }
 
   /// Cmd + Shift + 5
   static let defaultRecording = ShortcutConfig(
@@ -157,12 +164,12 @@ struct ShortcutConfig: Equatable, Codable {
     if event.modifierFlags.contains(.shift) { carbonModifiers |= UInt32(shiftKey) }
     if event.modifierFlags.contains(.option) { carbonModifiers |= UInt32(optionKey) }
     if event.modifierFlags.contains(.control) { carbonModifiers |= UInt32(controlKey) }
-    if event.modifierFlags.contains(.function) {
+    if event.modifierFlags.contains(.function), !Self.isFunctionKey(UInt32(event.keyCode)) {
       carbonModifiers |= Self.functionCarbonModifier
     }
 
-    // Require at least one modifier
-    guard carbonModifiers != 0 else { return nil }
+    // F-keys work alone. Ordinary character keys still need a modifier.
+    guard carbonModifiers != 0 || Self.isFunctionKey(UInt32(event.keyCode)) else { return nil }
 
     self.keyCode = UInt32(event.keyCode)
     self.modifiers = carbonModifiers
@@ -176,7 +183,10 @@ struct ShortcutConfig: Equatable, Codable {
   /// Whether a key event exactly matches this shortcut (keyCode + full modifier set, incl. Fn).
   func matches(event: NSEvent) -> Bool {
     guard UInt32(event.keyCode) == keyCode else { return false }
-    let flags = event.modifierFlags.intersection(Self.matchableEventModifiers)
+    var flags = event.modifierFlags.intersection(Self.matchableEventModifiers)
+    if Self.isFunctionKey(keyCode), modifiers & Self.functionCarbonModifier == 0 {
+      flags.remove(.function) // NSEvent also marks ordinary F-key events as function keys.
+    }
     var expected: NSEvent.ModifierFlags = []
     if modifiers & UInt32(cmdKey) != 0 { expected.insert(.command) }
     if modifiers & UInt32(shiftKey) != 0 { expected.insert(.shift) }
@@ -474,6 +484,7 @@ enum GlobalShortcutKind: String, CaseIterable, Codable {
   case area
   case repeatArea
   case areaAnnotate
+  case pinClipboard
   case activeWindow
   case scrollingCapture
   case recording
@@ -490,6 +501,15 @@ enum GlobalShortcutKind: String, CaseIterable, Codable {
   case smartElement
   case objectCutout
   case history
+
+  /// Retained as IDs for old config/URLs; hidden screenshot modes must not hold keys.
+  var isRetiredCaptureShortcut: Bool {
+    switch self {
+    case .fullscreen, .area, .repeatArea, .activeWindow, .scrollingCapture,
+         .delayedCapture, .ocr, .smartElement, .objectCutout: return true
+    default: return false
+    }
+  }
 
   var isSystemConflictRelevant: Bool {
     switch self {
@@ -510,6 +530,8 @@ extension GlobalShortcutKind {
       return L10n.Actions.captureArea
     case .repeatArea:
       return L10n.Actions.captureRepeatArea
+    case .pinClipboard:
+      return L10n.Actions.pinClipboard
     case .areaAnnotate:
       return L10n.Actions.captureAreaAnnotate
     case .activeWindow:
@@ -555,6 +577,7 @@ enum ShortcutAction {
   case captureRepeatArea
   case captureDelayed
   case captureAreaAnnotate
+  case pinClipboard
   case captureApplication
   case captureActiveWindow
   case captureScrolling
@@ -590,6 +613,7 @@ final class KeyboardShortcutManager {
   private(set) var fullscreenShortcut: ShortcutConfig
   private(set) var areaShortcut: ShortcutConfig
   private(set) var repeatAreaShortcut: ShortcutConfig
+  private(set) var pinClipboardShortcut: ShortcutConfig
   private(set) var areaAnnotateShortcut: ShortcutConfig
   private(set) var scrollingCaptureShortcut: ShortcutConfig
   private(set) var recordingShortcut: ShortcutConfig
@@ -645,6 +669,7 @@ final class KeyboardShortcutManager {
   /// Whether a binding for `kind` should hold a global registration right now.
   /// Session-scoped kinds register only while a recording session is active.
   func shouldRegisterNow(for kind: GlobalShortcutKind) -> Bool {
+    guard !kind.isRetiredCaptureShortcut else { return false }
     guard Self.recordingSessionKinds.contains(kind) else { return true }
     if let sessionActivityOverride { return sessionActivityOverride }
     return isRecordingSessionActive()
@@ -653,6 +678,7 @@ final class KeyboardShortcutManager {
   private var fullscreenHotkeyRef: EventHotKeyRef?
   private var areaHotkeyRef: EventHotKeyRef?
   private var repeatAreaHotkeyRef: EventHotKeyRef?
+  private var pinClipboardHotkeyRef: EventHotKeyRef?
   private var areaAnnotateHotkeyRef: EventHotKeyRef?
   private var scrollingCaptureHotkeyRef: EventHotKeyRef?
   private var recordingHotkeyRef: EventHotKeyRef?
@@ -703,12 +729,15 @@ final class KeyboardShortcutManager {
   private let repeatAreaHotkeyID = EventHotKeyID(signature: OSType(0x5A53_464C), id: 21)         // "ZSFL"
   private let delayedCaptureHotkeyID = EventHotKeyID(signature: OSType(0x5A53_464D), id: 22)     // "ZSFM"
 
+  private let pinClipboardHotkeyID = EventHotKeyID(signature: OSType(0x5A53_464E), id: 23)
+
   private var eventHandler: EventHandlerRef?
 
   // UserDefaults keys
   private let fullscreenShortcutKey = "fullscreenShortcut"
   private let areaShortcutKey = "areaShortcut"
   private let repeatAreaShortcutKey = "repeatAreaShortcut"
+  private let pinClipboardShortcutKey = "pinClipboardShortcut"
   private let areaAnnotateShortcutKey = "areaAnnotateShortcut"
   private let scrollingCaptureShortcutKey = "scrollingCaptureShortcut"
   private let recordingShortcutKey = "recordingShortcut"
@@ -735,6 +764,7 @@ final class KeyboardShortcutManager {
     areaShortcut = .defaultArea
     repeatAreaShortcut = .defaultRepeatArea
     areaAnnotateShortcut = .defaultAreaAnnotate
+    pinClipboardShortcut = .defaultPinClipboard
     scrollingCaptureShortcut = .defaultScrollingCapture
     recordingShortcut = .defaultRecording
     pauseResumeRecordingShortcut = .defaultPauseResumeRecording
@@ -755,6 +785,7 @@ final class KeyboardShortcutManager {
     loadDisabledShortcuts()
     loadClearedShortcuts()
     seedDefaultClearedShortcutsOnFirstLaunchIfNeeded()
+    retireLegacyCaptureShortcuts()
     setupEventHandler()
     observeRecordingSessionState()
 
@@ -847,12 +878,13 @@ final class KeyboardShortcutManager {
   }
 
   func shortcut(for kind: GlobalShortcutKind) -> ShortcutConfig? {
-    guard !clearedShortcuts.contains(kind) else { return nil }
+    guard !kind.isRetiredCaptureShortcut, !clearedShortcuts.contains(kind) else { return nil }
 
     switch kind {
     case .fullscreen: return fullscreenShortcut
     case .area: return areaShortcut
     case .repeatArea: return repeatAreaShortcut
+    case .pinClipboard: return pinClipboardShortcut
     case .areaAnnotate: return areaAnnotateShortcut
     case .activeWindow: return activeWindowShortcut
     case .scrollingCapture: return scrollingCaptureShortcut
@@ -874,10 +906,11 @@ final class KeyboardShortcutManager {
   }
 
   func isShortcutEnabled(for kind: GlobalShortcutKind) -> Bool {
-    !disabledShortcuts.contains(kind)
+    !kind.isRetiredCaptureShortcut && !disabledShortcuts.contains(kind)
   }
 
   func setShortcutEnabled(_ enabled: Bool, for kind: GlobalShortcutKind) {
+    guard !kind.isRetiredCaptureShortcut else { return }
     guard isShortcutEnabled(for: kind) != enabled else { return }
     mutateShortcutRegistration {
       if enabled {
@@ -887,6 +920,22 @@ final class KeyboardShortcutManager {
       }
       saveDisabledShortcuts()
     }
+  }
+
+  func setPinClipboardShortcut(_ config: ShortcutConfig?) {
+    mutateShortcutRegistration {
+      setShortcut(config, for: .pinClipboard) { pinClipboardShortcut = $0 }
+      saveShortcuts()
+      saveClearedShortcuts()
+    }
+  }
+
+  private func retireLegacyCaptureShortcuts() {
+    let retired = GlobalShortcutKind.allCases.filter(\.isRetiredCaptureShortcut)
+    clearedShortcuts.formUnion(retired)
+    disabledShortcuts.formUnion(retired)
+    saveClearedShortcuts()
+    saveDisabledShortcuts()
   }
 
   /// Update fullscreen shortcut
@@ -1114,6 +1163,7 @@ final class KeyboardShortcutManager {
     for kind: GlobalShortcutKind,
     assign: (ShortcutConfig) -> Void
   ) {
+    guard !kind.isRetiredCaptureShortcut else { return }
     if let config {
       assign(config)
       clearedShortcuts.remove(kind)
@@ -1126,6 +1176,9 @@ final class KeyboardShortcutManager {
 
   private func saveShortcuts() {
     let encoder = JSONEncoder()
+    if let data = try? encoder.encode(pinClipboardShortcut) {
+      UserDefaults.standard.set(data, forKey: pinClipboardShortcutKey)
+    }
     if let fullscreenData = try? encoder.encode(fullscreenShortcut) {
       UserDefaults.standard.set(fullscreenData, forKey: fullscreenShortcutKey)
     }
@@ -1200,6 +1253,10 @@ final class KeyboardShortcutManager {
 
   private func loadShortcuts() {
     let decoder = JSONDecoder()
+    if let data = UserDefaults.standard.data(forKey: pinClipboardShortcutKey),
+       let config = try? decoder.decode(ShortcutConfig.self, from: data) {
+      pinClipboardShortcut = config
+    }
     if let fullscreenData = UserDefaults.standard.data(forKey: fullscreenShortcutKey),
       let config = try? decoder.decode(ShortcutConfig.self, from: fullscreenData)
     {
@@ -1412,6 +1469,9 @@ final class KeyboardShortcutManager {
     let action: ShortcutAction
 
     switch id {
+    case pinClipboardHotkeyID.id:
+      actionName = "pin-clipboard"
+      action = .pinClipboard
     case fullscreenHotkeyID.id:
       actionName = "fullscreen"
       action = .captureFullscreen
@@ -1495,6 +1555,8 @@ final class KeyboardShortcutManager {
   private func registerShortcuts() {
     guard shouldRegisterShortcuts else { return }
 
+    registerShortcutIfNeeded(kind: .pinClipboard, config: shortcut(for: .pinClipboard),
+      hotkeyID: pinClipboardHotkeyID, ref: &pinClipboardHotkeyRef)
     registerShortcutIfNeeded(
       kind: .fullscreen,
       config: shortcut(for: .fullscreen),
@@ -1648,7 +1710,7 @@ final class KeyboardShortcutManager {
       if config.modifiers & ShortcutConfig.functionCarbonModifier != 0 {
         return "\(kind.rawValue)=\(combo)[fn-monitor]"
       }
-      guard config.modifiers != 0 else {
+      guard config.canRegisterGlobally else {
         return "\(kind.rawValue)=\(combo)[skipped:no-modifier]"
       }
       return "\(kind.rawValue)=\(combo)[registered]"
@@ -1681,7 +1743,7 @@ final class KeyboardShortcutManager {
       return
     }
 
-    guard config.modifiers != 0 else { return }
+    guard config.canRegisterGlobally else { return }
 
     let status = RegisterEventHotKey(
       config.keyCode,
@@ -1725,7 +1787,7 @@ final class KeyboardShortcutManager {
       return
     }
 
-    guard config.modifiers != 0 else { return }
+    guard config.canRegisterGlobally else { return }
 
     let status = RegisterEventHotKey(
       config.keyCode,
@@ -1806,6 +1868,10 @@ final class KeyboardShortcutManager {
   }
 
   private func unregisterAllShortcuts() {
+    if let ref = pinClipboardHotkeyRef {
+      UnregisterEventHotKey(ref)
+      pinClipboardHotkeyRef = nil
+    }
     if let ref = fullscreenHotkeyRef {
       UnregisterEventHotKey(ref)
       fullscreenHotkeyRef = nil

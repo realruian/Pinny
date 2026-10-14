@@ -254,7 +254,7 @@ final class QuickAccessPinWindow: NSPanel {
     collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
     acceptsMouseMovedEvents = true
     ignoresMouseEvents = false
-    applyCornerRadius(pinState?.preservesSourceSize == true ? 0 : NSWindow.defaultCornerRadius)
+    applyCornerRadius(0)
     level = Self.pinnedWindowLevel
     // Pure image pins never take keyboard focus; pointer events still reach sendEvent.
     becomesKeyOnlyIfNeeded = true

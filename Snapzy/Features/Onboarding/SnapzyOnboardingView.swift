@@ -142,7 +142,7 @@ struct SnapzyOnboardingView: View {
       .frame(width: 32, height: 32)
       .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous)) // radius-lint:allow — clips the app icon bitmap; matches the icon's own corner
 
-      Text("Snapzy")
+      Text("Pinny")
         .font(.system(size: 15, weight: .semibold))
         .foregroundStyle(SnapzyGlassInk.primary)
     }

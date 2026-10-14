@@ -45,7 +45,7 @@ struct PreferencesSidebarUpdateBadge: View {
 
           VStack(alignment: .leading, spacing: 2) {
             HStack(spacing: 4) {
-              Text(verbatim: "Snapzy")
+              Text(verbatim: "Pinny")
                 .font(.system(size: 12.5, weight: .semibold))
                 .foregroundStyle(.primary)
 

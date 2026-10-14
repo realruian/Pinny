@@ -785,6 +785,8 @@ struct CaptureSettingsView: View {
 
         if selectedPane == .general {
           Section(L10n.PreferencesCapture.afterCaptureSection) {
+            Text(L10n.PreferencesWorkflow.captureDescription)
+              .font(.callout).foregroundStyle(.secondary)
             AfterCaptureMatrixView()
 
             Text(L10n.PreferencesCapture.removeBackground)

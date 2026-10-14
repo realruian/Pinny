@@ -1827,61 +1827,61 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy konnte im ausgewählten Bereich keinen Text erkennen."
+            "value": "Pinny konnte im ausgewählten Bereich keinen Text erkennen."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy could not recognize text from the selected area."
+            "value": "Pinny could not recognize text from the selected area."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy no pudo reconocer texto en el área seleccionada."
+            "value": "Pinny no pudo reconocer texto en el área seleccionada."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy n’a pas pu reconnaître de texte dans la zone sélectionnée."
+            "value": "Pinny n’a pas pu reconnaître de texte dans la zone sélectionnée."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy は選択した領域のテキストを認識できませんでした。"
+            "value": "Pinny は選択した領域のテキストを認識できませんでした。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy가 선택한 영역의 텍스트를 인식하지 못했습니다."
+            "value": "Pinny가 선택한 영역의 텍스트를 인식하지 못했습니다."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy не смог распознать текст в выбранной области."
+            "value": "Pinny не смог распознать текст в выбранной области."
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy không thể nhận dạng văn bản từ vùng đã chọn."
+            "value": "Pinny không thể nhận dạng văn bản từ vùng đã chọn."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy 无法识别所选区域中的文本。"
+            "value": "Pinny 无法识别所选区域中的文本。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy 無法辨識所選區域中的文字。"
+            "value": "Pinny 無法辨識所選區域中的文字。"
           }
         }
       }
@@ -1957,61 +1957,61 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy konnte im ausgewählten Bereich keinen lesbaren Text finden."
+            "value": "Pinny konnte im ausgewählten Bereich keinen lesbaren Text finden."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy could not find readable text in the selected area."
+            "value": "Pinny could not find readable text in the selected area."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy no encontró texto legible en el área seleccionada."
+            "value": "Pinny no encontró texto legible en el área seleccionada."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy n’a trouvé aucun texte lisible dans la zone sélectionnée."
+            "value": "Pinny n’a trouvé aucun texte lisible dans la zone sélectionnée."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy は選択した領域から読み取れるテキストを見つけられませんでした。"
+            "value": "Pinny は選択した領域から読み取れるテキストを見つけられませんでした。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy가 선택한 영역에서 읽을 수 있는 텍스트를 찾지 못했습니다."
+            "value": "Pinny가 선택한 영역에서 읽을 수 있는 텍스트를 찾지 못했습니다."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy не нашёл читаемый текст в выбранной области."
+            "value": "Pinny не нашёл читаемый текст в выбранной области."
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy không tìm thấy văn bản đọc được trong vùng đã chọn."
+            "value": "Pinny không tìm thấy văn bản đọc được trong vùng đã chọn."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy 在所选区域中找不到可识别的文本。"
+            "value": "Pinny 在所选区域中找不到可识别的文本。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy 在所選區域中找不到可辨識的文字。"
+            "value": "Pinny 在所選區域中找不到可辨識的文字。"
           }
         }
       }
@@ -2282,61 +2282,61 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "QR-Code erkannt, aber Snapzy kann nur textbasierte QR-Inhalte kopieren."
+            "value": "QR-Code erkannt, aber Pinny kann nur textbasierte QR-Inhalte kopieren."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "QR code detected, but Snapzy can only copy text-based QR content."
+            "value": "QR code detected, but Pinny can only copy text-based QR content."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Código QR detectado, pero Snapzy solo puede copiar contenido QR basado en texto."
+            "value": "Código QR detectado, pero Pinny solo puede copiar contenido QR basado en texto."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Code QR détecté, mais Snapzy ne peut copier que le contenu QR textuel."
+            "value": "Code QR détecté, mais Pinny ne peut copier que le contenu QR textuel."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "QR コードを検出しましたが、Snapzy はテキスト形式の QR 内容のみコピーできます。"
+            "value": "QR コードを検出しましたが、Pinny はテキスト形式の QR 内容のみコピーできます。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "QR 코드를 감지했지만 Snapzy는 텍스트 기반 QR 내용만 복사할 수 있습니다."
+            "value": "QR 코드를 감지했지만 Pinny는 텍스트 기반 QR 내용만 복사할 수 있습니다."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "QR-код обнаружен, но Snapzy может копировать только текстовое содержимое QR."
+            "value": "QR-код обнаружен, но Pinny может копировать только текстовое содержимое QR."
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Đã phát hiện mã QR, nhưng Snapzy chỉ có thể sao chép nội dung QR dạng văn bản."
+            "value": "Đã phát hiện mã QR, nhưng Pinny chỉ có thể sao chép nội dung QR dạng văn bản."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "检测到二维码，但 Snapzy 只能复制基于文本的二维码内容。"
+            "value": "检测到二维码，但 Pinny 只能复制基于文本的二维码内容。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "偵測到 QR 碼，但 Snapzy 只能複製文字型 QR 內容。"
+            "value": "偵測到 QR 碼，但 Pinny 只能複製文字型 QR 內容。"
           }
         }
       }
@@ -2938,61 +2938,61 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wenn der Editor geöffnet bleibt, Snapzy nach Abschluss des Drops nach vorn holen und Anmerkungen fokussieren"
+            "value": "Wenn der Editor geöffnet bleibt, Pinny nach Abschluss des Drops nach vorn holen und Anmerkungen fokussieren"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "When the editor stays open, bring Snapzy to the front and focus Annotate after the drop completes"
+            "value": "When the editor stays open, bring Pinny to the front and focus Annotate after the drop completes"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cuando el editor permanezca abierto, traer Snapzy al frente y enfocar Anotar después de soltar"
+            "value": "Cuando el editor permanezca abierto, traer Pinny al frente y enfocar Anotar después de soltar"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quand l’éditeur reste ouvert, remettre Snapzy au premier plan et focaliser Annoter une fois le dépôt terminé"
+            "value": "Quand l’éditeur reste ouvert, remettre Pinny au premier plan et focaliser Annoter une fois le dépôt terminé"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "エディタを開いたままにする場合、ドロップ完了後に Snapzy を前面へ移動し注釈にフォーカス"
+            "value": "エディタを開いたままにする場合、ドロップ完了後に Pinny を前面へ移動し注釈にフォーカス"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "편집기를 열어 둔 경우 드롭이 완료된 뒤 Snapzy를 앞으로 가져오고 주석에 포커스"
+            "value": "편집기를 열어 둔 경우 드롭이 완료된 뒤 Pinny를 앞으로 가져오고 주석에 포커스"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Если редактор остается открытым, вывести Snapzy на передний план и сфокусировать Аннотации после завершения перетаскивания"
+            "value": "Если редактор остается открытым, вывести Pinny на передний план и сфокусировать Аннотации после завершения перетаскивания"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Khi trình chỉnh sửa vẫn mở, đưa Snapzy lên trước và focus Chú thích sau khi thao tác thả hoàn tất"
+            "value": "Khi trình chỉnh sửa vẫn mở, đưa Pinny lên trước và focus Chú thích sau khi thao tác thả hoàn tất"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "编辑器保持打开时，在放下完成后将 Snapzy 置于前台并聚焦 标注"
+            "value": "编辑器保持打开时，在放下完成后将 Pinny 置于前台并聚焦 标注"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "編輯器保持開啟時，在放開完成後將 Snapzy 帶到前景並聚焦 標註"
+            "value": "編輯器保持開啟時，在放開完成後將 Pinny 帶到前景並聚焦 標註"
           }
         }
       }
@@ -4055,7 +4055,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "With window detection enabled, prefer components such as sidebars and cards. Requires Accessibility access. In Screenshot & Annotate, use Tab / Shift-Tab to switch levels."
+            "value": "With window detection enabled, prefer components such as sidebars and cards. Requires Accessibility access. Press Tab to expand to the parent and Shift-Tab to shrink to the child."
           }
         },
         "es": {
@@ -4097,7 +4097,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "开启上面的窗口识别后，优先选择侧栏、卡片等组件。需要辅助功能权限；截图并标注时可用 Tab / ⇧Tab 切换父子层级。"
+            "value": "开启窗口识别后，优先选择侧栏、卡片等组件。需要辅助功能权限；按 Tab 扩大到父级，⇧Tab 缩小到子级。"
           }
         },
         "zh-Hant": {
@@ -6129,61 +6129,61 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy-Fenster wie „Anmerken“ in aufgezeichneten Videos anzeigen"
+            "value": "Pinny-Fenster wie „Anmerken“ in aufgezeichneten Videos anzeigen"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Show Snapzy windows such as Annotate in recorded videos"
+            "value": "Show Pinny windows such as Annotate in recorded videos"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mostrar ventanas Snapzy como Anotar en videos grabados"
+            "value": "Mostrar ventanas Pinny como Anotar en videos grabados"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Afficher les fenêtres Snapzy telles que Annoter dans les vidéos enregistrées"
+            "value": "Afficher les fenêtres Pinny telles que Annoter dans les vidéos enregistrées"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "録画したビデオに注釈などの Snapzy ウィンドウを表示する"
+            "value": "録画したビデオに注釈などの Pinny ウィンドウを表示する"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "녹화된 비디오에 주석과 같은 Snapzy 창 표시"
+            "value": "녹화된 비디오에 주석과 같은 Pinny 창 표시"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Показывать окна Snapzy, такие как Аннотации, в записанных видео"
+            "value": "Показывать окна Pinny, такие как Аннотации, в записанных видео"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hiển thị các cửa sổ Snapzy như Chú thích trong video đã ghi"
+            "value": "Hiển thị các cửa sổ Pinny như Chú thích trong video đã ghi"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "在屏幕录制画面中显示 Snapzy 窗口（例如标注工具栏）"
+            "value": "在屏幕录制画面中显示 Pinny 窗口（例如标注工具栏）"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "在螢幕錄製畫面中顯示 Snapzy 視窗（例如標註工具列）"
+            "value": "在螢幕錄製畫面中顯示 Pinny 視窗（例如標註工具列）"
           }
         }
       }
@@ -6259,61 +6259,61 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy-Fenster wie „Anmerkungen“ in aufgenommenen Bildern anzeigen"
+            "value": "Pinny-Fenster wie „Anmerkungen“ in aufgenommenen Bildern anzeigen"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Show Snapzy windows such as Annotate in captured images"
+            "value": "Show Pinny windows such as Annotate in captured images"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mostrar ventanas Snapzy como Anotar en imágenes capturadas"
+            "value": "Mostrar ventanas Pinny como Anotar en imágenes capturadas"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Afficher les fenêtres Snapzy telles que Annoter dans les images capturées"
+            "value": "Afficher les fenêtres Pinny telles que Annoter dans les images capturées"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "撮影した画像に注釈などの Snapzy ウィンドウを表示する"
+            "value": "撮影した画像に注釈などの Pinny ウィンドウを表示する"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "캡처된 이미지에 주석과 같은 Snapzy 창 표시"
+            "value": "캡처된 이미지에 주석과 같은 Pinny 창 표시"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Показывать окна Snapzy, такие как Аннотации, на захваченных изображениях"
+            "value": "Показывать окна Pinny, такие как Аннотации, на захваченных изображениях"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hiển thị các cửa sổ Snapzy như Chú thích trong ảnh đã chụp"
+            "value": "Hiển thị các cửa sổ Pinny như Chú thích trong ảnh đã chụp"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "在截图画面中显示 Snapzy 窗口（例如标注窗口）"
+            "value": "在截图画面中显示 Pinny 窗口（例如标注窗口）"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "在截圖中顯示 Snapzy 視窗（例如標註視窗）"
+            "value": "在截圖中顯示 Pinny 視窗（例如標註視窗）"
           }
         }
       }
@@ -6517,61 +6517,61 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Für die Erfassung von Objektausschnitten ist Transparenz erforderlich. Snapzy speichert sie als PNG, auch wenn JPEG ausgewählt ist."
+            "value": "Für die Erfassung von Objektausschnitten ist Transparenz erforderlich. Pinny speichert sie als PNG, auch wenn JPEG ausgewählt ist."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Object cutout captures require transparency. Snapzy will save them as PNG even when JPEG is selected."
+            "value": "Object cutout captures require transparency. Pinny will save them as PNG even when JPEG is selected."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Las capturas de objetos recortados requieren transparencia. Snapzy los guardará como PNG incluso cuando se seleccione JPEG."
+            "value": "Las capturas de objetos recortados requieren transparencia. Pinny los guardará como PNG incluso cuando se seleccione JPEG."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Les captures de découpes d'objets nécessitent de la transparence. Snapzy les enregistrera au format PNG même lorsque JPEG est sélectionné."
+            "value": "Les captures de découpes d'objets nécessitent de la transparence. Pinny les enregistrera au format PNG même lorsque JPEG est sélectionné."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "オブジェクトの切り抜き撮影には透明性が必要です。Snapzy は、JPEG が選択されている場合でも、ファイルを PNG として保存します。"
+            "value": "オブジェクトの切り抜き撮影には透明性が必要です。Pinny は、JPEG が選択されている場合でも、ファイルを PNG として保存します。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "개체 컷아웃 캡처에는 투명성이 필요합니다. Snapzy는 JPEG를 선택한 경우에도 해당 파일을 PNG로 저장합니다."
+            "value": "개체 컷아웃 캡처에는 투명성이 필요합니다. Pinny는 JPEG를 선택한 경우에도 해당 파일을 PNG로 저장합니다."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Для захвата вырезов объектов требуется прозрачность. Snapzy сохранит их в формате PNG, даже если выбран JPEG."
+            "value": "Для захвата вырезов объектов требуется прозрачность. Pinny сохранит их в формате PNG, даже если выбран JPEG."
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ảnh tách chủ thể cần nền trong suốt. Snapzy sẽ lưu chúng dưới dạng PNG ngay cả khi bạn chọn JPEG."
+            "value": "Ảnh tách chủ thể cần nền trong suốt. Pinny sẽ lưu chúng dưới dạng PNG ngay cả khi bạn chọn JPEG."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "主体抠图需要透明通道。若选择 JPEG，Snapzy 仍会保存为 PNG。"
+            "value": "主体抠图需要透明通道。若选择 JPEG，Pinny 仍会保存为 PNG。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "主體去背需要透明資訊。即使選擇 JPEG，Snapzy 仍會以 PNG 格式儲存。"
+            "value": "主體去背需要透明資訊。即使選擇 JPEG，Pinny 仍會以 PNG 格式儲存。"
           }
         }
       }
@@ -9010,25 +9010,25 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Erlaube Benachrichtigungen, damit Snapzy dir den erkannten Text zeigen kann."
+            "value": "Erlaube Benachrichtigungen, damit Pinny dir den erkannten Text zeigen kann."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Allow notifications so Snapzy can show you the recognized text."
+            "value": "Allow notifications so Pinny can show you the recognized text."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Permite las notificaciones para que Snapzy pueda mostrarte el texto reconocido."
+            "value": "Permite las notificaciones para que Pinny pueda mostrarte el texto reconocido."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Autorisez les notifications pour que Snapzy puisse vous montrer le texte reconnu."
+            "value": "Autorisez les notifications pour que Pinny puisse vous montrer le texte reconnu."
           }
         },
         "ja": {
@@ -9040,31 +9040,31 @@
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy가 인식된 텍스트를 보여줄 수 있도록 알림을 허용하세요."
+            "value": "Pinny가 인식된 텍스트를 보여줄 수 있도록 알림을 허용하세요."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Разрешите уведомления, чтобы Snapzy показывал распознанный текст."
+            "value": "Разрешите уведомления, чтобы Pinny показывал распознанный текст."
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cho phép thông báo để Snapzy hiển thị văn bản đã nhận dạng."
+            "value": "Cho phép thông báo để Pinny hiển thị văn bản đã nhận dạng."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "允许通知，Snapzy 才能向你展示识别出的文本。"
+            "value": "允许通知，Pinny 才能向你展示识别出的文本。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "允許通知，Snapzy 才能向你顯示辨識出的文字。"
+            "value": "允許通知，Pinny 才能向你顯示辨識出的文字。"
           }
         }
       }
@@ -9075,61 +9075,61 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Benachrichtigungen für Snapzy sind in den Systemeinstellungen deaktiviert. Die OCR funktioniert weiterhin und kopiert Text in die Zwischenablage."
+            "value": "Benachrichtigungen für Pinny sind in den Systemeinstellungen deaktiviert. Die OCR funktioniert weiterhin und kopiert Text in die Zwischenablage."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Notifications are turned off for Snapzy in System Settings. OCR still works and copies text to the clipboard."
+            "value": "Notifications are turned off for Pinny in System Settings. OCR still works and copies text to the clipboard."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Las notificaciones de Snapzy están desactivadas en Ajustes del Sistema. El OCR sigue funcionando y copia el texto al portapapeles."
+            "value": "Las notificaciones de Pinny están desactivadas en Ajustes del Sistema. El OCR sigue funcionando y copia el texto al portapapeles."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Les notifications de Snapzy sont désactivées dans Réglages Système. L’OCR fonctionne toujours et copie le texte dans le presse-papiers."
+            "value": "Les notifications de Pinny sont désactivées dans Réglages Système. L’OCR fonctionne toujours et copie le texte dans le presse-papiers."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "システム設定で Snapzy の通知がオフになっています。OCR は引き続き動作し、テキストをクリップボードにコピーします。"
+            "value": "システム設定で Pinny の通知がオフになっています。OCR は引き続き動作し、テキストをクリップボードにコピーします。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "시스템 설정에서 Snapzy 알림이 꺼져 있습니다. OCR은 계속 작동하며 텍스트를 클립보드에 복사합니다."
+            "value": "시스템 설정에서 Pinny 알림이 꺼져 있습니다. OCR은 계속 작동하며 텍스트를 클립보드에 복사합니다."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Уведомления Snapzy отключены в Системных настройках. OCR продолжает работать и копирует текст в буфер обмена."
+            "value": "Уведомления Pinny отключены в Системных настройках. OCR продолжает работать и копирует текст в буфер обмена."
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Thông báo cho Snapzy đang tắt trong Cài đặt hệ thống. OCR vẫn hoạt động và sao chép văn bản vào clipboard."
+            "value": "Thông báo cho Pinny đang tắt trong Cài đặt hệ thống. OCR vẫn hoạt động và sao chép văn bản vào clipboard."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "系统设置中已关闭 Snapzy 的通知。OCR 仍可正常使用，并会将文本复制到剪贴板。"
+            "value": "系统设置中已关闭 Pinny 的通知。OCR 仍可正常使用，并会将文本复制到剪贴板。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "系統設定中已關閉 Snapzy 的通知。OCR 仍可正常使用，並會將文字複製到剪貼簿。"
+            "value": "系統設定中已關閉 Pinny 的通知。OCR 仍可正常使用，並會將文字複製到剪貼簿。"
           }
         }
       }
@@ -14989,61 +14989,61 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ausrichtung pausiert. Machen Sie langsamer und behalten Sie eine Richtung bei, damit Snapzy sich erholen kann."
+            "value": "Ausrichtung pausiert. Machen Sie langsamer und behalten Sie eine Richtung bei, damit Pinny sich erholen kann."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Alignment paused. Slow down and keep one direction so Snapzy can recover."
+            "value": "Alignment paused. Slow down and keep one direction so Pinny can recover."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Alineación pausada. Reduce la velocidad y mantén una dirección para que Snapzy pueda recuperarse."
+            "value": "Alineación pausada. Reduce la velocidad y mantén una dirección para que Pinny pueda recuperarse."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "L’alignement s’est arrêté. Ralentissez et gardez une direction pour que Snapzy puisse récupérer."
+            "value": "L’alignement s’est arrêté. Ralentissez et gardez une direction pour que Pinny puisse récupérer."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "位置合わせを一時停止しました。Snapzy が回復できるように、速度を落として一方向を維持してください。"
+            "value": "位置合わせを一時停止しました。Pinny が回復できるように、速度を落として一方向を維持してください。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "정렬이 일시중지되었습니다. Snapzy가 회복할 수 있도록 속도를 줄이고 한 방향을 유지하세요."
+            "value": "정렬이 일시중지되었습니다. Pinny가 회복할 수 있도록 속도를 줄이고 한 방향을 유지하세요."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Выравнивание приостановлено. Снизьте скорость и держитесь одного направления, чтобы Snapzy мог восстановиться."
+            "value": "Выравнивание приостановлено. Снизьте скорость и держитесь одного направления, чтобы Pinny мог восстановиться."
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Đã tạm dừng căn chỉnh. Hãy cuộn chậm hơn và giữ một hướng để Snapzy khôi phục."
+            "value": "Đã tạm dừng căn chỉnh. Hãy cuộn chậm hơn và giữ một hướng để Pinny khôi phục."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "对齐暂停。放慢速度并保持一个方向，以便 Snapzy 能够恢复。"
+            "value": "对齐暂停。放慢速度并保持一个方向，以便 Pinny 能够恢复。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "對齊暫停。放慢速度並保持一個方向，以便 Snapzy 能夠恢復。"
+            "value": "對齊暫停。放慢速度並保持一個方向，以便 Pinny 能夠恢復。"
           }
         }
       }
@@ -15054,61 +15054,61 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Automatisches Scrollen benötigt Bedienungshilfen-Zugriff. Aktiviere Snapzy in Systemeinstellungen > Datenschutz & Sicherheit > Bedienungshilfen."
+            "value": "Automatisches Scrollen benötigt Bedienungshilfen-Zugriff. Aktiviere Pinny in Systemeinstellungen > Datenschutz & Sicherheit > Bedienungshilfen."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Auto Scroll needs Accessibility permission. Enable Snapzy in System Settings > Privacy & Security > Accessibility."
+            "value": "Auto Scroll needs Accessibility permission. Enable Pinny in System Settings > Privacy & Security > Accessibility."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "El desplazamiento automático necesita permiso de Accesibilidad. Activa Snapzy en Ajustes del Sistema > Privacidad y seguridad > Accesibilidad."
+            "value": "El desplazamiento automático necesita permiso de Accesibilidad. Activa Pinny en Ajustes del Sistema > Privacidad y seguridad > Accesibilidad."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Le défilement automatique nécessite l’autorisation d’accessibilité. Activez Snapzy dans Réglages Système > Confidentialité et sécurité > Accessibilité."
+            "value": "Le défilement automatique nécessite l’autorisation d’accessibilité. Activez Pinny dans Réglages Système > Confidentialité et sécurité > Accessibilité."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "自動スクロールにはアクセシビリティ権限が必要です。システム設定 > プライバシーとセキュリティ > アクセシビリティでSnapzyを有効にしてください。"
+            "value": "自動スクロールにはアクセシビリティ権限が必要です。システム設定 > プライバシーとセキュリティ > アクセシビリティでPinnyを有効にしてください。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "자동 스크롤에는 손쉬운 사용 권한이 필요합니다. 시스템 설정 > 개인정보 보호 및 보안 > 손쉬운 사용에서 Snapzy를 활성화하세요."
+            "value": "자동 스크롤에는 손쉬운 사용 권한이 필요합니다. 시스템 설정 > 개인정보 보호 및 보안 > 손쉬운 사용에서 Pinny를 활성화하세요."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Для автопрокрутки нужен доступ к Универсальному доступу. Включите Snapzy в Системных настройках > Конфиденциальность и безопасность > Универсальный доступ."
+            "value": "Для автопрокрутки нужен доступ к Универсальному доступу. Включите Pinny в Системных настройках > Конфиденциальность и безопасность > Универсальный доступ."
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cuộn tự động cần quyền Trợ năng. Hãy bật Snapzy trong Cài đặt hệ thống > Quyền riêng tư & Bảo mật > Trợ năng."
+            "value": "Cuộn tự động cần quyền Trợ năng. Hãy bật Pinny trong Cài đặt hệ thống > Quyền riêng tư & Bảo mật > Trợ năng."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "自动滚动需要辅助功能权限。请在系统设置 > 隐私与安全性 > 辅助功能中启用 Snapzy。"
+            "value": "自动滚动需要辅助功能权限。请在系统设置 > 隐私与安全性 > 辅助功能中启用 Pinny。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "自動捲動需要輔助使用權限。請在「系統設定」>「隱私權與安全性」>「輔助使用」中啟用 Snapzy。"
+            "value": "自動捲動需要輔助使用權限。請在「系統設定」>「隱私權與安全性」>「輔助使用」中啟用 Pinny。"
           }
         }
       }
@@ -15314,61 +15314,61 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Das letzte Bild konnte nicht erfasst werden. Snapzy speichert das aktuelle Stitch-Ergebnis."
+            "value": "Das letzte Bild konnte nicht erfasst werden. Pinny speichert das aktuelle Stitch-Ergebnis."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Couldn't capture the last frame. Snapzy will save the current stitched result."
+            "value": "Couldn't capture the last frame. Pinny will save the current stitched result."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "No se pudo capturar el último fotograma. Snapzy guardará el resultado cosido actual."
+            "value": "No se pudo capturar el último fotograma. Pinny guardará el resultado cosido actual."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Impossible de capturer la dernière image. Snapzy enregistrera le résultat cousu actuel."
+            "value": "Impossible de capturer la dernière image. Pinny enregistrera le résultat cousu actuel."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "最後のフレームを撮影できませんでした。Snapzy は現在のステッチ結果を保存します。"
+            "value": "最後のフレームを撮影できませんでした。Pinny は現在のステッチ結果を保存します。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "마지막 프레임을 캡처할 수 없습니다. Snapzy는 현재 스티치 결과를 저장합니다."
+            "value": "마지막 프레임을 캡처할 수 없습니다. Pinny는 현재 스티치 결과를 저장합니다."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Не удалось запечатлеть последний кадр. Snapzy сохранит текущий результат сшивания."
+            "value": "Не удалось запечатлеть последний кадр. Pinny сохранит текущий результат сшивания."
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Không thể chụp khung hình cuối. Snapzy sẽ lưu kết quả ghép hiện tại."
+            "value": "Không thể chụp khung hình cuối. Pinny sẽ lưu kết quả ghép hiện tại."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "无法截取最后一帧。Snapzy 将保存当前拼接结果。"
+            "value": "无法截取最后一帧。Pinny 将保存当前拼接结果。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "無法擷取最後一個畫面；Snapzy 會儲存目前的拼接結果。"
+            "value": "無法擷取最後一個畫面；Pinny 會儲存目前的拼接結果。"
           }
         }
       }
@@ -15379,61 +15379,61 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Der letzte Frame konnte nicht aktualisiert werden. Snapzy speichert das aktuelle Stitch-Ergebnis."
+            "value": "Der letzte Frame konnte nicht aktualisiert werden. Pinny speichert das aktuelle Stitch-Ergebnis."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Couldn't refresh the last frame. Snapzy will save the current stitched result."
+            "value": "Couldn't refresh the last frame. Pinny will save the current stitched result."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "No se pudo actualizar el último fotograma. Snapzy guardará el resultado cosido actual."
+            "value": "No se pudo actualizar el último fotograma. Pinny guardará el resultado cosido actual."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Impossible d'actualiser la dernière image. Snapzy enregistrera le résultat cousu actuel."
+            "value": "Impossible d'actualiser la dernière image. Pinny enregistrera le résultat cousu actuel."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "最後のフレームを更新できませんでした。 Snapzy は現在のステッチ結果を保存します。"
+            "value": "最後のフレームを更新できませんでした。 Pinny は現在のステッチ結果を保存します。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "마지막 프레임을 새로고침할 수 없습니다. Snapzy는 현재 스티치 결과를 저장합니다."
+            "value": "마지막 프레임을 새로고침할 수 없습니다. Pinny는 현재 스티치 결과를 저장합니다."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Не удалось обновить последний кадр. Snapzy сохранит текущий результат сшивания."
+            "value": "Не удалось обновить последний кадр. Pinny сохранит текущий результат сшивания."
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Không thể làm mới khung hình cuối. Snapzy sẽ lưu kết quả ghép hiện tại."
+            "value": "Không thể làm mới khung hình cuối. Pinny sẽ lưu kết quả ghép hiện tại."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "无法刷新最后一帧。 Snapzy 将保存当前的拼接结果。"
+            "value": "无法刷新最后一帧。 Pinny 将保存当前的拼接结果。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "無法刷新最後一幀。 Snapzy 將保存當前的拼接結果。"
+            "value": "無法刷新最後一幀。 Pinny 將保存當前的拼接結果。"
           }
         }
       }
@@ -15574,61 +15574,61 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Der letzte Frame konnte nicht sauber ausgerichtet werden. Snapzy speichert das aktuelle Stitch-Ergebnis."
+            "value": "Der letzte Frame konnte nicht sauber ausgerichtet werden. Pinny speichert das aktuelle Stitch-Ergebnis."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Couldn't align the last frame cleanly. Snapzy will save the current stitched result."
+            "value": "Couldn't align the last frame cleanly. Pinny will save the current stitched result."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "No se pudo alinear limpiamente el último fotograma. Snapzy guardará el resultado cosido actual."
+            "value": "No se pudo alinear limpiamente el último fotograma. Pinny guardará el resultado cosido actual."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Impossible d'aligner proprement la dernière image. Snapzy enregistrera le résultat cousu actuel."
+            "value": "Impossible d'aligner proprement la dernière image. Pinny enregistrera le résultat cousu actuel."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "最後のフレームをきれいに揃えることができませんでした。 Snapzy は現在のステッチ結果を保存します。"
+            "value": "最後のフレームをきれいに揃えることができませんでした。 Pinny は現在のステッチ結果を保存します。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "마지막 프레임을 깔끔하게 정렬할 수 없습니다. Snapzy는 현재 스티치 결과를 저장합니다."
+            "value": "마지막 프레임을 깔끔하게 정렬할 수 없습니다. Pinny는 현재 스티치 결과를 저장합니다."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Не удалось аккуратно выровнять последний кадр. Snapzy сохранит текущий результат сшивания."
+            "value": "Не удалось аккуратно выровнять последний кадр. Pinny сохранит текущий результат сшивания."
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Không thể căn chỉnh gọn khung hình cuối. Snapzy sẽ lưu kết quả ghép hiện tại."
+            "value": "Không thể căn chỉnh gọn khung hình cuối. Pinny sẽ lưu kết quả ghép hiện tại."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "无法干净地对齐最后一帧。 Snapzy 将保存当前的拼接结果。"
+            "value": "无法干净地对齐最后一帧。 Pinny 将保存当前的拼接结果。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "無法乾淨地對齊最後一幀。 Snapzy 將保存當前的拼接結果。"
+            "value": "無法乾淨地對齊最後一幀。 Pinny 將保存當前的拼接結果。"
           }
         }
       }
@@ -15639,55 +15639,55 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Finalisierung der aktuellen Aufnahme. Snapzy sperrt das neueste Stitch-Ergebnis vor dem Speichern."
+            "value": "Finalisierung der aktuellen Aufnahme. Pinny sperrt das neueste Stitch-Ergebnis vor dem Speichern."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Finalizing the current capture. Snapzy is locking the latest stitched result before saving."
+            "value": "Finalizing the current capture. Pinny is locking the latest stitched result before saving."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Finalizando la captura actual. Snapzy está bloqueando el último resultado cosido antes de guardarlo."
+            "value": "Finalizando la captura actual. Pinny está bloqueando el último resultado cosido antes de guardarlo."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Finalisation de la capture en cours. Snapzy verrouille le dernier résultat cousu avant de l'enregistrer."
+            "value": "Finalisation de la capture en cours. Pinny verrouille le dernier résultat cousu avant de l'enregistrer."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "現在の撮影を終了しています。Snapzy は、保存する前に最新のステッチ結果をロックします。"
+            "value": "現在の撮影を終了しています。Pinny は、保存する前に最新のステッチ結果をロックします。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "현재 캡처를 마무리하는 중입니다. Snapzy는 저장하기 전에 최신 스티치 결과를 잠급니다."
+            "value": "현재 캡처를 마무리하는 중입니다. Pinny는 저장하기 전에 최신 스티치 결과를 잠급니다."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Завершение текущего захвата. Snapzy блокирует последний результат сшивания перед сохранением."
+            "value": "Завершение текущего захвата. Pinny блокирует последний результат сшивания перед сохранением."
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Đang hoàn tất ảnh chụp hiện tại. Snapzy đang khóa kết quả ghép mới nhất trước khi lưu."
+            "value": "Đang hoàn tất ảnh chụp hiện tại. Pinny đang khóa kết quả ghép mới nhất trước khi lưu."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "正在完成本次截取，保存前 Snapzy 会锁定最新拼接结果。"
+            "value": "正在完成本次截取，保存前 Pinny 会锁定最新拼接结果。"
           }
         },
         "zh-Hant": {
@@ -15704,55 +15704,55 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sperren der aktuellen Aufnahme. Snapzy versiegelt %d zusammengefügte Frames vor dem Speichern."
+            "value": "Sperren der aktuellen Aufnahme. Pinny versiegelt %d zusammengefügte Frames vor dem Speichern."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Locking the current capture. Snapzy is sealing %d stitched frames before saving."
+            "value": "Locking the current capture. Pinny is sealing %d stitched frames before saving."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bloqueando la captura actual. Snapzy está sellando %d cuadros cosidos antes de guardarlos."
+            "value": "Bloqueando la captura actual. Pinny está sellando %d cuadros cosidos antes de guardarlos."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Verrouillage de la capture en cours. Snapzy scelle %d cadres cousus avant de les enregistrer."
+            "value": "Verrouillage de la capture en cours. Pinny scelle %d cadres cousus avant de les enregistrer."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "現在の撮影をロックしています。Snapzy は、保存する前に %d 個のステッチされたフレームを確定しています。"
+            "value": "現在の撮影をロックしています。Pinny は、保存する前に %d 個のステッチされたフレームを確定しています。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "현재 캡처를 잠급니다. Snapzy가 저장하기 전에 연결된 프레임 %d개를 봉인하고 있습니다."
+            "value": "현재 캡처를 잠급니다. Pinny가 저장하기 전에 연결된 프레임 %d개를 봉인하고 있습니다."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Блокировка текущего захвата. Snapzy запечатывает %d сшитых кадров перед сохранением."
+            "value": "Блокировка текущего захвата. Pinny запечатывает %d сшитых кадров перед сохранением."
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Đang khóa ảnh chụp hiện tại. Snapzy đang chốt %d khung đã ghép trước khi lưu."
+            "value": "Đang khóa ảnh chụp hiện tại. Pinny đang chốt %d khung đã ghép trước khi lưu."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "正在完成本次截取，保存前 Snapzy 正在处理 %d 帧拼接结果。"
+            "value": "正在完成本次截取，保存前 Pinny 正在处理 %d 帧拼接结果。"
           }
         },
         "zh-Hant": {
@@ -15769,61 +15769,61 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Höhenlimit erreicht. Snapzy speichert das aktuelle Stitch-Ergebnis."
+            "value": "Höhenlimit erreicht. Pinny speichert das aktuelle Stitch-Ergebnis."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Height limit reached. Snapzy is saving the current stitched result."
+            "value": "Height limit reached. Pinny is saving the current stitched result."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Límite de altura alcanzado. Snapzy está guardando el resultado cosido actual."
+            "value": "Límite de altura alcanzado. Pinny está guardando el resultado cosido actual."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Limite de hauteur atteinte. Snapzy enregistre le résultat cousu actuel."
+            "value": "Limite de hauteur atteinte. Pinny enregistre le résultat cousu actuel."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "高さ制限に達しました。 Snapzy は現在のステッチ結果を保存しています。"
+            "value": "高さ制限に達しました。 Pinny は現在のステッチ結果を保存しています。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "높이 제한에 도달했습니다. Snapzy는 현재 스티치 결과를 저장하고 있습니다."
+            "value": "높이 제한에 도달했습니다. Pinny는 현재 스티치 결과를 저장하고 있습니다."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Достигнут предел высоты. Snapzy сохраняет текущий результат сшивания."
+            "value": "Достигнут предел высоты. Pinny сохраняет текущий результат сшивания."
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Đã chạm giới hạn chiều cao. Snapzy đang lưu kết quả ghép hiện tại."
+            "value": "Đã chạm giới hạn chiều cao. Pinny đang lưu kết quả ghép hiện tại."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "达到高度限制。 Snapzy 正在保存当前的拼接结果。"
+            "value": "达到高度限制。 Pinny 正在保存当前的拼接结果。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "達到高度限制。 Snapzy 正在保存當前的拼接結果。"
+            "value": "達到高度限制。 Pinny 正在保存當前的拼接結果。"
           }
         }
       }
@@ -15834,61 +15834,61 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Es wurden keine neuen Inhalte erkannt. Snapzy speichert das aktuelle Stitch-Ergebnis."
+            "value": "Es wurden keine neuen Inhalte erkannt. Pinny speichert das aktuelle Stitch-Ergebnis."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "No new content was detected. Snapzy is saving the current stitched result."
+            "value": "No new content was detected. Pinny is saving the current stitched result."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "No se detectó ningún contenido nuevo. Snapzy está guardando el resultado cosido actual."
+            "value": "No se detectó ningún contenido nuevo. Pinny está guardando el resultado cosido actual."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aucun nouveau contenu n'a été détecté. Snapzy enregistre le résultat cousu actuel."
+            "value": "Aucun nouveau contenu n'a été détecté. Pinny enregistre le résultat cousu actuel."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "新しいコンテンツは検出されませんでした。 Snapzy は現在のステッチ結果を保存しています。"
+            "value": "新しいコンテンツは検出されませんでした。 Pinny は現在のステッチ結果を保存しています。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "새로운 콘텐츠가 감지되지 않았습니다. Snapzy는 현재 스티치 결과를 저장하고 있습니다."
+            "value": "새로운 콘텐츠가 감지되지 않았습니다. Pinny는 현재 스티치 결과를 저장하고 있습니다."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Нового контента обнаружено не было. Snapzy сохраняет текущий результат сшивания."
+            "value": "Нового контента обнаружено не было. Pinny сохраняет текущий результат сшивания."
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Không phát hiện nội dung mới. Snapzy đang lưu kết quả ghép hiện tại."
+            "value": "Không phát hiện nội dung mới. Pinny đang lưu kết quả ghép hiện tại."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "没有检测到新内容。 Snapzy 正在保存当前的拼接结果。"
+            "value": "没有检测到新内容。 Pinny 正在保存当前的拼接结果。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "沒有檢測到新內容。 Snapzy 正在保存當前的拼接結果。"
+            "value": "沒有檢測到新內容。 Pinny 正在保存當前的拼接結果。"
           }
         }
       }
@@ -16029,61 +16029,61 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Es wurden gemischte Scrollrichtungen erkannt. Behalten Sie eine Richtung bei, damit Snapzy sich ausrichten kann."
+            "value": "Es wurden gemischte Scrollrichtungen erkannt. Behalten Sie eine Richtung bei, damit Pinny sich ausrichten kann."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mixed scroll directions detected. Keep one direction so Snapzy can align."
+            "value": "Mixed scroll directions detected. Keep one direction so Pinny can align."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Se detectaron direcciones de desplazamiento mixtas. Mantenga una dirección para que Snapzy pueda alinearse."
+            "value": "Se detectaron direcciones de desplazamiento mixtas. Mantenga una dirección para que Pinny pueda alinearse."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sens de défilement mixtes détectés. Gardez une direction pour que Snapzy puisse s'aligner."
+            "value": "Sens de défilement mixtes détectés. Gardez une direction pour que Pinny puisse s'aligner."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "混合スクロール方向が検出されました。 Snapzy が位置を合わせられるように、一方向を維持してください。"
+            "value": "混合スクロール方向が検出されました。 Pinny が位置を合わせられるように、一方向を維持してください。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "혼합된 스크롤 방향이 감지되었습니다. Snapzy가 정렬할 수 있도록 한 방향을 유지하세요."
+            "value": "혼합된 스크롤 방향이 감지되었습니다. Pinny가 정렬할 수 있도록 한 방향을 유지하세요."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Обнаружены смешанные направления прокрутки. Сохраняйте одно направление, чтобы Snapzy мог выровняться."
+            "value": "Обнаружены смешанные направления прокрутки. Сохраняйте одно направление, чтобы Pinny мог выровняться."
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Phát hiện cuộn nhiều hướng. Hãy giữ một hướng để Snapzy có thể căn chỉnh."
+            "value": "Phát hiện cuộn nhiều hướng. Hãy giữ một hướng để Pinny có thể căn chỉnh."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "检测到混合滚动方向。保持一个方向，以便 Snapzy 可以对齐。"
+            "value": "检测到混合滚动方向。保持一个方向，以便 Pinny 可以对齐。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "檢測到混合滾動方向。保持一個方向，以便 Snapzy 可以對齊。"
+            "value": "檢測到混合滾動方向。保持一個方向，以便 Pinny 可以對齊。"
           }
         }
       }
@@ -16159,49 +16159,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy konnte ein speicherbares zusammengefügtes Bild noch nicht sperren. Sie können mit der Aufnahme fortfahren, es erneut mit „Fertig“ versuchen oder abbrechen."
+            "value": "Pinny konnte ein speicherbares zusammengefügtes Bild noch nicht sperren. Sie können mit der Aufnahme fortfahren, es erneut mit „Fertig“ versuchen oder abbrechen."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy couldn't lock a savable stitched image yet. You can keep capturing, try Done again, or Cancel."
+            "value": "Pinny couldn't lock a savable stitched image yet. You can keep capturing, try Done again, or Cancel."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy aún no pudo bloquear una imagen cosida que se puede guardar. Puede seguir capturando, intentar Listo nuevamente o Cancelar."
+            "value": "Pinny aún no pudo bloquear una imagen cosida que se puede guardar. Puede seguir capturando, intentar Listo nuevamente o Cancelar."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy n'a pas encore pu verrouiller une image assemblée pouvant être enregistrée. Vous pouvez continuer la capture, réessayer Terminé ou Annuler."
+            "value": "Pinny n'a pas encore pu verrouiller une image assemblée pouvant être enregistrée. Vous pouvez continuer la capture, réessayer Terminé ou Annuler."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy は、保存可能なステッチ画像をまだロックできませんでした。撮影を続行するか、「完了」を再試行するか、「キャンセル」することができます。"
+            "value": "Pinny は、保存可能なステッチ画像をまだロックできませんでした。撮影を続行するか、「完了」を再試行するか、「キャンセル」することができます。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy는 아직 저장 가능한 스티치 이미지를 잠글 수 없습니다. 계속 캡처하거나, 다시 완료하거나, 취소할 수 있습니다."
+            "value": "Pinny는 아직 저장 가능한 스티치 이미지를 잠글 수 없습니다. 계속 캡처하거나, 다시 완료하거나, 취소할 수 있습니다."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy пока не удалось заблокировать сохраненное сшитое изображение. Вы можете продолжить съемку, попробовать «Готово» еще раз или «Отмена»."
+            "value": "Pinny пока не удалось заблокировать сохраненное сшитое изображение. Вы можете продолжить съемку, попробовать «Готово» еще раз или «Отмена»."
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy chưa thể khóa một ảnh ghép có thể lưu. Bạn có thể tiếp tục chụp, thử Xong lại hoặc Hủy."
+            "value": "Pinny chưa thể khóa một ảnh ghép có thể lưu. Bạn có thể tiếp tục chụp, thử Xong lại hoặc Hủy."
           }
         },
         "zh-Hans": {
@@ -17914,61 +17914,61 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Live-Vorschau läuft, während Snapzy den zusammengefügten Rahmen sperrt."
+            "value": "Live-Vorschau läuft, während Pinny den zusammengefügten Rahmen sperrt."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Live preview running while Snapzy locks the stitched frame."
+            "value": "Live preview running while Pinny locks the stitched frame."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vista previa en vivo ejecutándose mientras Snapzy bloquea el marco cosido."
+            "value": "Vista previa en vivo ejecutándose mientras Pinny bloquea el marco cosido."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aperçu en direct en cours d'exécution pendant que Snapzy verrouille le cadre cousu."
+            "value": "Aperçu en direct en cours d'exécution pendant que Pinny verrouille le cadre cousu."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy がステッチされたフレームをロックしている間、ライブプレビューが実行されます。"
+            "value": "Pinny がステッチされたフレームをロックしている間、ライブプレビューが実行されます。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy가 스티치된 프레임을 잠그는 동안 실시간 미리보기가 실행 중입니다."
+            "value": "Pinny가 스티치된 프레임을 잠그는 동안 실시간 미리보기가 실행 중입니다."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Предварительный просмотр в реальном времени выполняется, пока Snapzy блокирует сшитый кадр."
+            "value": "Предварительный просмотр в реальном времени выполняется, пока Pinny блокирует сшитый кадр."
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bản xem trước trực tiếp đang chạy trong khi Snapzy khóa khung đã ghép."
+            "value": "Bản xem trước trực tiếp đang chạy trong khi Pinny khóa khung đã ghép."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy 锁定缝合帧时运行实时预览。"
+            "value": "Pinny 锁定缝合帧时运行实时预览。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy 鎖定縫合幀時運行實時預覽。"
+            "value": "Pinny 鎖定縫合幀時運行實時預覽。"
           }
         }
       }
@@ -18954,61 +18954,61 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Behalten Sie eine Richtung bei, damit Snapzy neu ausrichten kann"
+            "value": "Behalten Sie eine Richtung bei, damit Pinny neu ausrichten kann"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Keep one direction so Snapzy can re-align"
+            "value": "Keep one direction so Pinny can re-align"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mantenga una dirección para que Snapzy pueda realinearse"
+            "value": "Mantenga una dirección para que Pinny pueda realinearse"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gardez une direction pour que Snapzy puisse se réaligner"
+            "value": "Gardez une direction pour que Pinny puisse se réaligner"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy が再調整できるように、一方向を維持してください"
+            "value": "Pinny が再調整できるように、一方向を維持してください"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy가 다시 정렬할 수 있도록 한 방향을 유지하세요"
+            "value": "Pinny가 다시 정렬할 수 있도록 한 방향을 유지하세요"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Сохраняйте одно направление, чтобы Snapzy мог перестроить"
+            "value": "Сохраняйте одно направление, чтобы Pinny мог перестроить"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Giữ một hướng để Snapzy căn chỉnh lại"
+            "value": "Giữ một hướng để Pinny căn chỉnh lại"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "保持一个方向，以便 Snapzy 可以重新对齐"
+            "value": "保持一个方向，以便 Pinny 可以重新对齐"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "保持一個方向，以便 Snapzy 可以重新對齊"
+            "value": "保持一個方向，以便 Pinny 可以重新對齊"
           }
         }
       }
@@ -20189,61 +20189,61 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy sperrt den ersten Frame"
+            "value": "Pinny sperrt den ersten Frame"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy is locking the first frame"
+            "value": "Pinny is locking the first frame"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy está bloqueando el primer cuadro"
+            "value": "Pinny está bloqueando el primer cuadro"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy verrouille la première image"
+            "value": "Pinny verrouille la première image"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy は最初のフレームをロックしています"
+            "value": "Pinny は最初のフレームをロックしています"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy가 첫 번째 프레임을 잠그고 있습니다"
+            "value": "Pinny가 첫 번째 프레임을 잠그고 있습니다"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy блокирует первый кадр"
+            "value": "Pinny блокирует первый кадр"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy đang khóa khung hình đầu tiên"
+            "value": "Pinny đang khóa khung hình đầu tiên"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy 正在锁定第一帧"
+            "value": "Pinny 正在锁定第一帧"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy 正在鎖定第一幀"
+            "value": "Pinny 正在鎖定第一幀"
           }
         }
       }
@@ -20254,61 +20254,61 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy versiegelt das genähte Ergebnis"
+            "value": "Pinny versiegelt das genähte Ergebnis"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy is sealing the stitched result"
+            "value": "Pinny is sealing the stitched result"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy está sellando el resultado cosido"
+            "value": "Pinny está sellando el resultado cosido"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy scelle le résultat cousu"
+            "value": "Pinny scelle le résultat cousu"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy がステッチ結果を確定しています"
+            "value": "Pinny がステッチ結果を確定しています"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy가 스티치 결과를 봉인하고 있습니다"
+            "value": "Pinny가 스티치 결과를 봉인하고 있습니다"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy запечатывает результат сшивания"
+            "value": "Pinny запечатывает результат сшивания"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy đang chốt kết quả đã ghép"
+            "value": "Pinny đang chốt kết quả đã ghép"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy 正在密封缝合结果"
+            "value": "Pinny 正在密封缝合结果"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy 正在密封縫合結果"
+            "value": "Pinny 正在密封縫合結果"
           }
         }
       }
@@ -20709,61 +20709,61 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vorschau angehalten – scrollen Sie langsam, damit Snapzy sich neu ausrichten kann."
+            "value": "Vorschau angehalten – scrollen Sie langsam, damit Pinny sich neu ausrichten kann."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Preview paused - scroll slowly so Snapzy can re-align."
+            "value": "Preview paused - scroll slowly so Pinny can re-align."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vista previa en pausa: desplácese lentamente para que Snapzy pueda realinearse."
+            "value": "Vista previa en pausa: desplácese lentamente para que Pinny pueda realinearse."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aperçu en pause - faites défiler lentement pour que Snapzy puisse se réaligner."
+            "value": "Aperçu en pause - faites défiler lentement pour que Pinny puisse se réaligner."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "プレビューが一時停止されました - Snapzy が再調整できるようにゆっくりスクロールします。"
+            "value": "プレビューが一時停止されました - Pinny が再調整できるようにゆっくりスクロールします。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "미리보기가 일시중지되었습니다. Snapzy가 다시 정렬할 수 있도록 천천히 스크롤하세요."
+            "value": "미리보기가 일시중지되었습니다. Pinny가 다시 정렬할 수 있도록 천천히 스크롤하세요."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Предварительный просмотр приостановлен: прокрутите медленно, чтобы Snapzy мог выровнять изображение."
+            "value": "Предварительный просмотр приостановлен: прокрутите медленно, чтобы Pinny мог выровнять изображение."
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bản xem trước đã tạm dừng, hãy cuộn chậm để Snapzy căn chỉnh lại."
+            "value": "Bản xem trước đã tạm dừng, hãy cuộn chậm để Pinny căn chỉnh lại."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "预览已暂停 - 缓慢滚动，以便 Snapzy 可以重新对齐。"
+            "value": "预览已暂停 - 缓慢滚动，以便 Pinny 可以重新对齐。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "預覽已暫停 - 緩慢滾動，以便 Snapzy 可以重新對齊。"
+            "value": "預覽已暫停 - 緩慢滾動，以便 Pinny 可以重新對齊。"
           }
         }
       }
@@ -20969,61 +20969,61 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zeigt das neueste zusammengefügte Ergebnis an, während Snapzy neuere Inhalte sperrt."
+            "value": "Zeigt das neueste zusammengefügte Ergebnis an, während Pinny neuere Inhalte sperrt."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Showing the latest stitched result while Snapzy locks newer content."
+            "value": "Showing the latest stitched result while Pinny locks newer content."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mostrando el último resultado cosido mientras Snapzy bloquea el contenido más nuevo."
+            "value": "Mostrando el último resultado cosido mientras Pinny bloquea el contenido más nuevo."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Affichage du dernier résultat assemblé pendant que Snapzy verrouille le contenu le plus récent."
+            "value": "Affichage du dernier résultat assemblé pendant que Pinny verrouille le contenu le plus récent."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy が新しいコンテンツをロックしている間、最新のステッチ結果を表示します。"
+            "value": "Pinny が新しいコンテンツをロックしている間、最新のステッチ結果を表示します。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy가 최신 콘텐츠를 잠그는 동안 최신 연결 결과를 표시합니다."
+            "value": "Pinny가 최신 콘텐츠를 잠그는 동안 최신 연결 결과를 표시합니다."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Показан последний сшитый результат, в то время как Snapzy блокирует новый контент."
+            "value": "Показан последний сшитый результат, в то время как Pinny блокирует новый контент."
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Đang hiển thị kết quả ghép mới nhất trong khi Snapzy khóa phần nội dung mới hơn."
+            "value": "Đang hiển thị kết quả ghép mới nhất trong khi Pinny khóa phần nội dung mới hơn."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "显示最新的拼接结果，同时 Snapzy 锁定更新的内容。"
+            "value": "显示最新的拼接结果，同时 Pinny 锁定更新的内容。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "顯示最新的拼接結果，同時 Snapzy 鎖定更新的內容。"
+            "value": "顯示最新的拼接結果，同時 Pinny 鎖定更新的內容。"
           }
         }
       }

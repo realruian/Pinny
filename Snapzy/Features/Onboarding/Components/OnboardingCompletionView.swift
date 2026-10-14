@@ -95,7 +95,7 @@ struct CompletionView: View {
   private var completionDescription: String {
     onboardingLocalization.string(
       "onboarding.completion.description",
-      defaultValue: "Snapzy is ready. Access it from the menu bar or use your keyboard shortcuts.",
+      defaultValue: "Pinny is ready. Access it from the menu bar or use your keyboard shortcuts.",
       comment: "Onboarding completion description"
     )
   }

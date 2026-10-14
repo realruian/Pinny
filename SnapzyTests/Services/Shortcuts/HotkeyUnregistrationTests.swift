@@ -18,10 +18,10 @@ import XCTest
 
 final class HotkeyUnregistrationTests: XCTestCase {
 
-  /// Exotic combo (Ctrl+Option+Shift+Cmd+F17) — no system/app should hold it.
+  /// Bare F17 exercises modifier-free Carbon registration without using user F1/F2.
   private let probeConfig = ShortcutConfig(
     keyCode: UInt32(kVK_F17),
-    modifiers: UInt32(cmdKey | shiftKey | optionKey | controlKey)
+    modifiers: 0
   )
 
   private let probeHotkeyID = EventHotKeyID(signature: OSType(0x5A54_5354), id: 999)  // "ZTST"
@@ -55,12 +55,12 @@ final class HotkeyUnregistrationTests: XCTestCase {
     try skipIfRunningInCI("Carbon hotkey registration is unsupported on headless CI runners")
     let manager = KeyboardShortcutManager.shared
 
-    let originalConfig = manager.shortcut(for: .fullscreen)
-    let originalFullscreenEnabled = manager.isShortcutEnabled(for: .fullscreen)
+    let originalConfig = manager.shortcut(for: .areaAnnotate)
+    let originalFullscreenEnabled = manager.isShortcutEnabled(for: .areaAnnotate)
     preserveMasterEnabledState(of: manager)
     addTeardownBlock { @MainActor in
-      manager.setFullscreenShortcut(originalConfig)
-      manager.setShortcutEnabled(originalFullscreenEnabled, for: .fullscreen)
+      manager.setAreaAnnotateShortcut(originalConfig)
+      manager.setShortcutEnabled(originalFullscreenEnabled, for: .areaAnnotate)
     }
 
     // Preconditions: combo must be free before we start.
@@ -72,8 +72,8 @@ final class HotkeyUnregistrationTests: XCTestCase {
 
     // Arm Snapzy's fullscreen shortcut with the probe combo.
     manager.enable()
-    manager.setFullscreenShortcut(probeConfig)
-    manager.setShortcutEnabled(true, for: .fullscreen)
+    manager.setAreaAnnotateShortcut(probeConfig)
+    manager.setShortcutEnabled(true, for: .areaAnnotate)
 
     // While enabled, the combo must be held by Snapzy (duplicate registration rejected).
     let held = probeRegister()
@@ -84,7 +84,7 @@ final class HotkeyUnregistrationTests: XCTestCase {
     if let ref = held.ref { UnregisterEventHotKey(ref) }
 
     // Issue #418: disable the shortcut — the combo must become free immediately.
-    manager.setShortcutEnabled(false, for: .fullscreen)
+    manager.setShortcutEnabled(false, for: .areaAnnotate)
 
     let freed = probeRegister()
     XCTAssertEqual(
@@ -94,7 +94,7 @@ final class HotkeyUnregistrationTests: XCTestCase {
     if let ref = freed.ref { UnregisterEventHotKey(ref) }
 
     // And the manager must report it disabled.
-    XCTAssertFalse(manager.isShortcutEnabled(for: .fullscreen))
+    XCTAssertFalse(manager.isShortcutEnabled(for: .areaAnnotate))
   }
 
   @MainActor
@@ -102,16 +102,16 @@ final class HotkeyUnregistrationTests: XCTestCase {
     try skipIfRunningInCI("Carbon hotkey registration is unsupported on headless CI runners")
     let manager = KeyboardShortcutManager.shared
 
-    let originalFullscreen = manager.shortcut(for: .fullscreen)
-    let originalCutout = manager.shortcut(for: .objectCutout)
-    let originalFullscreenEnabled = manager.isShortcutEnabled(for: .fullscreen)
-    let originalCutoutEnabled = manager.isShortcutEnabled(for: .objectCutout)
+    let originalFullscreen = manager.shortcut(for: .areaAnnotate)
+    let originalCutout = manager.shortcut(for: .pinClipboard)
+    let originalFullscreenEnabled = manager.isShortcutEnabled(for: .areaAnnotate)
+    let originalCutoutEnabled = manager.isShortcutEnabled(for: .pinClipboard)
     preserveMasterEnabledState(of: manager)
     addTeardownBlock { @MainActor in
-      manager.setFullscreenShortcut(originalFullscreen)
-      manager.setObjectCutoutShortcut(originalCutout)
-      manager.setShortcutEnabled(originalFullscreenEnabled, for: .fullscreen)
-      manager.setShortcutEnabled(originalCutoutEnabled, for: .objectCutout)
+      manager.setAreaAnnotateShortcut(originalFullscreen)
+      manager.setPinClipboardShortcut(originalCutout)
+      manager.setShortcutEnabled(originalFullscreenEnabled, for: .areaAnnotate)
+      manager.setShortcutEnabled(originalCutoutEnabled, for: .pinClipboard)
     }
 
     let pre = probeRegister()
@@ -123,11 +123,11 @@ final class HotkeyUnregistrationTests: XCTestCase {
     // Fullscreen holds the combo, then gets disabled; user reassigns the
     // combo to objectCutout (the "不能把这个 3 的按键换成别的" scenario).
     manager.enable()
-    manager.setFullscreenShortcut(probeConfig)
-    manager.setShortcutEnabled(true, for: .fullscreen)
-    manager.setShortcutEnabled(false, for: .fullscreen)
-    manager.setObjectCutoutShortcut(probeConfig)
-    manager.setShortcutEnabled(true, for: .objectCutout)
+    manager.setAreaAnnotateShortcut(probeConfig)
+    manager.setShortcutEnabled(true, for: .areaAnnotate)
+    manager.setShortcutEnabled(false, for: .areaAnnotate)
+    manager.setPinClipboardShortcut(probeConfig)
+    manager.setShortcutEnabled(true, for: .pinClipboard)
 
     // objectCutout must now own the registration — probe still reports held…
     let held = probeRegister()
@@ -135,7 +135,7 @@ final class HotkeyUnregistrationTests: XCTestCase {
     if let ref = held.ref { UnregisterEventHotKey(ref) }
 
     // …and disabling objectCutout frees it again.
-    manager.setShortcutEnabled(false, for: .objectCutout)
+    manager.setShortcutEnabled(false, for: .pinClipboard)
     let freed = probeRegister()
     XCTAssertEqual(freed.status, noErr, "Combo must be freed after disabling the reassigned kind")
     if let ref = freed.ref { UnregisterEventHotKey(ref) }

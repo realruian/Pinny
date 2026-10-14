@@ -348,6 +348,8 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
 
   func shortcutTriggered(_ action: ShortcutAction) {
     switch action {
+    case .pinClipboard:
+      QuickAccessPinWindowManager.shared.showClipboardImage()
     case .captureFullscreen:
       captureFullscreen()
     case .captureArea:
@@ -367,7 +369,7 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
     case .captureOCR:
       captureOCR()
     case .captureSmartElement:
-      SmartElementCaptureController.shared.startCapture()
+      captureAreaAnnotate()
     case .captureObjectCutout:
       captureObjectCutout()
     case .recordVideo:
@@ -414,135 +416,19 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
   }
 
   func captureFullscreen() {
-    Task {
-      let targetDisplayID = ScreenUtility.activeDisplayID()
-
-      guard
-        let resolvedSaveDirectory = fileAccessManager.ensureExportDirectoryForOperation(
-          promptMessage: L10n.Recording.chooseSaveLocationMessage
-        )
-      else {
-        lastCaptureResult = .failure(.saveFailed(L10n.ScreenCapture.saveLocationPermissionRequired))
-        DiagnosticLogger.shared.log(.error, .capture, "Fullscreen capture aborted: no save location")
-        return
-      }
-      saveDirectory = resolvedSaveDirectory
-
-      let context = CaptureContext.fromFrontmostApp()
-      isCapturing = true
-      DiagnosticLogger.shared.log(.info, .capture, "Fullscreen capture flow started", context: [
-        "displayID": "\(targetDisplayID)",
-        "format": resolvedFormat.fileExtension,
-      ])
-      let excludeDesktopIcons = DesktopIconManager.shared.isIconHidingEnabled
-      let excludeDesktopWidgets = DesktopIconManager.shared.isWidgetHidingEnabled
-      let excludeOwnApplication = !includesOwnAppInScreenshots
-      let canUseFastMultiDisplayPath = !showsCursorInScreenshots
-        && !excludeDesktopIcons
-        && !excludeDesktopWidgets
-      let prefetchedContentTask = canUseFastMultiDisplayPath
-        ? nil
-        : captureManager.prefetchShareableContent(
-          includeDesktopWindows: excludeDesktopIcons || excludeDesktopWidgets
-        )
-      await Task.yield()
-      let hiddenWindowSession = hideVisibleNormalWindowsIfNeeded(excludeOwnApplication)
-
-      // Resolve save directory based on auto-save toggle
-      let actualSaveDirectory = tempCaptureManager.resolveSaveDirectory(
-        for: .screenshot,
-        exportDirectory: resolvedSaveDirectory
-      )
-
-      if hiddenWindowSession.didHideWindows {
-        try? await Task.sleep(nanoseconds: UInt64(windowHideSettleDelay * 1_000_000_000))
-      }
-
-      let result = await captureManager.captureAllDisplays(
-        saveDirectory: actualSaveDirectory,
-        format: resolvedFormat,
-        showCursor: showsCursorInScreenshots,
-        excludeDesktopIcons: excludeDesktopIcons,
-        excludeDesktopWidgets: excludeDesktopWidgets,
-        excludeOwnApplication: excludeOwnApplication,
-        allowFastPathWhenOwnApplicationHidden: excludeOwnApplication,
-        prefetchedContentTask: prefetchedContentTask,
-        targetDisplayIDs: [targetDisplayID],
-        context: context
-      )
-
-      isCapturing = false
-      lastCaptureResult = result.primaryCaptureResult
-      hiddenWindowSession.restore()
-
-      if !result.savedURLs.isEmpty {
-        SoundManager.playScreenshotCapture()
-        await postCaptureHandler.handleScreenshotCaptures(urls: result.savedURLs)
-      }
-    }
+    startInlineAreaAnnotateCapture()
   }
 
   func captureActiveWindow() {
-    Task {
-      guard
-        let resolvedSaveDirectory = fileAccessManager.ensureExportDirectoryForOperation(
-          promptMessage: L10n.Recording.chooseSaveLocationMessage
-        )
-      else {
-        lastCaptureResult = .failure(.saveFailed(L10n.ScreenCapture.saveLocationPermissionRequired))
-        DiagnosticLogger.shared.log(.error, .capture, "Active window capture aborted: no save location")
-        return
-      }
-      saveDirectory = resolvedSaveDirectory
-
-      isCapturing = true
-      DiagnosticLogger.shared.log(.info, .capture, "Active window capture flow started", context: [
-        "format": resolvedFormat.fileExtension,
-      ])
-
-      let prefetchedContentTask = captureManager.prefetchShareableContent(includeDesktopWindows: false)
-      guard let target = await ActiveWindowResolver.resolveActiveWindowTarget(
-        prefetchedContentTask: prefetchedContentTask
-      ) else {
-        isCapturing = false
-        lastCaptureResult = .failure(.captureFailed(L10n.ScreenCapture.failedToCropCapturedImage))
-        DiagnosticLogger.shared.log(.error, .capture, "Active window capture failed: no resolvable window")
-        return
-      }
-
-      let actualSaveDirectory = tempCaptureManager.resolveSaveDirectory(
-        for: .screenshot,
-        exportDirectory: resolvedSaveDirectory
-      )
-
-      let context = CaptureContext.fromPID(target.ownerPID, windowTitle: target.title)
-      let result = await captureManager.captureWindow(
-        target: target,
-        saveDirectory: actualSaveDirectory,
-        format: resolvedFormat,
-        showCursor: showsCursorInScreenshots,
-        excludeDesktopIcons: DesktopIconManager.shared.isIconHidingEnabled,
-        excludeDesktopWidgets: DesktopIconManager.shared.isWidgetHidingEnabled,
-        excludeOwnApplication: false,
-        prefetchedContentTask: prefetchedContentTask,
-        context: context
-      )
-
-      isCapturing = false
-      lastCaptureResult = result
-
-      if case .success = result {
-        SoundManager.playScreenshotCapture()
-      }
-    }
+    startInlineAreaAnnotateCapture()
   }
 
   func captureArea() {
-    startAreaCapture(initialInteractionMode: .manualRegion)
+    startInlineAreaAnnotateCapture()
   }
 
   func captureApplication() {
-    startAreaCapture(initialInteractionMode: .applicationWindow)
+    startInlineAreaAnnotateCapture()
   }
 
   func captureAreaAnnotate() {
@@ -841,16 +727,6 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
       return
     }
 
-    guard
-      let resolvedSaveDirectory = fileAccessManager.ensureExportDirectoryForOperation(
-        promptMessage: L10n.Recording.chooseSaveLocationMessage
-      )
-    else {
-      lastCaptureResult = .failure(.saveFailed(L10n.ScreenCapture.saveLocationPermissionRequired))
-      return
-    }
-    saveDirectory = resolvedSaveDirectory
-
     let captureContext = CaptureContext.fromFrontmostApp()
     isAreaSelectionActive = true
     DiagnosticLogger.shared.log(.info, .capture, "Inline area annotate flow started", context: [
@@ -939,17 +815,18 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
           return
         }
 
-        let actualSaveDirectory = self.tempCaptureManager.resolveSaveDirectory(
-          for: .screenshot,
-          exportDirectory: resolvedSaveDirectory
-        )
         InlineAreaAnnotateCoordinator.shared.start(
           screens: screens,
           primaryDisplayID: primaryDisplayID,
           backdrops: frozenSession.backdrops,
           frozenSession: frozenSession,
-          saveDirectory: actualSaveDirectory,
+          saveDirectory: self.saveDirectory,
           outputFormat: self.resolvedFormat,
+          saveDirectoryProvider: { [weak self] in
+            guard let self else { return nil }
+            return self.fileAccessManager.ensureExportDirectoryForOperation(
+              promptMessage: L10n.Recording.chooseSaveLocationMessage)
+          },
           context: captureContext,
           prefetchedContentTask: prefetchedContentTask,
           excludeOwnApplication: excludeOwnApplication
@@ -959,7 +836,11 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
             return
           }
           isAreaSelectionActive = false
-          lastCaptureResult = result
+          switch result {
+          case .saved(let url): lastCaptureResult = .success(url)
+          case .failure(let error): lastCaptureResult = .failure(error)
+          case .copied, .pinned: lastCaptureResult = nil
+          }
           hiddenWindowSession.restore()
           if case .failure(let error) = result {
             DiagnosticLogger.shared.log(.info, .capture, "Inline area annotate ended", context: [

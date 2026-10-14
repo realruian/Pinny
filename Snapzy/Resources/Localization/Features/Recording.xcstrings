@@ -527,61 +527,61 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy benötigt Kamerazugriff. Bitte aktiviere ihn unter Systemeinstellungen > Datenschutz & Sicherheit > Kamera."
+            "value": "Pinny benötigt Kamerazugriff. Bitte aktiviere ihn unter Systemeinstellungen > Datenschutz & Sicherheit > Kamera."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy needs camera permission. Please enable it in System Settings > Privacy & Security > Camera."
+            "value": "Pinny needs camera permission. Please enable it in System Settings > Privacy & Security > Camera."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy necesita permiso de cámara. Actívalo en Ajustes del Sistema > Privacidad y seguridad > Cámara."
+            "value": "Pinny necesita permiso de cámara. Actívalo en Ajustes del Sistema > Privacidad y seguridad > Cámara."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy a besoin de l'accès à la caméra. Veuillez l'activer dans Réglages Système > Confidentialité et sécurité > Appareil photo."
+            "value": "Pinny a besoin de l'accès à la caméra. Veuillez l'activer dans Réglages Système > Confidentialité et sécurité > Appareil photo."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy にはカメラの権限が必要です。システム設定 > プライバシーとセキュリティ > カメラで有効にしてください。"
+            "value": "Pinny にはカメラの権限が必要です。システム設定 > プライバシーとセキュリティ > カメラで有効にしてください。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy에 카메라 권한이 필요합니다. 시스템 설정 > 개인정보 보호 및 보안 > 카메라에서 활성화하세요."
+            "value": "Pinny에 카메라 권한이 필요합니다. 시스템 설정 > 개인정보 보호 및 보안 > 카메라에서 활성화하세요."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy требуется доступ к камере. Включите его в меню «Системные настройки» > «Конфиденциальность и безопасность» > «Камера»."
+            "value": "Pinny требуется доступ к камере. Включите его в меню «Системные настройки» > «Конфиденциальность и безопасность» > «Камера»."
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy cần quyền sử dụng máy ảnh. Vui lòng bật trong Cài đặt hệ thống > Quyền riêng tư & Bảo mật > Camera."
+            "value": "Pinny cần quyền sử dụng máy ảnh. Vui lòng bật trong Cài đặt hệ thống > Quyền riêng tư & Bảo mật > Camera."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy 需要摄像头权限。请在“系统设置”>“隐私与安全性”>“摄像头”中启用。"
+            "value": "Pinny 需要摄像头权限。请在“系统设置”>“隐私与安全性”>“摄像头”中启用。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy 需要相機權限。請在「系統設定」>「隱私權與安全性」>「相機」中啟用。"
+            "value": "Pinny 需要相機權限。請在「系統設定」>「隱私權與安全性」>「相機」中啟用。"
           }
         }
       }
@@ -592,61 +592,61 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy benötigt Kamerazugriff, um eine Kamera-Überlagerung zur Aufnahme hinzuzufügen."
+            "value": "Pinny benötigt Kamerazugriff, um eine Kamera-Überlagerung zur Aufnahme hinzuzufügen."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy needs camera permission to add a camera overlay to the recording."
+            "value": "Pinny needs camera permission to add a camera overlay to the recording."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy necesita permiso de cámara para añadir la superposición de cámara a la grabación."
+            "value": "Pinny necesita permiso de cámara para añadir la superposición de cámara a la grabación."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy a besoin de l'accès à la caméra pour superposer la caméra sur l'enregistrement."
+            "value": "Pinny a besoin de l'accès à la caméra pour superposer la caméra sur l'enregistrement."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "録画にカメラオーバーレイを追加するには、Snapzy にカメラの権限が必要です。"
+            "value": "録画にカメラオーバーレイを追加するには、Pinny にカメラの権限が必要です。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "녹화에 카메라 오버레이를 추가하려면 Snapzy에 카메라 권한이 필요합니다."
+            "value": "녹화에 카메라 오버레이를 추가하려면 Pinny에 카메라 권한이 필요합니다."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy требуется доступ к камере для наложения видео с камеры на запись."
+            "value": "Pinny требуется доступ к камере для наложения видео с камеры на запись."
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy cần quyền sử dụng máy ảnh để phủ hình máy ảnh lên bản ghi màn hình."
+            "value": "Pinny cần quyền sử dụng máy ảnh để phủ hình máy ảnh lên bản ghi màn hình."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy 需要摄像头权限以在录制中添加摄像头画面叠加。"
+            "value": "Pinny 需要摄像头权限以在录制中添加摄像头画面叠加。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy 需要相機權限以在錄影中加入相機畫面疊加。"
+            "value": "Pinny 需要相機權限以在錄影中加入相機畫面疊加。"
           }
         }
       }
@@ -2152,61 +2152,61 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy benötigt eine Mikrofonberechtigung. Bitte aktivieren Sie es in den Systemeinstellungen > Datenschutz und Sicherheit > Mikrofon."
+            "value": "Pinny benötigt eine Mikrofonberechtigung. Bitte aktivieren Sie es in den Systemeinstellungen > Datenschutz und Sicherheit > Mikrofon."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy needs microphone permission. Please enable it in System Settings > Privacy & Security > Microphone."
+            "value": "Pinny needs microphone permission. Please enable it in System Settings > Privacy & Security > Microphone."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy necesita permiso del micrófono. Habilítelo en Configuración del sistema > Privacidad y seguridad > Micrófono."
+            "value": "Pinny necesita permiso del micrófono. Habilítelo en Configuración del sistema > Privacidad y seguridad > Micrófono."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy a besoin de l'autorisation du microphone. Veuillez l'activer dans Paramètres système > Confidentialité et sécurité > Microphone."
+            "value": "Pinny a besoin de l'autorisation du microphone. Veuillez l'activer dans Paramètres système > Confidentialité et sécurité > Microphone."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy にはマイクの許可が必要です。 [システム設定] > [プライバシーとセキュリティ] > [マイク] で有効にしてください。"
+            "value": "Pinny にはマイクの許可が必要です。 [システム設定] > [プライバシーとセキュリティ] > [マイク] で有効にしてください。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy에는 마이크 권한이 필요합니다. 시스템 설정 > 개인 정보 보호 및 보안 > 마이크에서 활성화해 주세요."
+            "value": "Pinny에는 마이크 권한이 필요합니다. 시스템 설정 > 개인 정보 보호 및 보안 > 마이크에서 활성화해 주세요."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy требуется разрешение микрофона. Включите его в «Настройки системы» > «Конфиденциальность и безопасность» > «Микрофон»."
+            "value": "Pinny требуется разрешение микрофона. Включите его в «Настройки системы» > «Конфиденциальность и безопасность» > «Микрофон»."
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy cần quyền Microphone. Vui lòng bật trong Cài đặt hệ thống > Quyền riêng tư & Bảo mật > Microphone."
+            "value": "Pinny cần quyền Microphone. Vui lòng bật trong Cài đặt hệ thống > Quyền riêng tư & Bảo mật > Microphone."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy 需要麦克风权限。请在系统设置 > 隐私和安全 > 麦克风中启用它。"
+            "value": "Pinny 需要麦克风权限。请在系统设置 > 隐私和安全 > 麦克风中启用它。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy 需要麥克風權限。請在系統設置 > 隱私和安全 > 麥克風中啓用它。"
+            "value": "Pinny 需要麥克風權限。請在系統設置 > 隱私和安全 > 麥克風中啓用它。"
           }
         }
       }
@@ -2217,61 +2217,61 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy benötigt eine Mikrofonberechtigung, um Audio aufzunehmen. Bitte gewähren Sie den Zugriff in den Systemeinstellungen."
+            "value": "Pinny benötigt eine Mikrofonberechtigung, um Audio aufzunehmen. Bitte gewähren Sie den Zugriff in den Systemeinstellungen."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy needs microphone permission to record audio. Please grant access in System Settings."
+            "value": "Pinny needs microphone permission to record audio. Please grant access in System Settings."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy necesita permiso del micrófono para grabar audio. Conceda acceso en Configuración del sistema."
+            "value": "Pinny necesita permiso del micrófono para grabar audio. Conceda acceso en Configuración del sistema."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy a besoin de l'autorisation du microphone pour enregistrer de l'audio. Veuillez accorder l'accès dans les paramètres système."
+            "value": "Pinny a besoin de l'autorisation du microphone pour enregistrer de l'audio. Veuillez accorder l'accès dans les paramètres système."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy が音声を録音するにはマイクの許可が必要です。システム設定でアクセスを許可してください。"
+            "value": "Pinny が音声を録音するにはマイクの許可が必要です。システム設定でアクセスを許可してください。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy가 오디오를 녹음하려면 마이크 권한이 필요합니다. 시스템 설정에서 액세스 권한을 부여하세요."
+            "value": "Pinny가 오디오를 녹음하려면 마이크 권한이 필요합니다. 시스템 설정에서 액세스 권한을 부여하세요."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy требуется разрешение микрофона для записи звука. Пожалуйста, предоставьте доступ в настройках системы."
+            "value": "Pinny требуется разрешение микрофона для записи звука. Пожалуйста, предоставьте доступ в настройках системы."
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy cần quyền Microphone để ghi âm. Vui lòng cấp quyền trong Cài đặt hệ thống."
+            "value": "Pinny cần quyền Microphone để ghi âm. Vui lòng cấp quyền trong Cài đặt hệ thống."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy 需要麦克风权限才能录制音频。请在系统设置中授予访问权限。"
+            "value": "Pinny 需要麦克风权限才能录制音频。请在系统设置中授予访问权限。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy 需要麥克風權限才能錄製音頻。請在系統設置中授予訪問權限。"
+            "value": "Pinny 需要麥克風權限才能錄製音頻。請在系統設置中授予訪問權限。"
           }
         }
       }
@@ -5791,61 +5791,61 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wählen Sie, wo Snapzy Screenshots und Aufnahmen speichern soll"
+            "value": "Wählen Sie, wo Pinny Screenshots und Aufnahmen speichern soll"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Choose where Snapzy should save screenshots and recordings"
+            "value": "Choose where Pinny should save screenshots and recordings"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Elija dónde Snapzy debe guardar capturas de pantalla y grabaciones"
+            "value": "Elija dónde Pinny debe guardar capturas de pantalla y grabaciones"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Choisissez où Snapzy doit enregistrer les captures d'écran et les enregistrements"
+            "value": "Choisissez où Pinny doit enregistrer les captures d'écran et les enregistrements"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy がスクリーンショットと録画を保存する場所を選択します"
+            "value": "Pinny がスクリーンショットと録画を保存する場所を選択します"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy가 스크린샷과 녹음을 저장할 위치를 선택하세요"
+            "value": "Pinny가 스크린샷과 녹음을 저장할 위치를 선택하세요"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Выберите, где Snapzy должен сохранять снимки экрана и записи"
+            "value": "Выберите, где Pinny должен сохранять снимки экрана и записи"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Chọn nơi Snapzy sẽ lưu ảnh chụp và bản ghi"
+            "value": "Chọn nơi Pinny sẽ lưu ảnh chụp và bản ghi"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "选择 Snapzy 保存屏幕截图和录屏的位置"
+            "value": "选择 Pinny 保存屏幕截图和录屏的位置"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "選擇 Snapzy 保存螢幕截圖和錄屏的位置"
+            "value": "選擇 Pinny 保存螢幕截圖和錄屏的位置"
           }
         }
       }
@@ -6766,61 +6766,61 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy benötigt eine Berechtigung zum Speichern des Ordners, um fortfahren zu können. Bitte wählen Sie im Onboarding einen Ordner aus oder gewähren Sie ihn jetzt."
+            "value": "Pinny benötigt eine Berechtigung zum Speichern des Ordners, um fortfahren zu können. Bitte wählen Sie im Onboarding einen Ordner aus oder gewähren Sie ihn jetzt."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy needs a save folder permission to continue. Please choose a folder in onboarding or grant it now."
+            "value": "Pinny needs a save folder permission to continue. Please choose a folder in onboarding or grant it now."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy necesita un permiso para guardar la carpeta para continuar. Elija una carpeta en la incorporación o concédala ahora."
+            "value": "Pinny necesita un permiso para guardar la carpeta para continuar. Elija una carpeta en la incorporación o concédala ahora."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy a besoin d'une autorisation de dossier de sauvegarde pour continuer. Veuillez choisir un dossier lors de l'intégration ou l'accorder maintenant."
+            "value": "Pinny a besoin d'une autorisation de dossier de sauvegarde pour continuer. Veuillez choisir un dossier lors de l'intégration ou l'accorder maintenant."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "続行するには Snapzy に保存フォルダの権限が必要です。オンボーディングでフォルダを選択するか、今すぐ権限を許可してください。"
+            "value": "続行するには Pinny に保存フォルダの権限が必要です。オンボーディングでフォルダを選択するか、今すぐ権限を許可してください。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "계속하려면 Snapzy에 폴더 저장 권한이 필요합니다. 온보딩에서 폴더를 선택하거나 지금 부여하세요."
+            "value": "계속하려면 Pinny에 폴더 저장 권한이 필요합니다. 온보딩에서 폴더를 선택하거나 지금 부여하세요."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Чтобы продолжить, Snapzy требуется разрешение на сохранение папки. Пожалуйста, выберите папку при регистрации или предоставьте ее сейчас."
+            "value": "Чтобы продолжить, Pinny требуется разрешение на сохранение папки. Пожалуйста, выберите папку при регистрации или предоставьте ее сейчас."
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy cần quyền vào thư mục lưu để tiếp tục. Hãy chọn thư mục trong onboarding hoặc cấp quyền ngay bây giờ."
+            "value": "Pinny cần quyền vào thư mục lưu để tiếp tục. Hãy chọn thư mục trong onboarding hoặc cấp quyền ngay bây giờ."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy 需要访问保存文件夹才能继续。请在引导中选择文件夹，或现在授予访问权限。"
+            "value": "Pinny 需要访问保存文件夹才能继续。请在引导中选择文件夹，或现在授予访问权限。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy 需要存取儲存資料夾才能繼續。請在引導流程中選擇資料夾，或立即授予存取權限。"
+            "value": "Pinny 需要存取儲存資料夾才能繼續。請在引導流程中選擇資料夾，或立即授予存取權限。"
           }
         }
       }

@@ -35,7 +35,7 @@ enum SnapzyMockApp: Equatable {
     case .notes:
       return [
         .init(text: "t For style"),
-        .init(text: "Snapzy"),
+        .init(text: "Pinny"),
         .init(text: "4 . . . 1 . . . 1", size: 30, weight: .heavy, opacity: 0.040),
         .init(text: "Notes"),
         .init(text: "Studio", opacity: 0.040),

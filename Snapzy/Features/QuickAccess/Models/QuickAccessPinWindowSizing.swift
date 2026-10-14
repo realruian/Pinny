@@ -35,8 +35,8 @@ enum QuickAccessPinWindowSizing {
 
   static func validSourceRect(_ rect: CGRect?) -> CGRect? {
     guard let rect, rect.origin.x.isFinite, rect.origin.y.isFinite,
-          rect.width.isFinite, rect.height.isFinite,
-          rect.width > 0, rect.height > 0 else { return nil }
+          rect.size.width.isFinite, rect.size.height.isFinite,
+          rect.size.width > 0, rect.size.height > 0 else { return nil }
     return rect
   }
 
@@ -47,10 +47,23 @@ enum QuickAccessPinWindowSizing {
     sourceScreenRect: CGRect? = nil
   ) -> CGRect {
     if let rect = validSourceRect(sourceScreenRect) { return rect }
-    return frame(
-      size: size(for: imageSize, visibleSize: visibleFrame.size, mode: mode),
-      centeredAt: CGPoint(x: visibleFrame.midX, y: visibleFrame.midY)
-    )
+    // External images have no screen origin: center at their natural logical size.
+    // Only downscale if the whole image would otherwise extend beyond this display.
+    // TIFF DPI conversion can produce 50.00000000001 for an exact 50-point image.
+    // Remove only floating-point noise so AppKit does not ceil it to 51 points.
+    func naturalDimension(_ value: CGFloat) -> CGFloat {
+      guard value.isFinite else { return 1 }
+      let rounded = value.rounded()
+      return max(abs(value - rounded) < 0.000_001 ? rounded : value, 1)
+    }
+    let source = CGSize(width: naturalDimension(imageSize.width), height: naturalDimension(imageSize.height))
+    let scale = min(1, max(1, visibleFrame.width) / source.width, max(1, visibleFrame.height) / source.height)
+    var centered = frame(size: CGSize(width: source.width * scale, height: source.height * scale),
+                         centeredAt: CGPoint(x: visibleFrame.midX, y: visibleFrame.midY))
+    // AppKit rounds a half-point centered origin outward and can add a point to the size.
+    centered.origin.x = centered.origin.x.rounded()
+    centered.origin.y = centered.origin.y.rounded()
+    return centered
   }
 
   static func size(for imageSize: CGSize, visibleSize: CGSize, mode: QuickAccessPinZoomMode) -> CGSize {

@@ -121,7 +121,7 @@ struct SponsorView: View {
   private var sponsorTitle: String {
     onboardingLocalization.string(
       "onboarding.sponsor.title",
-      defaultValue: "Support Snapzy",
+      defaultValue: "Support Pinny",
       comment: "Onboarding sponsor step title"
     )
   }
@@ -129,7 +129,7 @@ struct SponsorView: View {
   private var sponsorDescription: String {
     onboardingLocalization.string(
       "onboarding.sponsor.description",
-      defaultValue: "If Snapzy saves you time, supporting the project helps keep it independent and improving.",
+      defaultValue: "If Pinny saves you time, supporting the project helps keep it independent and improving.",
       comment: "Onboarding sponsor step description"
     )
   }
@@ -137,7 +137,7 @@ struct SponsorView: View {
   private var sponsorOptionalNote: String {
     onboardingLocalization.string(
       "onboarding.sponsor.optional-note",
-      defaultValue: "Completely optional. Snapzy stays fully usable either way.",
+      defaultValue: "Completely optional. Pinny stays fully usable either way.",
       comment: "Note shown below sponsor links during onboarding"
     )
   }

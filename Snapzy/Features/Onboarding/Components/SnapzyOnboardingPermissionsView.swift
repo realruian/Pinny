@@ -194,7 +194,7 @@ struct SnapzyOnboardingPermissionsView: View {
 
   private func requestExportFolder() {
     _ = fileAccessManager.chooseExportDirectory(
-      message: "Choose a folder for Snapzy captures (default: Desktop/Snapzy)",
+      message: "Choose a folder for Pinny captures (default: Desktop/Pinny)",
       prompt: "Grant Access",
       directoryURL: fileAccessManager.defaultExportDirectory
     )

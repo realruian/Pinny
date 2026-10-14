@@ -23,6 +23,13 @@ struct InlineAreaAnnotateDisplay: Identifiable {
   var id: CGDirectDisplayID { displayID }
 }
 
+enum InlineCaptureOutcome {
+  case saved(URL)
+  case copied
+  case pinned
+  case failure(CaptureError)
+}
+
 nonisolated enum InlineAreaAnnotatePhase {
   case selecting
   case annotating
@@ -39,6 +46,7 @@ nonisolated enum InlineAreaKeyAction: Equatable {
   case finish
   case copyCurrentImage
   case copyMagnifierColor
+  case selectDisplay
   case changeElementLevel(towardParent: Bool)
   case setMoveModifierActive(Bool)
   case resetMoveModifierAndPassThrough
@@ -94,7 +102,9 @@ final class InlineAreaAnnotateSession: ObservableObject {
   private let outputFormat: ImageFormat
   private let defaults: UserDefaults
   private let context: CaptureContext
-  private let onComplete: (CaptureResult) -> Void
+  private let saveDirectoryProvider: (() -> URL?)?
+  private let pinImage: @MainActor (NSImage, CGRect) -> Void
+  private let onComplete: (InlineCaptureOutcome) -> Void
   private let windows = NSHashTable<NSWindow>.weakObjects()
   private var localKeyMonitor: Any?
   private var globalKeyMonitor: Any?
@@ -128,11 +138,15 @@ final class InlineAreaAnnotateSession: ObservableObject {
     frozenSession: FrozenAreaCaptureSession,
     saveDirectory: URL,
     outputFormat: ImageFormat,
+    saveDirectoryProvider: (() -> URL?)? = nil,
     defaults: UserDefaults = .standard,
     context: CaptureContext = .empty,
     prefetchedContentTask: ShareableContentPrefetchTask? = nil,
     excludeOwnApplication: Bool = false,
-    onComplete: @escaping (CaptureResult) -> Void
+    pinImage: @escaping @MainActor (NSImage, CGRect) -> Void = { image, rect in
+      QuickAccessPinWindowManager.shared.show(image: image, sourceScreenRect: rect)
+    },
+    onComplete: @escaping (InlineCaptureOutcome) -> Void
   ) {
     self.primaryDisplayID = primaryDisplayID
     self.desktopFrame = desktopFrame
@@ -143,9 +157,11 @@ final class InlineAreaAnnotateSession: ObservableObject {
     self.frozenSession = frozenSession
     self.saveDirectory = saveDirectory
     self.outputFormat = outputFormat
+    self.saveDirectoryProvider = saveDirectoryProvider
     self.defaults = defaults
     self.context = context
     self.onComplete = onComplete
+    self.pinImage = pinImage
     self.state = AnnotateState(
       defaults: defaults,
       appliesDefaultCanvasPresetOnNewImages: false
@@ -402,6 +418,9 @@ final class InlineAreaAnnotateSession: ObservableObject {
       // Only claim the key when the magnifier was actually active — otherwise this falls
       // through as `.passThrough` would have, so plain "C" typing elsewhere is unaffected.
       return copyMagnifierColorForKeyWindow(event)
+    case .selectDisplay:
+      selectDisplayUnderPointer()
+      return true
     case .changeElementLevel(let towardParent):
       guard autoDetectElementUnderCursor else { return false }
       return SmartElementQueryService.shared.selectAdjacentCandidate(towardParent: towardParent)
@@ -435,72 +454,65 @@ final class InlineAreaAnnotateSession: ObservableObject {
     return bestMatch?.displayID ?? primaryDisplayID
   }
 
+  func selectDisplayUnderPointer() {
+    guard phase == .selecting else { return }
+    let point = selectionPointerLocation ?? currentDesktopMouseLocation
+    if let display = displays.first(where: { $0.localFrame.contains(point) }) {
+      beginAnnotating(with: display.localFrame)
+    }
+  }
+
+  private func renderedSelection() -> NSImage? {
+    state.commitTextEditing()
+    guard let image = AnnotateExporter.renderFinalImage(state: state) else {
+      actionMessage = L10n.ScreenCapture.failedToCropCapturedImage
+      return nil
+    }
+    return image
+  }
+
+  /// Saving is the only action that needs a directory or writes an image file.
   func finish() async {
-    await finish(pinToScreen: false)
-  }
-
-  func finishAndPin() async {
-    await finish(pinToScreen: true)
-  }
-
-  private func finish(pinToScreen: Bool) async {
     guard phase == .annotating, !didComplete, !isFinishing else { return }
     isFinishing = true
     actionMessage = nil
     defer { isFinishing = false }
-    state.commitTextEditing()
-    if let selectionRect, let crop = cropImage(for: selectionRect) {
-      self.selectionRect = crop.localRect
-      state.replaceSourceImagePreservingAnnotations(crop.image)
-    }
-
-    guard let renderedImage = AnnotateExporter.renderFinalImage(state: state),
-          let cgImage = AnnotateExporter.bestCGImage(from: renderedImage) else {
-      actionMessage = L10n.ScreenCapture.failedToCropCapturedImage
-      return
-    }
-
-    // Retain the pixel-aligned crop's AppKit screen rect before completing the session.
-    // Image pixels (especially on Retina displays) cannot recover its position or point size.
-    let sourceScreenRect = selectionRect.map { screenRect(for: $0) }
+    guard let image = renderedSelection(),
+          let cgImage = AnnotateExporter.bestCGImage(from: image) else { return }
+    guard let directory = saveDirectoryProvider.map({ $0() }) ?? saveDirectory else { return }
     let result = await ScreenCaptureManager.shared.saveProcessedImage(
-      cgImage,
-      to: saveDirectory,
-      format: outputFormat,
-      scaleFactor: Self.imageScale(renderedImage),
-      emitCompletion: !pinToScreen,
-      context: context
+      cgImage, to: directory, format: outputFormat,
+      scaleFactor: Self.imageScale(image), emitCompletion: false, context: context
     )
-
-    guard !didComplete else { return }
-    if case .success = result {
-      SoundManager.playScreenshotCapture()
-    }
-    if case .success(let url) = result {
+    switch result {
+    case .success(let url):
       persistCommittedSession(for: url)
-    }
-    if case .failure(let error) = result {
+      SoundManager.playScreenshotCapture()
+      complete(.saved(url))
+    case .failure(let error):
       actionMessage = error.localizedDescription
-      return
-    }
-    complete(result)
-    if pinToScreen, case .success(let url) = result {
-      await PostCaptureActionHandler.shared.handleScreenshotCapture(
-        url: url, pinToScreen: true, sourceScreenRect: sourceScreenRect
-      )
     }
   }
 
+  func finishAndPin() async {
+    guard phase == .annotating, !didComplete, !isFinishing,
+          let sourceRect = selectionRect.map({ screenRect(for: $0) }),
+          let image = renderedSelection() else { return }
+    // The window owns this full-resolution image. No saved URL or thumbnail work is needed.
+    isFinishing = true
+    let shouldCopy = defaults.object(forKey: "inlinePinCopiesImage") as? Bool ?? true
+    if shouldCopy { ClipboardHelper.copyImage(image, sourceScreenRect: sourceRect) }
+    complete(.pinned)
+    pinImage(image, sourceRect)
+    isFinishing = false
+  }
+
   func copyCurrentImage() {
-    guard phase == .annotating, !didComplete, !isFinishing else { return }
-    state.commitTextEditing()
-    guard let image = AnnotateExporter.renderFinalImage(state: state) else {
-      actionMessage = L10n.ScreenCapture.failedToCropCapturedImage
-      return
-    }
-    ClipboardHelper.copyImage(image)
-    actionMessage = L10n.Common.copiedToClipboard
+    guard phase == .annotating, !didComplete, !isFinishing,
+          let image = renderedSelection() else { return }
+    ClipboardHelper.copyImage(image, sourceScreenRect: selectionRect.map { screenRect(for: $0) })
     SoundManager.play("Pop")
+    complete(.copied)
   }
 
   private func cropImage(for localRect: CGRect) -> InlineAreaCrop? {
@@ -543,7 +555,7 @@ final class InlineAreaAnnotateSession: ObservableObject {
     }
   }
 
-  private func screenRect(for localRect: CGRect) -> CGRect {
+  func screenRect(for localRect: CGRect) -> CGRect {
     Self.screenRect(for: localRect, in: desktopFrame)
   }
 
@@ -587,7 +599,9 @@ final class InlineAreaAnnotateSession: ObservableObject {
   private func installMagnifierScrollMonitorIfNeeded() {
     guard magnifierScrollMonitor == nil else { return }
     magnifierScrollMonitor = NSEvent.addLocalMonitorForEvents(matching: [.scrollWheel]) { [weak self] event in
-      guard let self, self.phase == .selecting, event.modifierFlags.contains(.command),
+      guard let self, self.phase == .selecting,
+            let window = event.window, self.windows.contains(window) else { return event }
+      guard event.modifierFlags.contains(.command),
             let displayID = (event.window as? InlineAreaAnnotatePanel)?.displayID,
             let hostView = self.magnifierHostViewBoxes[displayID]?.view else {
         return event
@@ -661,7 +675,7 @@ final class InlineAreaAnnotateSession: ObservableObject {
     localDesktopPoint(for: NSEvent.mouseLocation)
   }
 
-  private func complete(_ result: CaptureResult, closeWindow: Bool = true) {
+  private func complete(_ result: InlineCaptureOutcome, closeWindow: Bool = true) {
     guard !didComplete else { return }
     didComplete = true
     SmartElementQueryService.shared.cancelPendingQueries()
@@ -747,6 +761,9 @@ final class InlineAreaAnnotateSession: ObservableObject {
     hasKeyWindow: Bool
   ) -> InlineAreaKeyAction {
     guard phase == .annotating else {
+      if event.type == .keyDown, event.keyCode == 0,
+         event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command,
+         source == .local || hasKeyWindow { return .selectDisplay }
       if event.type == .keyDown, event.keyCode == 48, !hasTextResponder,
          source == .local || hasKeyWindow,
          event.modifierFlags.intersection([.command, .control, .option]).isEmpty {
@@ -780,7 +797,7 @@ final class InlineAreaAnnotateSession: ObservableObject {
     }
 
     if matchesFinishShortcut(event) {
-      return .finish
+      return .copyCurrentImage
     }
 
     if matchesCancelShortcut(event) {

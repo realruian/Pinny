@@ -7,61 +7,61 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy konnte den Zugriff auf diesen Ordner nicht aufrechterhalten. Bitte wählen Sie den Ordner erneut aus und bestätigen Sie die Berechtigung."
+            "value": "Pinny konnte den Zugriff auf diesen Ordner nicht aufrechterhalten. Bitte wählen Sie den Ordner erneut aus und bestätigen Sie die Berechtigung."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy could not persist access to this folder. Please choose the folder again and confirm permission."
+            "value": "Pinny could not persist access to this folder. Please choose the folder again and confirm permission."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy no pudo mantener el acceso a esta carpeta. Elija la carpeta nuevamente y confirme el permiso."
+            "value": "Pinny no pudo mantener el acceso a esta carpeta. Elija la carpeta nuevamente y confirme el permiso."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy n'a pas pu conserver l'accès à ce dossier. Veuillez choisir à nouveau le dossier et confirmer l'autorisation."
+            "value": "Pinny n'a pas pu conserver l'accès à ce dossier. Veuillez choisir à nouveau le dossier et confirmer l'autorisation."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy はこのフォルダへのアクセスを維持できませんでした。もう一度フォルダを選択し、許可を確認してください。"
+            "value": "Pinny はこのフォルダへのアクセスを維持できませんでした。もう一度フォルダを選択し、許可を確認してください。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy는 이 폴더에 대한 액세스를 유지할 수 없습니다. 폴더를 다시 선택하고 권한을 확인해 주세요."
+            "value": "Pinny는 이 폴더에 대한 액세스를 유지할 수 없습니다. 폴더를 다시 선택하고 권한을 확인해 주세요."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy не удалось сохранить доступ к этой папке. Пожалуйста, выберите папку еще раз и подтвердите разрешение."
+            "value": "Pinny не удалось сохранить доступ к этой папке. Пожалуйста, выберите папку еще раз и подтвердите разрешение."
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy không thể lưu quyền truy cập thư mục này. Vui lòng chọn lại thư mục và xác nhận quyền."
+            "value": "Pinny không thể lưu quyền truy cập thư mục này. Vui lòng chọn lại thư mục và xác nhận quyền."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy 无法持久访问此文件夹。请再次选择该文件夹并确认权限。"
+            "value": "Pinny 无法持久访问此文件夹。请再次选择该文件夹并确认权限。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy 無法持久訪問此檔案夾。請再次選擇該檔案夾並確認權限。"
+            "value": "Pinny 無法持久訪問此檔案夾。請再次選擇該檔案夾並確認權限。"
           }
         }
       }
@@ -137,61 +137,61 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wählen Sie, wo Snapzy Screenshots und Aufnahmen speichern soll"
+            "value": "Wählen Sie, wo Pinny Screenshots und Aufnahmen speichern soll"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Choose where Snapzy should save screenshots and recordings"
+            "value": "Choose where Pinny should save screenshots and recordings"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Elija dónde Snapzy debe guardar capturas de pantalla y grabaciones"
+            "value": "Elija dónde Pinny debe guardar capturas de pantalla y grabaciones"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Choisissez où Snapzy doit enregistrer les captures d'écran et les enregistrements"
+            "value": "Choisissez où Pinny doit enregistrer les captures d'écran et les enregistrements"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy がスクリーンショットと録画を保存する場所を選択します"
+            "value": "Pinny がスクリーンショットと録画を保存する場所を選択します"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy가 스크린샷과 녹음을 저장할 위치를 선택하세요"
+            "value": "Pinny가 스크린샷과 녹음을 저장할 위치를 선택하세요"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Выберите, где Snapzy должен сохранять снимки экрана и записи"
+            "value": "Выберите, где Pinny должен сохранять снимки экрана и записи"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Chọn nơi Snapzy sẽ lưu ảnh chụp và bản ghi"
+            "value": "Chọn nơi Pinny sẽ lưu ảnh chụp và bản ghi"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "选择 Snapzy 保存屏幕截图和录屏的位置"
+            "value": "选择 Pinny 保存屏幕截图和录屏的位置"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "選擇 Snapzy 保存螢幕截圖和錄屏的位置"
+            "value": "選擇 Pinny 保存螢幕截圖和錄屏的位置"
           }
         }
       }
@@ -527,7 +527,7 @@
         "de": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Snapzy benötigt bestimmte Berechtigungen, um Ihren Bildschirm und Audio aufzunehmen."
+            "value": "Pinny benötigt bestimmte Berechtigungen, um Ihren Bildschirm und Audio aufzunehmen."
           }
         },
         "en": {
@@ -539,37 +539,37 @@
         "es": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Snapzy requiere ciertos permisos para capturar su pantalla y audio."
+            "value": "Pinny requiere ciertos permisos para capturar su pantalla y audio."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Snapzy nécessite certaines autorisations pour capturer votre écran et votre audio."
+            "value": "Pinny nécessite certaines autorisations pour capturer votre écran et votre audio."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Snapzy が画面と音声を記録するには、いくつかの権限が必要です。"
+            "value": "Pinny が画面と音声を記録するには、いくつかの権限が必要です。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Snapzy가 화면과 오디오를 캡처하려면 특정 권한이 필요합니다."
+            "value": "Pinny가 화면과 오디오를 캡처하려면 특정 권한이 필요합니다."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Snapzy требует определенных разрешений для захвата экрана и звука."
+            "value": "Pinny требует определенных разрешений для захвата экрана и звука."
           }
         },
         "vi": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Snapzy cần một số quyền để chụp màn hình và ghi âm."
+            "value": "Pinny cần một số quyền để chụp màn hình và ghi âm."
           }
         },
         "zh-Hans": {
@@ -581,7 +581,7 @@
         "zh-Hant": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Snapzy 需要擷取螢幕畫面、麥克風音訊與檔案等相關權限。"
+            "value": "Pinny 需要擷取螢幕畫面、麥克風音訊與檔案等相關權限。"
           }
         }
       }

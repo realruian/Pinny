@@ -28,7 +28,13 @@ struct MenuBarSettingsView: View {
       iconSection
 
       ForEach(MenuBarItemGroup.allCases, id: \.self) { group in
-        itemGroupSection(group)
+        if group == .capture {
+          Section(itemGroupTitle(group)) {
+            Label(L10n.Actions.captureAreaAnnotate, systemImage: "viewfinder")
+          }
+        } else {
+          itemGroupSection(group)
+        }
       }
 
       Section(L10n.PreferencesMenuBar.appSection) {

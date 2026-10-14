@@ -143,7 +143,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Capture Markup"
+            "value": "Screenshot"
           }
         },
         "es": {
@@ -185,7 +185,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "截图并标注"
+            "value": "截图"
           }
         },
         "zh-Hant": {
@@ -1502,61 +1502,61 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Installieren Sie Snapzy in /Applications, bevor Sie Berechtigungen erteilen. Aktueller Pfad: %@"
+            "value": "Installieren Sie Pinny in /Applications, bevor Sie Berechtigungen erteilen. Aktueller Pfad: %@"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Install Snapzy in /Applications before granting permissions. Current path: %@"
+            "value": "Install Pinny in /Applications before granting permissions. Current path: %@"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Instale Snapzy en /Aplicaciones antes de otorgar permisos. Ruta actual: %@"
+            "value": "Instale Pinny en /Aplicaciones antes de otorgar permisos. Ruta actual: %@"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Installez Snapzy dans /Applications avant d'accorder les autorisations. Chemin actuel : %@"
+            "value": "Installez Pinny dans /Applications avant d'accorder les autorisations. Chemin actuel : %@"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "権限を付与する前に、/Applications に Snapzy をインストールします。現在のパス: %@"
+            "value": "権限を付与する前に、/Applications に Pinny をインストールします。現在のパス: %@"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "권한을 부여하기 전에 /Applications에 Snapzy를 설치하세요. 현재 경로: %@"
+            "value": "권한을 부여하기 전에 /Applications에 Pinny를 설치하세요. 현재 경로: %@"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Прежде чем предоставлять разрешения, установите Snapzy в каталоге /Applications. Текущий путь: %@"
+            "value": "Прежде чем предоставлять разрешения, установите Pinny в каталоге /Applications. Текущий путь: %@"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hãy cài Snapzy trong /Applications trước khi cấp quyền. Đường dẫn hiện tại: %@"
+            "value": "Hãy cài Pinny trong /Applications trước khi cấp quyền. Đường dẫn hiện tại: %@"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "请先将 Snapzy 安装到 /Applications，再授予权限。当前路径：%@"
+            "value": "请先将 Pinny 安装到 /Applications，再授予权限。当前路径：%@"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "請先將 Snapzy 安裝到 /Applications，再授予權限。目前路徑：%@"
+            "value": "請先將 Pinny 安裝到 /Applications，再授予權限。目前路徑：%@"
           }
         }
       }
@@ -7862,6 +7862,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ (%@)"
+          }
+        }
+      }
+    },
+    "action.pin-clipboard": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pin clipboard image"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "贴图"
           }
         }
       }

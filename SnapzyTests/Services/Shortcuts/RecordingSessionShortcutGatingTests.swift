@@ -51,13 +51,13 @@ final class RecordingSessionShortcutGatingTests: XCTestCase {
     let gatedWhileIdle = GlobalShortcutKind.allCases.filter { !manager.shouldRegisterNow(for: $0) }
     XCTAssertEqual(
       Set(gatedWhileIdle),
-      Set(Self.sessionKinds),
-      "Only the four recording-session kinds may be gated while no recording is active"
+      Set(Self.sessionKinds + GlobalShortcutKind.allCases.filter(\.isRetiredCaptureShortcut)),
+      "Recording-session and retired capture kinds must be gated while idle"
     )
 
     manager.isRecordingSessionActive = { true }
     let gatedWhileActive = GlobalShortcutKind.allCases.filter { !manager.shouldRegisterNow(for: $0) }
-    XCTAssertTrue(gatedWhileActive.isEmpty, "No kind may be gated while a recording session is active")
+    XCTAssertEqual(Set(gatedWhileActive), Set(GlobalShortcutKind.allCases.filter(\.isRetiredCaptureShortcut)))
   }
 
   @MainActor
@@ -87,7 +87,7 @@ final class RecordingSessionShortcutGatingTests: XCTestCase {
       "The start/stop recording shortcut must stay global while idle"
     )
     XCTAssertTrue(
-      manager.shouldRegisterNow(for: .fullscreen),
+      manager.shouldRegisterNow(for: .areaAnnotate),
       "Non-recording kinds must stay global while idle"
     )
   }
@@ -274,13 +274,13 @@ final class RecordingSessionHotkeyRegistrationTests: XCTestCase {
   func testNonSessionShortcut_staysRegisteredRegardlessOfSessionState() throws {
     try skipIfRunningInCI("Carbon hotkey registration is unsupported on headless CI runners")
     let manager = KeyboardShortcutManager.shared
-    preserveManagerState(of: manager, kinds: [.fullscreen])
+    preserveManagerState(of: manager, kinds: [.areaAnnotate])
     try requireFreeProbe(nonSessionProbeConfig)
 
     manager.enable()
     manager.isRecordingSessionActive = { false }
-    manager.setFullscreenShortcut(nonSessionProbeConfig)
-    manager.setShortcutEnabled(true, for: .fullscreen)
+    manager.setAreaAnnotateShortcut(nonSessionProbeConfig)
+    manager.setShortcutEnabled(true, for: .areaAnnotate)
 
     assertComboHeld(
       nonSessionProbeConfig,
@@ -314,7 +314,7 @@ final class RecordingSessionHotkeyRegistrationTests: XCTestCase {
   }
 
   @MainActor
-  func testZeroModifierSessionShortcut_staysUnregisteredWhileSessionActive() throws {
+  func testUnmodifiedFunctionKeySessionShortcut_registersWhileSessionActive() throws {
     try skipIfRunningInCI("Carbon hotkey registration is unsupported on headless CI runners")
     let manager = KeyboardShortcutManager.shared
     preserveManagerState(of: manager, kinds: [.restartRecording])
@@ -325,9 +325,9 @@ final class RecordingSessionHotkeyRegistrationTests: XCTestCase {
     manager.setRestartRecordingShortcut(zeroModifierProbeConfig)
     manager.setShortcutEnabled(true, for: .restartRecording)
 
-    assertComboFree(
+    assertComboHeld(
       zeroModifierProbeConfig,
-      "Zero-modifier configs must stay unregistered even while a session is active"
+      "Unmodified function keys must register while a session is active"
     )
   }
 
@@ -361,6 +361,7 @@ private extension KeyboardShortcutManager {
     case .area: setAreaShortcut(config)
     case .repeatArea: setRepeatAreaShortcut(config)
     case .areaAnnotate: setAreaAnnotateShortcut(config)
+    case .pinClipboard: setPinClipboardShortcut(config)
     case .activeWindow: setActiveWindowShortcut(config)
     case .scrollingCapture: setScrollingCaptureShortcut(config)
     case .recording: setRecordingShortcut(config)

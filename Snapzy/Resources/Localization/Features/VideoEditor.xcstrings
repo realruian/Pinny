@@ -1242,61 +1242,61 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy hat keinen Schreibzugriff auf diesen Dateispeicherort. Stattdessen als Kopie speichern.\n\n%@"
+            "value": "Pinny hat keinen Schreibzugriff auf diesen Dateispeicherort. Stattdessen als Kopie speichern.\n\n%@"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy doesn't have write access to this file location. Save as a copy instead.\n\n%@"
+            "value": "Pinny doesn't have write access to this file location. Save as a copy instead.\n\n%@"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy no tiene acceso de escritura a esta ubicación de archivo. Guárdelo como una copia.\n\n%@"
+            "value": "Pinny no tiene acceso de escritura a esta ubicación de archivo. Guárdelo como una copia.\n\n%@"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy n'a pas d'accès en écriture à cet emplacement de fichier. Enregistrez plutôt sous forme de copie.\n\n%@"
+            "value": "Pinny n'a pas d'accès en écriture à cet emplacement de fichier. Enregistrez plutôt sous forme de copie.\n\n%@"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy には、このファイルの場所への書き込みアクセス権がありません。代わりにコピーとして保存してください。\n\n%@"
+            "value": "Pinny には、このファイルの場所への書き込みアクセス権がありません。代わりにコピーとして保存してください。\n\n%@"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy에는 이 파일 위치에 대한 쓰기 액세스 권한이 없습니다. 대신 복사본으로 저장하세요.\n\n%@"
+            "value": "Pinny에는 이 파일 위치에 대한 쓰기 액세스 권한이 없습니다. 대신 복사본으로 저장하세요.\n\n%@"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy не имеет доступа на запись к этому местоположению файла. Вместо этого сохраните его как копию.\n\n%@"
+            "value": "Pinny не имеет доступа на запись к этому местоположению файла. Вместо этого сохраните его как копию.\n\n%@"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy không có quyền ghi vào vị trí tệp này. Hãy lưu thành bản sao thay thế.\n\n%@"
+            "value": "Pinny không có quyền ghi vào vị trí tệp này. Hãy lưu thành bản sao thay thế.\n\n%@"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy 没有对此文件位置的写入权限。另存为副本。\n\n%@"
+            "value": "Pinny 没有对此文件位置的写入权限。另存为副本。\n\n%@"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy 沒有對此檔案位置的寫入權限。另存為副本。\n\n%@"
+            "value": "Pinny 沒有對此檔案位置的寫入權限。另存為副本。\n\n%@"
           }
         }
       }
@@ -3452,61 +3452,61 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Follow Mouse funktioniert nur mit Videos, die von Snapzy aufgenommen wurden, nachdem die Mausverfolgung hinzugefügt wurde."
+            "value": "Follow Mouse funktioniert nur mit Videos, die von Pinny aufgenommen wurden, nachdem die Mausverfolgung hinzugefügt wurde."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Follow Mouse only works with videos recorded by Snapzy after mouse tracking was added."
+            "value": "Follow Mouse only works with videos recorded by Pinny after mouse tracking was added."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Follow Mouse solo funciona con videos grabados por Snapzy después de que se agregó el seguimiento del mouse."
+            "value": "Follow Mouse solo funciona con videos grabados por Pinny después de que se agregó el seguimiento del mouse."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Follow Mouse ne fonctionne qu'avec les vidéos enregistrées par Snapzy après l'ajout du suivi de la souris."
+            "value": "Follow Mouse ne fonctionne qu'avec les vidéos enregistrées par Pinny après l'ajout du suivi de la souris."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "「マウスに追従」は、マウストラッキングの追加後に Snapzy で録画したビデオでのみ機能します。"
+            "value": "「マウスに追従」は、マウストラッキングの追加後に Pinny で録画したビデオでのみ機能します。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Follow Mouse는 마우스 추적이 추가된 후 Snapzy에서 녹화한 비디오에서만 작동합니다."
+            "value": "Follow Mouse는 마우스 추적이 추가된 후 Pinny에서 녹화한 비디오에서만 작동합니다."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Follow Mouse работает только с видео, записанными Snapzy после добавления отслеживания мыши."
+            "value": "Follow Mouse работает только с видео, записанными Pinny после добавления отслеживания мыши."
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Theo chuột chỉ hoạt động với video do Snapzy ghi sau khi tính năng theo dõi chuột được thêm vào."
+            "value": "Theo chuột chỉ hoạt động với video do Pinny ghi sau khi tính năng theo dõi chuột được thêm vào."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "“跟随鼠标”仅适用于添加鼠标跟踪后由 Snapzy 录制的视频。"
+            "value": "“跟随鼠标”仅适用于添加鼠标跟踪后由 Pinny 录制的视频。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "“跟隨鼠標”僅適用於添加鼠標跟蹤後由 Snapzy 錄制的影片。"
+            "value": "“跟隨鼠標”僅適用於添加鼠標跟蹤後由 Pinny 錄制的影片。"
           }
         }
       }

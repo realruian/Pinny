@@ -49,8 +49,8 @@ final class CaptureOutputNamingTests: XCTestCase {
       date: fixedDate,
       defaults: defaults
     )
-    // Default template: "Snapzy_{datetime}_{ms}"
-    XCTAssertTrue(result.hasPrefix("Snapzy_"), "Expected template-based name, got: \(result)")
+    // Default template: "Pinny_{datetime}_{ms}"
+    XCTAssertTrue(result.hasPrefix("Pinny_"), "Expected template-based name, got: \(result)")
     XCTAssertTrue(result.contains("_"), "Expected datetime separators")
   }
 
@@ -61,7 +61,7 @@ final class CaptureOutputNamingTests: XCTestCase {
       date: fixedDate,
       defaults: defaults
     )
-    XCTAssertTrue(result.hasPrefix("Snapzy_"), "Expected template-based name, got: \(result)")
+    XCTAssertTrue(result.hasPrefix("Pinny_"), "Expected template-based name, got: \(result)")
   }
 
   func testResolveBaseName_withWhitespaceOnlyCustomName_fallsBackToTemplate() {
@@ -71,7 +71,7 @@ final class CaptureOutputNamingTests: XCTestCase {
       date: fixedDate,
       defaults: defaults
     )
-    XCTAssertTrue(result.hasPrefix("Snapzy_"))
+    XCTAssertTrue(result.hasPrefix("Pinny_"))
   }
 
   // MARK: - Template Token Expansion
@@ -482,8 +482,8 @@ final class CaptureOutputNamingTests: XCTestCase {
   // MARK: - CaptureOutputKind Properties
 
   func testCaptureOutputKind_defaultTemplates() {
-    XCTAssertEqual(CaptureOutputKind.screenshot.defaultTemplate, "Snapzy_{datetime}_{ms}")
-    XCTAssertEqual(CaptureOutputKind.recording.defaultTemplate, "Snapzy_Recording_{datetime}")
+    XCTAssertEqual(CaptureOutputKind.screenshot.defaultTemplate, "Pinny_{datetime}_{ms}")
+    XCTAssertEqual(CaptureOutputKind.recording.defaultTemplate, "Pinny_Recording_{datetime}")
   }
 
   func testCaptureOutputKind_typeTokenValues() {
@@ -504,9 +504,9 @@ final class CaptureOutputNamingTests: XCTestCase {
       defaults: defaults
     )
 
-    // Fallback format: "Snapzy_{yyyy-MM-dd_HH-mm-ss-SSS}" — also pin the Gregorian
+    // Fallback format: "Pinny_{yyyy-MM-dd_HH-mm-ss-SSS}" — also pin the Gregorian
     // year so the fallback path (which routes through `format`) is covered too.
-    XCTAssertTrue(result.hasPrefix("Snapzy_2026"), "Expected fallback name with Gregorian year 2026, got: \(result)")
+    XCTAssertTrue(result.hasPrefix("Pinny_2026"), "Expected fallback name with Gregorian year 2026, got: \(result)")
   }
 
   // MARK: - App Name Tokens
@@ -623,7 +623,7 @@ final class CaptureOutputNamingTests: XCTestCase {
     buddhist.dateFormat = "yyyy"
     let buddhistYear = buddhist.string(from: date)
 
-    // Default template: "Snapzy_{datetime}_{ms}"
+    // Default template: "Pinny_{datetime}_{ms}"
     let result = CaptureOutputNaming.resolveBaseName(
       customName: nil,
       kind: .screenshot,
@@ -631,9 +631,9 @@ final class CaptureOutputNamingTests: XCTestCase {
       defaults: defaults
     )
 
-    XCTAssertTrue(result.hasPrefix("Snapzy_2026-"), "Default name must start with Gregorian year, got: \(result)")
+    XCTAssertTrue(result.hasPrefix("Pinny_2026-"), "Default name must start with Gregorian year, got: \(result)")
     XCTAssertFalse(
-      result.hasPrefix("Snapzy_\(buddhistYear)-"),
+      result.hasPrefix("Pinny_\(buddhistYear)-"),
       "Default name must not use the Buddhist year \(buddhistYear), got: \(result)"
     )
   }

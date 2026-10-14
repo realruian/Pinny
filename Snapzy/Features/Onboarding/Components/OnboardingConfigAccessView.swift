@@ -142,7 +142,7 @@ struct ConfigAccessView: View {
   private var configAccessSubtitle: String {
     onboardingLocalization.string(
       "onboarding.config-access.subtitle",
-      defaultValue: "Snapzy uses a TOML file for portable settings, backups, and dotfile workflows.",
+      defaultValue: "Pinny uses a TOML file for portable settings, backups, and dotfile workflows.",
       comment: "Onboarding config access step subtitle"
     )
   }
@@ -166,7 +166,7 @@ struct ConfigAccessView: View {
   private var configFolderDescription: String {
     onboardingLocalization.string(
       "onboarding.config-access.folder-description",
-      defaultValue: "Grant access once. Snapzy will create config.toml if needed and apply valid direct edits on launch.",
+      defaultValue: "Grant access once. Pinny will create config.toml if needed and apply valid direct edits on launch.",
       comment: "Onboarding config access description."
     )
   }
@@ -174,7 +174,7 @@ struct ConfigAccessView: View {
   private var configAccessPrivacyNote: String {
     onboardingLocalization.string(
       "onboarding.config-access.privacy-note",
-      defaultValue: "This only grants Snapzy access to its config folder. It does not import secrets or scan your files.",
+      defaultValue: "This only grants Pinny access to its config folder. It does not import secrets or scan your files.",
       comment: "Privacy note on onboarding config access step"
     )
   }

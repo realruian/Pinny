@@ -249,7 +249,7 @@ final class AnnotateState: ObservableObject {
   @Published var arrowBendDirection: ArrowBendDirection = .primary
   @Published var arrowStartHead: ArrowEndpointStyle = .none
   @Published var arrowEndHead: ArrowEndpointStyle = .arrow
-  @Published var watermarkText: String = "Snapzy"
+  @Published var watermarkText: String = "Pinny"
   @Published var spotlightOpacity: CGFloat = 0.5
   @Published private var annotationToolProperties: [AnnotationToolType: AnnotationProperties] = [:]
   private var isQuickPropertiesGestureEditing = false
@@ -5204,7 +5204,7 @@ final class AnnotateState: ObservableObject {
   var quickWatermarkTextBinding: Binding<String> {
     Binding(
       get: { [weak self] in
-        guard let self else { return "Snapzy" }
+        guard let self else { return "Pinny" }
         if let annotation = self.quickSelectionTargets(matching: {
           if case .watermark = $0 { return true }
           return false

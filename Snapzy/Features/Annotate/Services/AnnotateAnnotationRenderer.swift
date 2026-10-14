@@ -139,7 +139,7 @@ nonisolated struct AnnotationRenderer {
     arrowEndHead: ArrowEndpointStyle = .arrow,
     lineStyle: LineDashStyle = .solid,
     rectangleCornerRadius: CGFloat = 0,
-    watermarkText: String = "Snapzy",
+    watermarkText: String = "Pinny",
     watermarkStyle: WatermarkStyle = .diagonal,
     watermarkOpacity: CGFloat = 0.22,
     watermarkRotationDegrees: CGFloat = -24,

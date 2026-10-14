@@ -272,7 +272,9 @@ enum SnapzyConfigurationDefaultDocument {
   }
 
   private static func globalShortcut(for kind: GlobalShortcutKind) -> ShortcutConfig? {
+    guard !kind.isRetiredCaptureShortcut else { return nil }
     switch kind {
+    case .pinClipboard: return .defaultPinClipboard
     case .fullscreen: return .defaultFullscreen
     case .area: return .defaultArea
     case .repeatArea: return .defaultRepeatArea

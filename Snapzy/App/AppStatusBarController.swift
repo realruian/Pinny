@@ -325,11 +325,11 @@ final class AppStatusBarController: ObservableObject {
     case .paused:
       return "\(L10n.RecordingToolbar.recordingPaused) (\(recorder.formattedDuration))"
     case .preparing:
-      return "Snapzy"
+      return "Pinny"
     case .stopping:
-      return "Snapzy"
+      return "Pinny"
     case .idle:
-      return "Snapzy"
+      return "Pinny"
     }
   }
 
@@ -408,7 +408,10 @@ final class AppStatusBarController: ObservableObject {
     // Customizable groups (Capture → Recording → Tools): user-ordered, hidden
     // items filtered out, separators only between non-empty groups.
     for group in MenuBarItemGroup.allCases {
-      let groupItems = menuBarCustomizationStore.orderedVisibleItems(for: group).map {
+      // Keep legacy customization data intact while exposing one screenshot entry.
+      let kinds: [MenuBarItemKind] = group == .capture
+        ? [.captureAreaAnnotate] : menuBarCustomizationStore.orderedVisibleItems(for: group)
+      let groupItems = kinds.map {
         makeMenuItem(for: $0, viewModel: viewModel, shortcutManager: shortcutManager)
       }
       guard !groupItems.isEmpty else { continue }
@@ -817,7 +820,7 @@ final class AppStatusBarController: ObservableObject {
 
   @objc private func captureSmartElementAction() {
     logMenuAction("captureSmartElement")
-    SmartElementCaptureController.shared.startCapture()
+    viewModel?.captureAreaAnnotate()
   }
 
   @objc private func captureObjectCutoutAction() {

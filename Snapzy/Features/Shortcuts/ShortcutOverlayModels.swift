@@ -131,30 +131,8 @@ enum ShortcutOverlayContentBuilder {
   }
 
   private static func captureItems(manager: KeyboardShortcutManager) -> [ShortcutOverlayItem] {
-    let areaConfig = manager.shortcut(for: .area)
-    var items: [ShortcutOverlayItem] = [
-      globalItem(kind: .fullscreen, icon: "rectangle.dashed.and.paperclip", manager: manager),
-      ShortcutOverlayItem(
-        id: "global-\(GlobalShortcutKind.area.rawValue)",
-        icon: "rectangle.dashed",
-        title: GlobalShortcutKind.area.displayName,
-        subtitle: L10n.ShortcutOverlay.applicationCapture(
-          CaptureOverlayShortcutSettings.effectiveApplicationCaptureDisplay(parentShortcut: areaConfig)
-        ),
-        isEnabled: manager.isShortcutEnabled(for: .area),
-        display: areaConfig.map { .keycaps($0.displayParts) } ?? .text(L10n.Common.none)
-      ),
-      globalItem(kind: .repeatArea, icon: "arrow.clockwise", manager: manager),
-      globalItem(kind: .delayedCapture, icon: "timer", manager: manager),
-      globalItem(kind: .areaAnnotate, icon: "pencil.and.scribble", manager: manager),
-      globalItem(kind: .activeWindow, icon: "macwindow", manager: manager),
-      globalItem(kind: .scrollingCapture, icon: "arrow.up.and.down", manager: manager),
-    ]
-
-    items.append(globalItem(kind: .objectCutout, icon: "person.crop.rectangle", manager: manager))
-    items.append(globalItem(kind: .ocr, icon: "text.viewfinder", manager: manager))
-    items.append(globalItem(kind: .smartElement, icon: "dot.viewfinder", manager: manager))
-    return items
+    [globalItem(kind: .areaAnnotate, icon: "viewfinder", manager: manager),
+     globalItem(kind: .pinClipboard, icon: "pin", manager: manager)]
   }
 
   private static func recordingItems(manager: KeyboardShortcutManager) -> [ShortcutOverlayItem] {

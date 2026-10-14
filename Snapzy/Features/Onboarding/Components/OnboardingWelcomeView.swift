@@ -20,7 +20,7 @@ struct WelcomeView: View {
         .frame(width: 128, height: 128)
 
       // Title
-      Text(verbatim: "Snapzy")
+      Text(verbatim: "Pinny")
         .vsHeading()
 
       // Subtitle
