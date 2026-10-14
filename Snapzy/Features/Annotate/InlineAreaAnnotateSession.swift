@@ -47,6 +47,7 @@ nonisolated enum InlineAreaKeyAction: Equatable {
   case copyCurrentImage
   case copyMagnifierColor
   case selectDisplay
+  case selectWindow
   case changeElementLevel(towardParent: Bool)
   /// Arrow keys after a selection exists; see `InlineAreaSelectionNudge`.
   case adjustSelection(InlineAreaSelectionNudge)
@@ -509,6 +510,9 @@ final class InlineAreaAnnotateSession: ObservableObject {
     case .selectDisplay:
       selectDisplayUnderPointer()
       return true
+    case .selectWindow:
+      selectWindowUnderPointer()
+      return true
     case .adjustSelection(let nudge):
       return adjustSelection(nudge)
     case .recallRegion(let older):
@@ -580,6 +584,18 @@ final class InlineAreaAnnotateSession: ObservableObject {
       .max { $0.area < $1.area }
 
     return bestMatch?.displayID ?? primaryDisplayID
+  }
+
+  /// The whole window under the pointer; the display when no window is detected there.
+  func selectWindowUnderPointer() {
+    guard phase == .selecting else { return }
+    let local = selectionPointerLocation ?? currentDesktopMouseLocation
+    let screenPoint = CGPoint(x: desktopFrame.minX + local.x, y: desktopFrame.maxY - local.y)
+    if let candidate = hoveredWindowCandidate ?? windowSelectionSnapshot?.hitTest(at: screenPoint) {
+      selectWindow(candidate)
+    } else {
+      selectDisplayUnderPointer()
+    }
   }
 
   func selectDisplayUnderPointer() {
@@ -905,12 +921,12 @@ final class InlineAreaAnnotateSession: ObservableObject {
       if event.type == .keyDown, event.keyCode == 0,
          event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command,
          source == .local || hasKeyWindow { return .selectDisplay }
-      // Pinny: plain R also captures the whole display while choosing an area. After a
-      // selection exists, R is the rectangle tool again.
+      // Pinny: plain R captures the whole window under the pointer while choosing an area.
+      // After a selection exists, R is the rectangle tool again.
       if event.type == .keyDown, !hasTextResponder, source == .local || hasKeyWindow,
          event.modifierFlags.intersection([.command, .control, .option, .shift]).isEmpty,
          event.keyCode == 15 || event.charactersIgnoringModifiers?.lowercased() == "r" {
-        return .selectDisplay
+        return .selectWindow
       }
       if event.type == .keyDown, event.keyCode == 48, !hasTextResponder,
          source == .local || hasKeyWindow,

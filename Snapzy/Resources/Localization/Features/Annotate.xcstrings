@@ -8,19 +8,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tab: expand · Shift-Tab: shrink"
+            "value": "R: whole window · Tab: expand · Shift-Tab: shrink"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tab 扩大选区 · ⇧Tab 缩小选区"
+            "value": "R 整个窗口 · Tab 扩大选区 · ⇧Tab 缩小选区"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tab 擴大選區 · ⇧Tab 縮小選區"
+            "value": "R 整個視窗 · Tab 擴大選區 · ⇧Tab 縮小選區"
           }
         }
       }
@@ -10997,13 +10997,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Select this display (R)"
+            "value": "Select this display (⌘A)"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "选择全屏（R）"
+            "value": "选择全屏（⌘A）"
           }
         }
       }

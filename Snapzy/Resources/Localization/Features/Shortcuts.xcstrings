@@ -3333,6 +3333,23 @@
         }
       }
     },
+    "preferences-shortcuts.pinny-select-window": {
+      "comment": "Pinny capture key reference",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capture the whole window"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "整个窗口"
+          }
+        }
+      }
+    },
     "preferences-shortcuts.pinny-select-display": {
       "comment": "Pinny capture key reference",
       "localizations": {

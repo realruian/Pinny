@@ -2954,6 +2954,7 @@ nonisolated enum L10n {
   /// Pinny: keys available inside the F1 capture overlay and on pinned images.
   enum PinnyKeyReference {
     static let selectingSection = string("preferences-shortcuts.pinny-selecting-section", defaultValue: "While choosing an area", comment: "Pinny capture key reference")
+    static let selectWindow = string("preferences-shortcuts.pinny-select-window", defaultValue: "Capture the whole window", comment: "Pinny capture key reference")
     static let selectDisplay = string("preferences-shortcuts.pinny-select-display", defaultValue: "Capture the whole display", comment: "Pinny capture key reference")
     static let lastRegion = string("preferences-shortcuts.pinny-last-region", defaultValue: "Use the last captured region", comment: "Pinny capture key reference")
     static let elementLevel = string("preferences-shortcuts.pinny-element-level", defaultValue: "Larger / smaller detected area", comment: "Pinny capture key reference")
@@ -8244,7 +8245,7 @@ nonisolated enum L10n {
 
   enum Annotate {
     static let previousRegion = string("annotate.previous-region", defaultValue: "Last region (,)", comment: "Reuse the most recently captured region in the unified screenshot overlay")
-    static let selectDisplay = string("annotate.select-display", defaultValue: "Select this display (R)", comment: "Select entire display in the unified screenshot overlay")
+    static let selectDisplay = string("annotate.select-display", defaultValue: "Select this display (⌘A)", comment: "Select entire display in the unified screenshot overlay")
     static let elementHierarchyHint = string(
       "annotate.element-hierarchy-hint",
       defaultValue: "Tab: expand · Shift-Tab: shrink",
