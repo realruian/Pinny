@@ -342,6 +342,14 @@ private struct InlineAnnotationTextEditor: NSViewRepresentable {
         guard let self, self.wantsInitialFocus else { return }
 
         if let window = self.window {
+          // The capture overlay has one window per display and each renders this editor.
+          // Only the copy that is actually on screen in its window may take focus; otherwise
+          // the other display's hidden copy steals the keystrokes.
+          if let content = window.contentView,
+             !content.bounds.intersects(self.convert(self.bounds, to: content)) {
+            self.wantsInitialFocus = false
+            return
+          }
           if !window.isKeyWindow {
             window.makeKey()
           }
