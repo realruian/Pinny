@@ -48,8 +48,92 @@ nonisolated enum InlineAreaKeyAction: Equatable {
   case copyMagnifierColor
   case selectDisplay
   case changeElementLevel(towardParent: Bool)
+  /// Arrow keys after a selection exists; see `InlineAreaSelectionNudge`.
+  case adjustSelection(InlineAreaSelectionNudge)
+  /// `,` (older) / `.` (newer) through recently captured regions.
+  case recallRegion(older: Bool)
   case setMoveModifierActive(Bool)
   case resetMoveModifierAndPassThrough
+}
+
+/// Pinny keyboard adjustment of the selection, in desktop-local points (y grows downward).
+/// Plain arrows move, ⌘ pushes the edge on that side outward, ⌥ pulls the opposite edge in
+/// that direction (shrinks); ⇧ makes any of them 10 points.
+nonisolated struct InlineAreaSelectionNudge: Equatable {
+  enum Mode: Equatable { case move, expand, shrink }
+  enum Direction: Equatable { case up, down, left, right }
+  let mode: Mode
+  let direction: Direction
+  let amount: CGFloat
+
+  static let minimumSide: CGFloat = 6
+
+  init(mode: Mode, direction: Direction, amount: CGFloat) {
+    self.mode = mode
+    self.direction = direction
+    self.amount = amount
+  }
+
+  init?(event: NSEvent) {
+    let direction: Direction
+    switch event.keyCode {
+    case 126: direction = .up
+    case 125: direction = .down
+    case 123: direction = .left
+    case 124: direction = .right
+    default: return nil
+    }
+    let flags = event.modifierFlags.intersection([.command, .option, .control, .shift])
+    guard !flags.contains(.control), !(flags.contains(.command) && flags.contains(.option)) else { return nil }
+    self.init(
+      mode: flags.contains(.command) ? .expand : (flags.contains(.option) ? .shrink : .move),
+      direction: direction,
+      amount: flags.contains(.shift) ? 10 : 1
+    )
+  }
+
+  func applied(to rect: CGRect) -> CGRect {
+    var r = rect.standardized
+    let a = amount
+    switch (mode, direction) {
+    case (.move, .up): r.origin.y -= a
+    case (.move, .down): r.origin.y += a
+    case (.move, .left): r.origin.x -= a
+    case (.move, .right): r.origin.x += a
+    case (.expand, .up): r.origin.y -= a; r.size.height += a
+    case (.expand, .down): r.size.height += a
+    case (.expand, .left): r.origin.x -= a; r.size.width += a
+    case (.expand, .right): r.size.width += a
+    case (.shrink, .up): r.size.height -= min(a, r.height - Self.minimumSide)
+    case (.shrink, .down):
+      let step = min(a, r.height - Self.minimumSide); r.origin.y += step; r.size.height -= step
+    case (.shrink, .left): r.size.width -= min(a, r.width - Self.minimumSide)
+    case (.shrink, .right):
+      let step = min(a, r.width - Self.minimumSide); r.origin.x += step; r.size.width -= step
+    }
+    return r
+  }
+}
+
+/// Pinny: screen rects (AppKit global points) of recently copied, saved or pinned captures,
+/// newest first, so the next capture can reuse one.
+enum InlineAreaRegionHistory {
+  static let limit = 10
+
+  static func regions(userDefaults: UserDefaults = .standard) -> [CGRect] {
+    (userDefaults.array(forKey: PreferencesKeys.captureRegionHistory) as? [[Double]] ?? []).compactMap {
+      $0.count == 4 && $0[2] > 0 && $0[3] > 0 ? CGRect(x: $0[0], y: $0[1], width: $0[2], height: $0[3]) : nil
+    }
+  }
+
+  static func record(_ rect: CGRect, userDefaults: UserDefaults = .standard) {
+    let rounded = rect.integral
+    let history = [rounded] + regions(userDefaults: userDefaults).filter { $0 != rounded }
+    userDefaults.set(
+      history.prefix(limit).map { [Double($0.minX), Double($0.minY), Double($0.width), Double($0.height)] },
+      forKey: PreferencesKeys.captureRegionHistory
+    )
+  }
 }
 
 /// Weakly holds a per-display magnifier host view so the session can reach it for
@@ -114,6 +198,9 @@ final class InlineAreaAnnotateSession: ObservableObject {
   private var selectionStartPoint: CGPoint?
   private var stateChangeCancellable: AnyCancellable?
   private var didComplete = false
+  /// Index into `InlineAreaRegionHistory` of the region currently shown, while it is untouched.
+  private var recalledRegionIndex: Int?
+  @Published private(set) var hasRegionHistory = !InlineAreaRegionHistory.regions().isEmpty
   /// Populated asynchronously in `init` (see `startWindowSelectionQuery`) — nil until the
   /// query resolves, so hover hit-testing simply has nothing to match until then.
   private var windowSelectionSnapshot: WindowSelectionSnapshot?
@@ -395,7 +482,8 @@ final class InlineAreaAnnotateSession: ObservableObject {
       source: source,
       phase: phase,
       hasTextResponder: windows.allObjects.contains { $0.firstResponder is NSTextView },
-      hasKeyWindow: windows.allObjects.contains { $0.isKeyWindow }
+      hasKeyWindow: windows.allObjects.contains { $0.isKeyWindow },
+      hasSelectedAnnotation: state.hasSelectedAnnotations
     )
 
     if phase != .annotating {
@@ -421,6 +509,10 @@ final class InlineAreaAnnotateSession: ObservableObject {
     case .selectDisplay:
       selectDisplayUnderPointer()
       return true
+    case .adjustSelection(let nudge):
+      return adjustSelection(nudge)
+    case .recallRegion(let older):
+      return recallRegion(older: older)
     case .changeElementLevel(let towardParent):
       guard autoDetectElementUnderCursor else { return false }
       return SmartElementQueryService.shared.selectAdjacentCandidate(towardParent: towardParent)
@@ -430,6 +522,42 @@ final class InlineAreaAnnotateSession: ObservableObject {
     case .resetMoveModifierAndPassThrough:
       isMoveModifierActive = false
       return false
+    }
+  }
+
+  /// Arrow-key move / resize of an existing selection. Moving carries annotations with the
+  /// image, resizing keeps them where they are on screen, matching mouse drags.
+  private func adjustSelection(_ nudge: InlineAreaSelectionNudge) -> Bool {
+    guard phase == .annotating, let rect = selectionRect else { return false }
+    recalledRegionIndex = nil
+    let target = nudge.applied(to: rect)
+    if nudge.mode == .move {
+      moveSelection(to: target, refreshImage: true)
+    } else {
+      resizeSelection(to: target, previousRect: rect)
+    }
+    return true
+  }
+
+  /// `,` before selecting reuses the last captured region; while that region is untouched and
+  /// unannotated, `,` / `.` step to older / newer ones.
+  func recallRegion(older: Bool) -> Bool {
+    let regions = InlineAreaRegionHistory.regions()
+    switch phase {
+    case .selecting:
+      guard older, let region = regions.first else { return false }
+      beginAnnotating(with: Self.localRect(for: region, in: desktopFrame))
+      guard phase == .annotating else { return false }
+      recalledRegionIndex = 0
+      return true
+    case .annotating:
+      guard let index = recalledRegionIndex, state.annotations.isEmpty,
+            let current = selectionRect else { return false }
+      let next = older ? index + 1 : index - 1
+      guard regions.indices.contains(next) else { return true }
+      resizeSelection(to: Self.localRect(for: regions[next], in: desktopFrame), previousRect: current)
+      recalledRegionIndex = next
+      return true
     }
   }
 
@@ -678,6 +806,12 @@ final class InlineAreaAnnotateSession: ObservableObject {
   private func complete(_ result: InlineCaptureOutcome, closeWindow: Bool = true) {
     guard !didComplete else { return }
     didComplete = true
+    switch result {
+    case .saved, .copied, .pinned:
+      if let selectionRect { InlineAreaRegionHistory.record(screenRect(for: selectionRect)) }
+    case .failure:
+      break
+    }
     SmartElementQueryService.shared.cancelPendingQueries()
     isMoveModifierActive = false
     selectionPointerLocation = nil
@@ -758,9 +892,16 @@ final class InlineAreaAnnotateSession: ObservableObject {
     source: InlineAreaKeyEventSource,
     phase: InlineAreaAnnotatePhase,
     hasTextResponder: Bool,
-    hasKeyWindow: Bool
+    hasKeyWindow: Bool,
+    hasSelectedAnnotation: Bool = false
   ) -> InlineAreaKeyAction {
+    let ownsKeyboard = source == .local || hasKeyWindow
+    let plainKey = event.modifierFlags.intersection([.command, .control, .option, .shift]).isEmpty
     guard phase == .annotating else {
+      // Pinny: "," reuses the last captured region.
+      if event.type == .keyDown, ownsKeyboard, !hasTextResponder, plainKey, event.keyCode == 43 {
+        return .recallRegion(older: true)
+      }
       if event.type == .keyDown, event.keyCode == 0,
          event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command,
          source == .local || hasKeyWindow { return .selectDisplay }
@@ -788,6 +929,16 @@ final class InlineAreaAnnotateSession: ObservableObject {
 
     if hasTextResponder {
       return matchesMoveModifierKey(event) ? .resetMoveModifierAndPassThrough : .passThrough
+    }
+
+    if event.type == .keyDown, ownsKeyboard {
+      // Arrows move a selected annotation (canvas) or, with none selected, the selection itself.
+      if !hasSelectedAnnotation, let nudge = InlineAreaSelectionNudge(event: event) {
+        return .adjustSelection(nudge)
+      }
+      if plainKey, event.keyCode == 43 || event.keyCode == 47 {
+        return .recallRegion(older: event.keyCode == 43)
+      }
     }
 
     if shouldHandleCommandCopyShortcut(

@@ -179,6 +179,63 @@ final class InlineAreaAnnotateSessionTests: XCTestCase {
       phase: .selecting, hasTextResponder: false, hasKeyWindow: true), .selectDisplay)
   }
 
+  func testSelectionNudgeMovesExpandsAndShrinks() {
+    let rect = CGRect(x: 100, y: 100, width: 200, height: 150)
+    XCTAssertEqual(InlineAreaSelectionNudge(mode: .move, direction: .up, amount: 1).applied(to: rect),
+                   CGRect(x: 100, y: 99, width: 200, height: 150))
+    XCTAssertEqual(InlineAreaSelectionNudge(mode: .expand, direction: .left, amount: 10).applied(to: rect),
+                   CGRect(x: 90, y: 100, width: 210, height: 150))
+    XCTAssertEqual(InlineAreaSelectionNudge(mode: .expand, direction: .down, amount: 1).applied(to: rect),
+                   CGRect(x: 100, y: 100, width: 200, height: 151))
+    // ⌥↑ pulls the bottom edge up; ⌥→ pulls the left edge right.
+    XCTAssertEqual(InlineAreaSelectionNudge(mode: .shrink, direction: .up, amount: 10).applied(to: rect),
+                   CGRect(x: 100, y: 100, width: 200, height: 140))
+    XCTAssertEqual(InlineAreaSelectionNudge(mode: .shrink, direction: .right, amount: 10).applied(to: rect),
+                   CGRect(x: 110, y: 100, width: 190, height: 150))
+    let tiny = CGRect(x: 0, y: 0, width: 8, height: 8)
+    XCTAssertEqual(InlineAreaSelectionNudge(mode: .shrink, direction: .left, amount: 10).applied(to: tiny).width,
+                   InlineAreaSelectionNudge.minimumSide)
+  }
+
+  func testArrowKeysAdjustSelectionOnlyWithoutSelectedAnnotation() throws {
+    let commandShiftUp = try makeKeyEvent(keyCode: 126, characters: "\u{F700}", flags: [.command, .shift, .numericPad, .function])
+    XCTAssertEqual(InlineAreaAnnotateSession.keyAction(for: commandShiftUp, source: .local, phase: .annotating,
+      hasTextResponder: false, hasKeyWindow: true),
+      .adjustSelection(InlineAreaSelectionNudge(mode: .expand, direction: .up, amount: 10)))
+    let left = try makeKeyEvent(keyCode: 123, characters: "\u{F702}", flags: [.numericPad, .function])
+    XCTAssertEqual(InlineAreaAnnotateSession.keyAction(for: left, source: .local, phase: .annotating,
+      hasTextResponder: false, hasKeyWindow: true, hasSelectedAnnotation: true), .passThrough)
+    XCTAssertEqual(InlineAreaAnnotateSession.keyAction(for: left, source: .local, phase: .annotating,
+      hasTextResponder: true, hasKeyWindow: true), .passThrough)
+    XCTAssertEqual(InlineAreaAnnotateSession.keyAction(for: left, source: .local, phase: .selecting,
+      hasTextResponder: false, hasKeyWindow: true), .passThrough)
+  }
+
+  func testCommaRecallsRegionAndPeriodStepsNewer() throws {
+    let comma = try makeKeyEvent(keyCode: 43, characters: ",", flags: [])
+    let period = try makeKeyEvent(keyCode: 47, characters: ".", flags: [])
+    XCTAssertEqual(InlineAreaAnnotateSession.keyAction(for: comma, source: .local, phase: .selecting,
+      hasTextResponder: false, hasKeyWindow: true), .recallRegion(older: true))
+    XCTAssertEqual(InlineAreaAnnotateSession.keyAction(for: period, source: .local, phase: .annotating,
+      hasTextResponder: false, hasKeyWindow: true), .recallRegion(older: false))
+    XCTAssertEqual(InlineAreaAnnotateSession.keyAction(for: comma, source: .local, phase: .annotating,
+      hasTextResponder: true, hasKeyWindow: true), .passThrough)
+  }
+
+  func testRegionHistoryKeepsNewestFirstWithoutDuplicates() {
+    let defaults = UserDefaultsFactory.make()
+    let a = CGRect(x: 10, y: 20, width: 300, height: 200)
+    let b = CGRect(x: 50, y: 60, width: 100, height: 80)
+    InlineAreaRegionHistory.record(a, userDefaults: defaults)
+    InlineAreaRegionHistory.record(b, userDefaults: defaults)
+    InlineAreaRegionHistory.record(a, userDefaults: defaults)
+    XCTAssertEqual(InlineAreaRegionHistory.regions(userDefaults: defaults), [a, b])
+    for i in 0..<15 {
+      InlineAreaRegionHistory.record(CGRect(x: i, y: 0, width: 40, height: 40), userDefaults: defaults)
+    }
+    XCTAssertEqual(InlineAreaRegionHistory.regions(userDefaults: defaults).count, InlineAreaRegionHistory.limit)
+  }
+
   // MARK: - desktopFrame
 
   func testDesktopFrame_unionsScreenFrames() {

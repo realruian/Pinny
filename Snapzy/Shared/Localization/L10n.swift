@@ -8216,6 +8216,7 @@ nonisolated enum L10n {
   }
 
   enum Annotate {
+    static let previousRegion = string("annotate.previous-region", defaultValue: "Last region (,)", comment: "Reuse the most recently captured region in the unified screenshot overlay")
     static let selectDisplay = string("annotate.select-display", defaultValue: "Select this display (R)", comment: "Select entire display in the unified screenshot overlay")
     static let elementHierarchyHint = string(
       "annotate.element-hierarchy-hint",

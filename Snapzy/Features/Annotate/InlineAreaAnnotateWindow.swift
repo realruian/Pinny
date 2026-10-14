@@ -306,6 +306,10 @@ private struct InlineAreaAnnotateRootView: View {
             HStack {
               Button(L10n.Annotate.selectDisplay) { session.selectDisplayUnderPointer() }
                 .buttonStyle(.borderedProminent)
+              if session.hasRegionHistory {
+                Button(L10n.Annotate.previousRegion) { _ = session.recallRegion(older: true) }
+                  .buttonStyle(.borderedProminent)
+              }
               Text(L10n.Annotate.elementHierarchyHint)
                 .foregroundStyle(.white)
                 .padding(8).background(.black.opacity(0.75), in: Capsule())

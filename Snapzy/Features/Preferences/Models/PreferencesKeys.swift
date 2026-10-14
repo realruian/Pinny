@@ -81,6 +81,7 @@ enum PreferencesKeys {
   static let annotateClipboardImageOpenBehavior = "annotate.clipboardImageOpenBehavior"
   static let annotateDefaultTool = "annotate.defaultTool"
   static let annotateHiddenTools = "annotate.hiddenTools"
+  static let captureRegionHistory = "capture.regionHistory"
   static let annotateRememberLastTool = "annotate.rememberLastTool"
   static let annotateLastUsedTool = "annotate.lastUsedTool"
   static let annotateCloseAfterDrag = "annotate.closeAfterDrag"
