@@ -2951,8 +2951,35 @@ nonisolated enum L10n {
     )
   }
 
+  /// Pinny: keys available inside the F1 capture overlay and on pinned images.
+  enum PinnyKeyReference {
+    static let selectingSection = string("preferences-shortcuts.pinny-selecting-section", defaultValue: "While choosing an area", comment: "Pinny capture key reference")
+    static let selectDisplay = string("preferences-shortcuts.pinny-select-display", defaultValue: "Capture the whole display", comment: "Pinny capture key reference")
+    static let lastRegion = string("preferences-shortcuts.pinny-last-region", defaultValue: "Use the last captured region", comment: "Pinny capture key reference")
+    static let elementLevel = string("preferences-shortcuts.pinny-element-level", defaultValue: "Larger / smaller detected area", comment: "Pinny capture key reference")
+    static let copyColor = string("preferences-shortcuts.pinny-copy-color", defaultValue: "Copy the color under the cursor", comment: "Pinny capture key reference")
+    static let selectedSection = string("preferences-shortcuts.pinny-selected-section", defaultValue: "After selecting", comment: "Pinny capture key reference")
+    static let moveSelection = string("preferences-shortcuts.pinny-move-selection", defaultValue: "Move the selection (⇧ for 10 points)", comment: "Pinny capture key reference")
+    static let expandSelection = string("preferences-shortcuts.pinny-expand-selection", defaultValue: "Push that edge outward", comment: "Pinny capture key reference")
+    static let shrinkSelection = string("preferences-shortcuts.pinny-shrink-selection", defaultValue: "Pull the opposite edge in", comment: "Pinny capture key reference")
+    static let cycleRegion = string("preferences-shortcuts.pinny-cycle-region", defaultValue: "Older / newer captured region", comment: "Pinny capture key reference")
+    static let copyClose = string("preferences-shortcuts.pinny-copy-close", defaultValue: "Copy and close", comment: "Pinny capture key reference")
+    static let save = string("preferences-shortcuts.pinny-save", defaultValue: "Save", comment: "Pinny capture key reference")
+    static let undoRedo = string("preferences-shortcuts.pinny-undo-redo", defaultValue: "Undo / redo", comment: "Pinny capture key reference")
+    static let deleteAnnotation = string("preferences-shortcuts.pinny-delete-annotation", defaultValue: "Delete the selected annotation", comment: "Pinny capture key reference")
+    static let cancel = string("preferences-shortcuts.pinny-cancel", defaultValue: "Cancel", comment: "Pinny capture key reference")
+    static let pinSection = string("preferences-shortcuts.pinny-pin-section", defaultValue: "Pinned images", comment: "Pinny capture key reference")
+    static let pinDoubleClick = string("preferences-shortcuts.pinny-pin-double-click", defaultValue: "Copy and close the pin", comment: "Pinny capture key reference")
+    static let pinScroll = string("preferences-shortcuts.pinny-pin-scroll", defaultValue: "Zoom the pin", comment: "Pinny capture key reference")
+    static let pinDrag = string("preferences-shortcuts.pinny-pin-drag", defaultValue: "Move the pin", comment: "Pinny capture key reference")
+    static let doubleClick = string("preferences-shortcuts.pinny-double-click", defaultValue: "Double-click", comment: "Pinny capture key reference")
+    static let scroll = string("preferences-shortcuts.pinny-scroll", defaultValue: "Scroll", comment: "Pinny capture key reference")
+    static let drag = string("preferences-shortcuts.pinny-drag", defaultValue: "Drag", comment: "Pinny capture key reference")
+  }
+
   enum PreferencesWorkflow {
     static let pinClipboardDescription = string("preferences-workflow.pin-clipboard-description", defaultValue: "Pin the image or image file currently copied to the clipboard.", comment: "Clipboard pin shortcut description")
+    static let pinCopiesImageDescription = string("preferences-workflow.pin-copy-description", defaultValue: "Pinning a capture also copies it to the clipboard.", comment: "Description of copying while pinning")
     static let pinCopiesImage = string("preferences-workflow.pin-copy", defaultValue: "Copy when pinning", comment: "Whether pinning also copies the image")
     static let captureSection = string("preferences-workflow.capture-section", defaultValue: "Capture in place", comment: "Screenshot and pin workflow settings")
     static let captureTitle = string("preferences-workflow.capture-title", defaultValue: "Screenshot & Annotate", comment: "Screenshot and pin workflow settings")

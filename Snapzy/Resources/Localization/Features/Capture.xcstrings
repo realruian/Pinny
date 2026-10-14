@@ -9626,7 +9626,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Overlay"
+            "value": "Detection"
           }
         },
         "es": {
@@ -9668,7 +9668,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "覆盖"
+            "value": "识别"
           }
         },
         "zh-Hant": {

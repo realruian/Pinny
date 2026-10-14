@@ -26,44 +26,42 @@ struct QuickAccessSettingsView: View {
   @State private var positionIsLeft: Bool = false
   @State private var showsLegacyCards = false
 
+  /// Pinny: pin settings only. Capture options live on the Capture page; the old corner
+  /// cards (Quick Access) are not part of the F1 flow and stay hidden.
+  private static let showsLegacyCards = false
+
   var body: some View {
     Form {
-      Section(L10n.PreferencesWorkflow.captureSection) {
-        SettingRow(icon: "viewfinder", title: L10n.PreferencesWorkflow.captureTitle,
-                   description: L10n.PreferencesWorkflow.captureDescription) {
+      Section(L10n.PreferencesQuickAccess.pinZoomSection) {
+        SettingRow(icon: "doc.on.doc", title: L10n.PreferencesWorkflow.pinCopiesImage,
+                   description: L10n.PreferencesWorkflow.pinCopiesImageDescription) {
+          Toggle("", isOn: $pinCopiesImage).labelsHidden()
+        }
+        SettingRow(icon: "pin", title: L10n.PreferencesWorkflow.pinTitle,
+                   description: L10n.PreferencesWorkflow.pinDescription) { EmptyView() }
+        SettingRow(icon: "doc.on.clipboard", title: L10n.Actions.pinClipboard,
+                   description: L10n.PreferencesWorkflow.pinClipboardDescription) {
           Button(L10n.Preferences.shortcutsTab) {
             PreferencesNavigationState.shared.select(.shortcuts)
           }
         }
-        SettingRow(icon: "rectangle.dashed", title: L10n.PreferencesWorkflow.componentTitle,
-                   description: L10n.PreferencesWorkflow.componentDescription) {
-          Button(L10n.PreferencesWorkflow.recognitionSettings) {
-            PreferencesNavigationState.shared.select(.capture)
-          }
-        }
-        SettingRow(icon: "arrow.up.left.and.arrow.down.right", title: L10n.PreferencesWorkflow.adjustTitle,
-                   description: L10n.PreferencesWorkflow.adjustDescription) { EmptyView() }
-      }
-
-      Section(L10n.PreferencesQuickAccess.pinZoomSection) {
-        Toggle(L10n.PreferencesWorkflow.pinCopiesImage, isOn: $pinCopiesImage)
-        SettingRow(icon: "pin", title: L10n.PreferencesWorkflow.pinTitle,
-                   description: L10n.PreferencesWorkflow.pinDescription) { EmptyView() }
         SettingRow(icon: "hand.tap", title: L10n.PreferencesWorkflow.doubleClickTitle,
                    description: L10n.PreferencesWorkflow.doubleClickDescription) { EmptyView() }
         SettingRow(icon: "arrow.up.left.and.arrow.down.right", title: L10n.PreferencesWorkflow.zoomTitle,
                    description: L10n.PreferencesWorkflow.zoomDescription) { EmptyView() }
       }
 
-      Section {
-        DisclosureGroup(L10n.PreferencesWorkflow.legacyCardsTitle, isExpanded: $showsLegacyCards) {
-          Text(L10n.PreferencesWorkflow.legacyCardsDescription)
-            .font(.caption)
-            .foregroundStyle(.secondary)
+      if Self.showsLegacyCards {
+        Section {
+          DisclosureGroup(L10n.PreferencesWorkflow.legacyCardsTitle, isExpanded: $showsLegacyCards) {
+            Text(L10n.PreferencesWorkflow.legacyCardsDescription)
+              .font(.caption)
+              .foregroundStyle(.secondary)
+          }
         }
-      }
-      if showsLegacyCards {
-        legacyCardSettings
+        if showsLegacyCards {
+          legacyCardSettings
+        }
       }
     }
     .formStyle(.grouped)

@@ -533,7 +533,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Screen recording access is needed for screenshots; Accessibility access is needed for component detection. Microphone access is only for audio recording."
+            "value": "Screen recording access is needed for screenshots; Accessibility access is needed for component detection."
           }
         },
         "es": {
@@ -575,7 +575,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "截图需要屏幕录制权限，组件识别需要辅助功能权限。麦克风仅用于录音。"
+            "value": "截图需要屏幕录制权限，组件识别需要辅助功能权限。"
           }
         },
         "zh-Hant": {

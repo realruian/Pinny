@@ -27,7 +27,8 @@ enum PreferencesTab: String, CaseIterable, Identifiable, Hashable {
 
   static var lastSelected: PreferencesTab {
     guard let raw = UserDefaults.standard.string(forKey: storageKey),
-          let tab = PreferencesTab(rawValue: raw) else {
+          let tab = PreferencesTab(rawValue: raw),
+          visibleTabs.contains(tab) else {
       return .general
     }
     return tab
@@ -88,12 +89,16 @@ enum PreferencesTab: String, CaseIterable, Identifiable, Hashable {
   }
 
   /// The sidebar's running order in 4 unlabelled groups separated by natural whitespace (Ruru & macOS System Settings style).
+  /// Pinny keeps the sidebar to the capture → annotate → pin flow. Menu bar customization,
+  /// history and cloud upload stay reachable only through deep links.
   static let groups: [[PreferencesTab]] = [
-    [.general, .menuBar, .quickAccess, .history],
-    [.capture, .annotate, .cloud],
+    [.general],
+    [.capture, .annotate, .quickAccess],
     [.shortcuts, .permissions, .advanced],
     [.about],
   ]
+
+  static var visibleTabs: [PreferencesTab] { groups.flatMap { $0 } }
 }
 
 @MainActor

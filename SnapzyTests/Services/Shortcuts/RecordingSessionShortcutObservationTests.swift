@@ -21,6 +21,11 @@ import XCTest
 
 final class RecordingSessionShortcutObservationTests: XCTestCase {
 
+  override func setUpWithError() throws {
+    try super.setUpWithError()
+    try XCTSkipIf(GlobalShortcutKind.recording.isRetiredCaptureShortcut, "Pinny retires recording shortcuts with the hidden recording feature")
+  }
+
   /// Exotic combo (Ctrl+Option+Shift+Cmd+F18) — no system/app should hold it.
   private let sessionProbeConfig = ShortcutConfig(
     keyCode: UInt32(kVK_F18),

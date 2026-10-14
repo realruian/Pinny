@@ -15,6 +15,11 @@ import XCTest
 
 final class RecordingToolbarShortcutsTests: XCTestCase {
 
+  override func setUpWithError() throws {
+    try super.setUpWithError()
+    try XCTSkipIf(GlobalShortcutKind.recording.isRetiredCaptureShortcut, "Pinny retires recording shortcuts with the hidden recording feature")
+  }
+
   // MARK: - GlobalShortcutKind & ShortcutAction Case Matching
 
   func testRecordingToolbarShortcuts_kindsArePresent() {

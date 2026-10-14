@@ -10,6 +10,10 @@ import Carbon.HIToolbox
 import SwiftUI
 
 struct ShortcutsSettingsView: View {
+  /// Pinny keeps F1/F2 and annotation keys; recording, tool, history and corner-card
+  /// shortcuts belong to hidden features and are retired with them.
+  private static let showsLegacySections = false
+
   @State private var fullscreenShortcut: ShortcutConfig?
   @State private var areaShortcut: ShortcutConfig?
   @State private var repeatAreaShortcut: ShortcutConfig?
@@ -356,6 +360,7 @@ struct ShortcutsSettingsView: View {
           )
         }
 
+        if Self.showsLegacySections {
         Section {
           ShortcutRecorderView(
             label: L10n.Actions.recordVideo,
@@ -432,7 +437,9 @@ struct ShortcutsSettingsView: View {
             onReset: { resetRecordingSection() }
           )
         }
+        }
 
+        if Self.showsLegacySections {
         Section {
           ShortcutRecorderView(
             label: L10n.Actions.openAnnotate,
@@ -484,7 +491,9 @@ struct ShortcutsSettingsView: View {
             onReset: { resetToolsSection() }
           )
         }
+        }
 
+        if Self.showsLegacySections {
         Section {
           ShortcutRecorderView(
             label: L10n.Actions.openHistory,
@@ -518,7 +527,9 @@ struct ShortcutsSettingsView: View {
             onReset: { resetHistorySection() }
           )
         }
+        }
 
+        if Self.showsLegacySections {
         Section {
           ShortcutRecorderView(
             label: L10n.PreferencesShortcuts.editLatestCapture,
@@ -545,8 +556,11 @@ struct ShortcutsSettingsView: View {
             onReset: resetQuickAccessSection
           )
         }
+        }
 
-        QuickAccessActionShortcutsSection()
+        if Self.showsLegacySections {
+          QuickAccessActionShortcutsSection()
+        }
 
         Section {
           ShortcutRecorderView(
@@ -635,32 +649,35 @@ struct ShortcutsSettingsView: View {
         }
 
         Section {
-          ReadOnlyShortcutRow(icon: "square.and.arrow.down", label: L10n.ShortcutOverlay.saveDone, shortcut: "⌘ S")
-          ReadOnlyShortcutRow(
-            icon: "square.and.arrow.down.on.square",
-            label: L10n.ShortcutOverlay.saveAs,
-            shortcut: "⌘ ⇧ S"
-          )
-          ReadOnlyShortcutRow(icon: "arrow.uturn.backward", label: L10n.ShortcutOverlay.undo, shortcut: "⌘ Z")
-          ReadOnlyShortcutRow(icon: "arrow.uturn.forward", label: L10n.ShortcutOverlay.redo, shortcut: "⌘ ⇧ Z")
-          ReadOnlyShortcutRow(icon: "trash", label: L10n.ShortcutOverlay.deleteAnnotation, shortcut: "⌫")
-          ReadOnlyShortcutRow(icon: "escape", label: L10n.ShortcutOverlay.cancelDeselect, shortcut: "⎋")
-          ReadOnlyShortcutRow(icon: "return", label: L10n.ShortcutOverlay.confirmCrop, shortcut: "↩")
-          ReadOnlyShortcutRow(
-            icon: "arrow.up.arrow.down.arrow.left.arrow.right",
-            label: L10n.ShortcutOverlay.nudgeAnnotation,
-            shortcut: "← → ↑ ↓"
-          )
-          ReadOnlyShortcutRow(
-            icon: "arrow.up.arrow.down.arrow.left.arrow.right",
-            label: L10n.ShortcutOverlay.nudgeTenPixels,
-            shortcut: "⇧ ← → ↑ ↓"
-          )
+          ReadOnlyShortcutRow(icon: "rectangle.dashed", label: L10n.PinnyKeyReference.selectDisplay, shortcut: "R")
+          ReadOnlyShortcutRow(icon: "clock.arrow.circlepath", label: L10n.PinnyKeyReference.lastRegion, shortcut: ",")
+          ReadOnlyShortcutRow(icon: "square.stack.3d.up", label: L10n.PinnyKeyReference.elementLevel, shortcut: "Tab / ⇧ Tab")
+          ReadOnlyShortcutRow(icon: "eyedropper", label: L10n.PinnyKeyReference.copyColor, shortcut: "C")
+          ReadOnlyShortcutRow(icon: "xmark", label: L10n.PinnyKeyReference.cancel, shortcut: "⎋")
         } header: {
-          ShortcutSectionHeader(
-            title: L10n.ShortcutOverlay.annotateReference,
-            help: L10n.PreferencesShortcuts.referenceDescription
-          )
+          ShortcutSectionHeader(title: L10n.PinnyKeyReference.selectingSection)
+        }
+
+        Section {
+          ReadOnlyShortcutRow(icon: "arrow.up.and.down.and.arrow.left.and.right", label: L10n.PinnyKeyReference.moveSelection, shortcut: "← → ↑ ↓")
+          ReadOnlyShortcutRow(icon: "arrow.up.left.and.arrow.down.right", label: L10n.PinnyKeyReference.expandSelection, shortcut: "⌘ ← → ↑ ↓")
+          ReadOnlyShortcutRow(icon: "arrow.down.right.and.arrow.up.left", label: L10n.PinnyKeyReference.shrinkSelection, shortcut: "⌥ ← → ↑ ↓")
+          ReadOnlyShortcutRow(icon: "clock.arrow.circlepath", label: L10n.PinnyKeyReference.cycleRegion, shortcut: ", / .")
+          ReadOnlyShortcutRow(icon: "doc.on.doc", label: L10n.PinnyKeyReference.copyClose, shortcut: "↩")
+          ReadOnlyShortcutRow(icon: "square.and.arrow.down", label: L10n.PinnyKeyReference.save, shortcut: "⌘ S")
+          ReadOnlyShortcutRow(icon: "arrow.uturn.backward", label: L10n.PinnyKeyReference.undoRedo, shortcut: "⌘ Z / ⌘ ⇧ Z")
+          ReadOnlyShortcutRow(icon: "trash", label: L10n.PinnyKeyReference.deleteAnnotation, shortcut: "⌫")
+          ReadOnlyShortcutRow(icon: "xmark", label: L10n.PinnyKeyReference.cancel, shortcut: "⎋")
+        } header: {
+          ShortcutSectionHeader(title: L10n.PinnyKeyReference.selectedSection)
+        }
+
+        Section {
+          ReadOnlyShortcutRow(icon: "hand.tap", label: L10n.PinnyKeyReference.pinDoubleClick, shortcut: L10n.PinnyKeyReference.doubleClick)
+          ReadOnlyShortcutRow(icon: "plus.magnifyingglass", label: L10n.PinnyKeyReference.pinScroll, shortcut: L10n.PinnyKeyReference.scroll)
+          ReadOnlyShortcutRow(icon: "hand.draw", label: L10n.PinnyKeyReference.pinDrag, shortcut: L10n.PinnyKeyReference.drag)
+        } header: {
+          ShortcutSectionHeader(title: L10n.PinnyKeyReference.pinSection)
         }
       }
     }

@@ -103,6 +103,8 @@ final class ShortcutCoreTests: XCTestCase {
     let manager = KeyboardShortcutManager.shared
     manager.setAreaShortcut(.defaultAreaAnnotate)
     manager.setShortcutEnabled(true, for: .area)
+    // Pinny keeps only F1 (capture) and F2 (pin clipboard) as global shortcuts.
+    XCTAssertEqual(GlobalShortcutKind.allCases.filter { !$0.isRetiredCaptureShortcut }, [.areaAnnotate, .pinClipboard])
     for kind in GlobalShortcutKind.allCases where kind.isRetiredCaptureShortcut {
       XCTAssertNil(manager.shortcut(for: kind))
       XCTAssertFalse(manager.isShortcutEnabled(for: kind))

@@ -127,10 +127,11 @@ final class PreferencesCoreTests: XCTestCase {
     XCTAssertEqual(PreferencesTab.allCases.count, 11)
   }
 
-  func testPreferencesTabGroups_coverAllCasesExactlyOnce() {
+  func testPreferencesTabGroups_showPinnyTabsExactlyOnce() {
     let flattened = PreferencesTab.groups.flatMap { $0 }
-    XCTAssertEqual(flattened.count, PreferencesTab.allCases.count)
-    XCTAssertEqual(Set(flattened).count, PreferencesTab.allCases.count)
+    XCTAssertEqual(Set(flattened).count, flattened.count)
+    // Pinny hides menu bar customization, history and cloud upload from the sidebar.
+    XCTAssertEqual(Set(PreferencesTab.allCases).subtracting(flattened), [.menuBar, .history, .cloud])
     XCTAssertEqual(PreferencesTab.groups.count, 4)
   }
 

@@ -13,6 +13,11 @@ import XCTest
 
 final class PauseResumeRecordingShortcutTests: XCTestCase {
 
+  override func setUpWithError() throws {
+    try super.setUpWithError()
+    try XCTSkipIf(GlobalShortcutKind.recording.isRetiredCaptureShortcut, "Pinny retires recording shortcuts with the hidden recording feature")
+  }
+
   // MARK: - RecordingState.isPauseResumeEligible
 
   func testRecordingStateIsPauseResumeEligible_trueForActiveStates() {

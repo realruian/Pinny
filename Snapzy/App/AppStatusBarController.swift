@@ -367,6 +367,8 @@ final class AppStatusBarController: ObservableObject {
 
   // MARK: - Menu Building
 
+  private static let showsUpdateItem = false
+
   private func buildMenu() {
     menu = NSMenu()
     menu?.autoenablesItems = false
@@ -407,17 +409,20 @@ final class AppStatusBarController: ObservableObject {
 
     // Customizable groups (Capture → Recording → Tools): user-ordered, hidden
     // items filtered out, separators only between non-empty groups.
-    for group in MenuBarItemGroup.allCases {
-      // Keep legacy customization data intact while exposing one screenshot entry.
-      let kinds: [MenuBarItemKind] = group == .capture
-        ? [.captureAreaAnnotate] : menuBarCustomizationStore.orderedVisibleItems(for: group)
-      let groupItems = kinds.map {
-        makeMenuItem(for: $0, viewModel: viewModel, shortcutManager: shortcutManager)
-      }
-      guard !groupItems.isEmpty else { continue }
-      groupItems.forEach { menu?.addItem($0) }
-      menu?.addItem(NSMenuItem.separator())
-    }
+    // Pinny: one capture entry plus clipboard pinning. Recording and tool groups stay hidden;
+    // their customization data is kept intact.
+    menu?.addItem(makeMenuItem(for: .captureAreaAnnotate, viewModel: viewModel, shortcutManager: shortcutManager))
+    let pinClipboardItem = NSMenuItem(
+      title: L10n.Actions.pinClipboard,
+      action: #selector(pinClipboardAction),
+      keyEquivalent: ""
+    )
+    applyConfiguredShortcut(pinClipboardItem, for: .pinClipboard, using: shortcutManager)
+    pinClipboardItem.target = self
+    pinClipboardItem.image = NSImage(systemSymbolName: "pin", accessibilityDescription: nil)
+    pinClipboardItem.isEnabled = true
+    menu?.addItem(pinClipboardItem)
+    menu?.addItem(NSMenuItem.separator())
 
     // Permission (if not granted)
     if !viewModel.hasPermission {
@@ -447,8 +452,8 @@ final class AppStatusBarController: ObservableObject {
       menu?.addItem(whatsNewItem)
     }
 
-    // Check for Updates (hideable, fixed position)
-    if !menuBarCustomizationStore.isHidden(.checkForUpdates) {
+    // Check for Updates: Pinny disables updates.
+    if Self.showsUpdateItem, !menuBarCustomizationStore.isHidden(.checkForUpdates) {
       menu?.addItem(makeMenuItem(for: .checkForUpdates, viewModel: viewModel, shortcutManager: shortcutManager))
     }
 
@@ -464,8 +469,8 @@ final class AppStatusBarController: ObservableObject {
     prefsItem.isEnabled = true
     menu?.addItem(prefsItem)
 
-    #if DEBUG
-    // Liquid Glass Playground
+    #if DEBUG && SNAPZY_LIQUID_GLASS_PLAYGROUND
+    // Liquid Glass Playground (Pinny ships the Debug build, so this needs an explicit flag)
     let playgroundItem = NSMenuItem(
       title: "Liquid Glass Playground",
       action: #selector(openLiquidGlassPlaygroundAction),
@@ -781,6 +786,10 @@ final class AppStatusBarController: ObservableObject {
   @objc private func captureAreaAction() {
     logMenuAction("captureArea")
     viewModel?.captureArea()
+  }
+
+  @objc private func pinClipboardAction() {
+    QuickAccessPinWindowManager.shared.showClipboardImage()
   }
 
   @objc private func captureAreaAnnotateAction() {

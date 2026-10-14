@@ -30,6 +30,9 @@ struct PermissionsSettingsView: View {
   private let filesAndFoldersURL =
     "x-apple.systempreferences:com.apple.preference.security?Privacy_FilesAndFolders"
 
+  /// The microphone is only used for screen recording, which Pinny hides.
+  private static let showsMicrophone = false
+
   var body: some View {
     Form {
       Section(L10n.Preferences.permissionsTab) {
@@ -70,6 +73,7 @@ struct PermissionsSettingsView: View {
           settingsURL: accessibilityURL
         )
 
+        if Self.showsMicrophone {
         permissionRow(
           icon: "mic.fill",
           name: L10n.Onboarding.microphone,
@@ -80,6 +84,7 @@ struct PermissionsSettingsView: View {
           isRequired: false,
           settingsURL: microphoneURL
         )
+        }
 
         if !identityManager.health.isHealthy {
           VStack(alignment: .leading, spacing: 6) {

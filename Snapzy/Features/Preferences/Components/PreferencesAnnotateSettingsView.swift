@@ -27,9 +27,53 @@ struct AnnotateSettingsView: View {
   private var annotateHighlighterTextSnappingEnabled = true
   @State private var hiddenTools = AnnotateToolVisibility.hiddenTools()
 
+  /// Pinny edits inline after F1; options that only affect the standalone editor (default and
+  /// remembered tool, stitching, crop snapping, clipboard opening, drag-out) stay hidden.
+  private static let showsLegacyOptions = false
+
   var body: some View {
     Form {
+      Section {
+        ForEach(AnnotationToolType.drawableTools) { tool in
+          HStack(spacing: 12) {
+            Image("CaptureTool-" + tool.rawValue)
+              .renderingMode(.template).resizable().scaledToFit()
+              .frame(width: 20, height: 20)
+              .foregroundColor(.secondary)
+              .frame(width: 28)
+            Text(tool.displayName)
+            Spacer()
+            Toggle("", isOn: toolVisibilityBinding(for: tool))
+              .labelsHidden()
+          }
+        }
+      } header: {
+        Text(L10n.PreferencesAnnotate.toolbarToolsSection)
+      } footer: {
+        Text(L10n.PreferencesAnnotate.toolbarToolsDescription)
+          .foregroundColor(.secondary)
+      }
+
       Section(L10n.PreferencesAnnotate.behaviorSection) {
+        SettingRow(
+          icon: "slider.horizontal.3",
+          title: L10n.PreferencesAnnotate.quickPropertiesSyncTitle,
+          description: L10n.PreferencesAnnotate.quickPropertiesSyncDescription
+        ) {
+          Toggle("", isOn: $annotateQuickPropertiesSyncEnabled)
+            .labelsHidden()
+        }
+
+        SettingRow(
+          icon: "highlighter",
+          title: L10n.AnnotateUI.highlighterTextSnapping,
+          description: L10n.AnnotateUI.highlighterTextSnappingDescription
+        ) {
+          Toggle("", isOn: $annotateHighlighterTextSnappingEnabled)
+            .labelsHidden()
+        }
+
+        if Self.showsLegacyOptions {
         SettingRow(
           icon: "cursorarrow",
           title: L10n.PreferencesAnnotate.defaultToolTitle,
@@ -58,15 +102,6 @@ struct AnnotateSettingsView: View {
         }
 
         SettingRow(
-          icon: "slider.horizontal.3",
-          title: L10n.PreferencesAnnotate.quickPropertiesSyncTitle,
-          description: L10n.PreferencesAnnotate.quickPropertiesSyncDescription
-        ) {
-          Toggle("", isOn: $annotateQuickPropertiesSyncEnabled)
-            .labelsHidden()
-        }
-
-        SettingRow(
           icon: "rectangle.stack",
           title: L10n.PreferencesAnnotate.combineSaveAsEditTitle,
           description: L10n.PreferencesAnnotate.combineSaveAsEditDescription
@@ -81,15 +116,6 @@ struct AnnotateSettingsView: View {
           description: L10n.AnnotateUI.cropSnapToEdgesDescription
         ) {
           Toggle("", isOn: $annotateCropSnapToEdgesEnabled)
-            .labelsHidden()
-        }
-
-        SettingRow(
-          icon: "highlighter",
-          title: L10n.AnnotateUI.highlighterTextSnapping,
-          description: L10n.AnnotateUI.highlighterTextSnappingDescription
-        ) {
-          Toggle("", isOn: $annotateHighlighterTextSnappingEnabled)
             .labelsHidden()
         }
 
@@ -127,27 +153,7 @@ struct AnnotateSettingsView: View {
             .labelsHidden()
         }
         .disabled(annotateCloseAfterDrag)
-      }
-
-      Section {
-        ForEach(AnnotationToolType.drawableTools) { tool in
-          HStack(spacing: 12) {
-            Image("CaptureTool-" + tool.rawValue)
-              .renderingMode(.template).resizable().scaledToFit()
-              .frame(width: 20, height: 20)
-              .foregroundColor(.secondary)
-              .frame(width: 28)
-            Text(tool.displayName)
-            Spacer()
-            Toggle("", isOn: toolVisibilityBinding(for: tool))
-              .labelsHidden()
-          }
         }
-      } header: {
-        Text(L10n.PreferencesAnnotate.toolbarToolsSection)
-      } footer: {
-        Text(L10n.PreferencesAnnotate.toolbarToolsDescription)
-          .foregroundColor(.secondary)
       }
     }
     .formStyle(.grouped)

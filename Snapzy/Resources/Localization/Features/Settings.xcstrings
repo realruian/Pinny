@@ -13792,7 +13792,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "截屏"
+            "value": "截图"
           }
         },
         "zh-Hant": {
@@ -14246,7 +14246,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "键盘快捷键"
+            "value": "快捷键"
           }
         },
         "zh-Hant": {
@@ -14270,6 +14270,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "钉图时同时复制"
+          }
+        }
+      }
+    },
+    "preferences-workflow.pin-copy-description": {
+      "comment": "Description of copying while pinning",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pinning a capture also copies it to the clipboard."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "钉住截图时，同时把图片复制到剪贴板。"
           }
         }
       }

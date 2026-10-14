@@ -502,12 +502,13 @@ enum GlobalShortcutKind: String, CaseIterable, Codable {
   case objectCutout
   case history
 
-  /// Retained as IDs for old config/URLs; hidden screenshot modes must not hold keys.
+  /// Retained as IDs for old config/URLs; hidden entry points must not hold keys.
+  /// Pinny keeps only F1 (capture) and F2 (pin clipboard); recording, the standalone editor,
+  /// video editing, cloud uploads, history and the shortcut list are hidden too.
   var isRetiredCaptureShortcut: Bool {
     switch self {
-    case .fullscreen, .area, .repeatArea, .activeWindow, .scrollingCapture,
-         .delayedCapture, .ocr, .smartElement, .objectCutout: return true
-    default: return false
+    case .areaAnnotate, .pinClipboard: return false
+    default: return true
     }
   }
 

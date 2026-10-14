@@ -114,8 +114,17 @@ struct CaptureSettingsView: View {
     )
   }
 
+  /// Pinny shows one page with the options that affect the F1 capture flow; recording, OCR,
+  /// scrolling capture and the old area-selection/after-capture options stay hidden.
+  private static let showsLegacyOptions = false
+
+  private static func showsPane(_ pane: CaptureSettingsPane) -> Bool {
+    showsLegacyOptions || pane == .general || pane == .screenshot
+  }
+
   var body: some View {
     VStack(spacing: 0) {
+      if Self.showsLegacyOptions {
       HStack {
         Spacer()
 
@@ -133,54 +142,12 @@ struct CaptureSettingsView: View {
       .padding(.horizontal, 20)
       .padding(.top, 16)
       .padding(.bottom, 8)
+      }
 
       Form {
-        if selectedPane == .general {
-          Section(L10n.PreferencesCapture.appWindowsSection) {
-            SettingRow(
-              icon: "photo.on.rectangle",
-              title: L10n.PreferencesCapture.includeInScreenshotsTitle,
-              description: L10n.PreferencesCapture.includeInScreenshotsDescription
-            ) {
-              Toggle("", isOn: $includeOwnAppInScreenshots)
-                .labelsHidden()
-            }
-
-            SettingRow(
-              icon: "video",
-              title: L10n.PreferencesCapture.includeInRecordingsTitle,
-              description: L10n.PreferencesCapture.includeInRecordingsDescription
-            ) {
-              Toggle("", isOn: $includeOwnAppInRecordings)
-                .labelsHidden()
-            }
-          }
-        }
-
-        // MARK: - Desktop
-
-        if selectedPane == .general {
-          Section(L10n.PreferencesCapture.desktopSection) {
-            SettingRow(
-              icon: "eye.slash",
-              title: L10n.PreferencesCapture.hideDesktopIconsTitle,
-              description: L10n.PreferencesCapture.hideDesktopIconsDescription
-            ) {
-              Toggle("", isOn: $hideDesktopIcons)
-                .labelsHidden()
-            }
-
-            SettingRow(
-              icon: "widget.small",
-              title: L10n.PreferencesCapture.hideDesktopWidgetsTitle,
-              description: L10n.PreferencesCapture.hideDesktopWidgetsDescription
-            ) {
-              Toggle("", isOn: $hideDesktopWidgets)
-                .labelsHidden()
-            }
-          }
-
+        if Self.showsPane(.general) {
           Section(L10n.PreferencesCapture.overlaySection) {
+            if Self.showsLegacyOptions {
             SettingRow(
               icon: "macwindow",
               title: L10n.PreferencesCapture.showSelectionAreaOverlayTitle,
@@ -188,6 +155,7 @@ struct CaptureSettingsView: View {
             ) {
               Toggle("", isOn: $showSelectionAreaOverlay)
                 .labelsHidden()
+            }
             }
 
             SettingRow(
@@ -215,6 +183,53 @@ struct CaptureSettingsView: View {
             }
           }
 
+          Section(L10n.PreferencesCapture.appWindowsSection) {
+            SettingRow(
+              icon: "photo.on.rectangle",
+              title: L10n.PreferencesCapture.includeInScreenshotsTitle,
+              description: L10n.PreferencesCapture.includeInScreenshotsDescription
+            ) {
+              Toggle("", isOn: $includeOwnAppInScreenshots)
+                .labelsHidden()
+            }
+
+            if Self.showsLegacyOptions {
+            SettingRow(
+              icon: "video",
+              title: L10n.PreferencesCapture.includeInRecordingsTitle,
+              description: L10n.PreferencesCapture.includeInRecordingsDescription
+            ) {
+              Toggle("", isOn: $includeOwnAppInRecordings)
+                .labelsHidden()
+            }
+            }
+          }
+        }
+
+        // MARK: - Desktop
+
+        if Self.showsPane(.general) {
+          Section(L10n.PreferencesCapture.desktopSection) {
+            SettingRow(
+              icon: "eye.slash",
+              title: L10n.PreferencesCapture.hideDesktopIconsTitle,
+              description: L10n.PreferencesCapture.hideDesktopIconsDescription
+            ) {
+              Toggle("", isOn: $hideDesktopIcons)
+                .labelsHidden()
+            }
+
+            SettingRow(
+              icon: "widget.small",
+              title: L10n.PreferencesCapture.hideDesktopWidgetsTitle,
+              description: L10n.PreferencesCapture.hideDesktopWidgetsDescription
+            ) {
+              Toggle("", isOn: $hideDesktopWidgets)
+                .labelsHidden()
+            }
+          }
+
+
           Section(L10n.PreferencesCapture.magnifierZoomSection) {
             SettingRow(
               icon: "magnifyingglass",
@@ -230,6 +245,7 @@ struct CaptureSettingsView: View {
                 }
             }
 
+            if Self.showsLegacyOptions {
             SettingRow(
               icon: "arrow.up.and.down",
               title: L10n.PreferencesCapture.reverseMagnifierZoomDirectionTitle,
@@ -237,6 +253,7 @@ struct CaptureSettingsView: View {
             ) {
               Toggle("", isOn: $reverseMagnifierZoomDirection)
                 .labelsHidden()
+            }
             }
 
             SettingRow(
@@ -253,7 +270,7 @@ struct CaptureSettingsView: View {
 
         // MARK: - Screenshot Format
 
-        if selectedPane == .screenshot {
+        if Self.showsPane(.screenshot) {
           Section(L10n.PreferencesCapture.screenshotFormatSection) {
             SettingRow(
               icon: "cursorarrow",
@@ -264,6 +281,7 @@ struct CaptureSettingsView: View {
                 .labelsHidden()
             }
 
+            if Self.showsLegacyOptions {
             SettingRow(
               icon: "shadow",
               title: L10n.PreferencesCapture.includeWindowShadowTitle,
@@ -272,7 +290,9 @@ struct CaptureSettingsView: View {
               Toggle("", isOn: $captureIncludeWindowShadow)
                 .labelsHidden()
             }
+            }
 
+            if Self.showsLegacyOptions {
             SettingRow(
               icon: "snowflake",
               title: L10n.PreferencesCapture.freezeAreaTitle,
@@ -281,7 +301,9 @@ struct CaptureSettingsView: View {
               Toggle("", isOn: $freezeAreaCapture)
                 .labelsHidden()
             }
+            }
 
+            if Self.showsLegacyOptions {
             SettingRow(
               icon: "timer",
               title: L10n.PreferencesCapture.delayedCaptureTitle,
@@ -295,7 +317,9 @@ struct CaptureSettingsView: View {
               .labelsHidden()
               .pickerStyle(.menu)
             }
+            }
 
+            if Self.showsLegacyOptions {
             SettingRow(
               icon: "cursorarrow.rays",
               title: L10n.PreferencesCapture.livePassthroughTitle,
@@ -328,6 +352,8 @@ struct CaptureSettingsView: View {
               .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
                 livePassthroughAccessibilityGranted = AXIsProcessTrusted()
               }
+            }
+
             }
 
             SettingRow(
@@ -374,13 +400,13 @@ struct CaptureSettingsView: View {
           }
         }
 
-        if selectedPane == .screenshot {
+        if Self.showsLegacyOptions {
           Section(L10n.PreferencesCapture.screenshotPresetSection) {
             PreferencesScreenshotDefaultPresetPicker()
           }
         }
 
-        if selectedPane == .screenshot {
+        if Self.showsLegacyOptions {
           Section(L10n.PreferencesCapture.scrollingCaptureSection) {
             SettingRow(
               icon: "lightbulb",
@@ -407,7 +433,7 @@ struct CaptureSettingsView: View {
 
         // MARK: - OCR
 
-        if selectedPane == .ocr {
+        if Self.showsPane(.ocr) {
           PreferencesOCRModelListView()
 
           Section(L10n.PreferencesCapture.ocrNotificationsSection) {
@@ -437,7 +463,7 @@ struct CaptureSettingsView: View {
           }
         }
 
-        if selectedPane == .general {
+        if Self.showsPane(.general) {
           Section(L10n.PreferencesCapture.outputNamingSection) {
             SettingRow(
               icon: "textformat",
@@ -449,6 +475,7 @@ struct CaptureSettingsView: View {
                 .frame(width: 260)
             }
 
+            if Self.showsLegacyOptions {
             SettingRow(
               icon: "textformat.abc",
               title: L10n.PreferencesCapture.recordingTemplateTitle,
@@ -457,6 +484,7 @@ struct CaptureSettingsView: View {
               TextField("", text: $recordingFileNameTemplate)
                 .textFieldStyle(.roundedBorder)
                 .frame(width: 260)
+            }
             }
 
             HStack(alignment: .top, spacing: 6) {
@@ -473,7 +501,9 @@ struct CaptureSettingsView: View {
 
             VStack(alignment: .leading, spacing: 2) {
               Text(L10n.PreferencesCapture.screenshotPreview(screenshotFilenamePreview))
-              Text(L10n.PreferencesCapture.recordingPreview(recordingFilenamePreview))
+              if Self.showsLegacyOptions {
+                Text(L10n.PreferencesCapture.recordingPreview(recordingFilenamePreview))
+              }
             }
             .font(.system(size: 11))
             .foregroundColor(.secondary)
@@ -493,7 +523,7 @@ struct CaptureSettingsView: View {
 
         // MARK: - Recording
 
-        if selectedPane == .recording {
+        if Self.showsPane(.recording) {
           Section(L10n.PreferencesCapture.recordingFormatSection) {
             SettingRow(
               icon: "film",
@@ -510,7 +540,7 @@ struct CaptureSettingsView: View {
           }
         }
 
-        if selectedPane == .recording {
+        if Self.showsPane(.recording) {
           Section(L10n.PreferencesCapture.recordingQualitySection) {
             SettingRow(
               icon: "gauge.with.dots.needle.33percent",
@@ -555,7 +585,7 @@ struct CaptureSettingsView: View {
           }
         }
 
-        if selectedPane == .recording {
+        if Self.showsPane(.recording) {
           Section(L10n.PreferencesCapture.recordingBehaviorSection) {
             SettingRow(
               icon: "cursorarrow",
@@ -588,7 +618,7 @@ struct CaptureSettingsView: View {
 
         // MARK: - Recording Controls
 
-        if selectedPane == .recording {
+        if Self.showsPane(.recording) {
           Section(L10n.PreferencesCapture.recordingControlsSection) {
             SettingRow(
               icon: "menubar.rectangle",
@@ -612,7 +642,7 @@ struct CaptureSettingsView: View {
 
         // MARK: - Recording Overlays
 
-        if selectedPane == .recording {
+        if Self.showsPane(.recording) {
           Section(L10n.PreferencesCapture.mouseHighlightSection) {
             SettingRow(
               icon: "cursorarrow.click.2",
@@ -679,7 +709,7 @@ struct CaptureSettingsView: View {
           }
         }
 
-        if selectedPane == .recording {
+        if Self.showsPane(.recording) {
           Section(L10n.PreferencesCapture.keystrokeOverlaySection) {
             SettingRow(
               icon: "textformat.size",
@@ -728,7 +758,7 @@ struct CaptureSettingsView: View {
           }
         }
 
-        if selectedPane == .recording {
+        if Self.showsPane(.recording) {
           Section(L10n.PreferencesCapture.audioSection) {
             SettingRow(
               icon: "speaker.wave.3.fill",
@@ -783,7 +813,7 @@ struct CaptureSettingsView: View {
 
         // MARK: - After Capture
 
-        if selectedPane == .general {
+        if Self.showsLegacyOptions {
           Section(L10n.PreferencesCapture.afterCaptureSection) {
             Text(L10n.PreferencesWorkflow.captureDescription)
               .font(.callout).foregroundStyle(.secondary)

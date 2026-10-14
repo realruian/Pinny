@@ -3316,6 +3316,380 @@
         }
       }
     },
+    "preferences-shortcuts.pinny-selecting-section": {
+      "comment": "Pinny capture key reference",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "While choosing an area"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选区时"
+          }
+        }
+      }
+    },
+    "preferences-shortcuts.pinny-select-display": {
+      "comment": "Pinny capture key reference",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capture the whole display"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全屏"
+          }
+        }
+      }
+    },
+    "preferences-shortcuts.pinny-last-region": {
+      "comment": "Pinny capture key reference",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use the last captured region"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用上次截图区域"
+          }
+        }
+      }
+    },
+    "preferences-shortcuts.pinny-element-level": {
+      "comment": "Pinny capture key reference",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Larger / smaller detected area"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "扩大 / 缩小识别范围"
+          }
+        }
+      }
+    },
+    "preferences-shortcuts.pinny-copy-color": {
+      "comment": "Pinny capture key reference",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy the color under the cursor"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "复制光标处颜色"
+          }
+        }
+      }
+    },
+    "preferences-shortcuts.pinny-selected-section": {
+      "comment": "Pinny capture key reference",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "After selecting"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选好之后"
+          }
+        }
+      }
+    },
+    "preferences-shortcuts.pinny-move-selection": {
+      "comment": "Pinny capture key reference",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move the selection (⇧ for 10 points)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移动选区（加 ⇧ 为 10 点）"
+          }
+        }
+      }
+    },
+    "preferences-shortcuts.pinny-expand-selection": {
+      "comment": "Pinny capture key reference",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Push that edge outward"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "向该方向扩大"
+          }
+        }
+      }
+    },
+    "preferences-shortcuts.pinny-shrink-selection": {
+      "comment": "Pinny capture key reference",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pull the opposite edge in"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "从对边向该方向缩小"
+          }
+        }
+      }
+    },
+    "preferences-shortcuts.pinny-cycle-region": {
+      "comment": "Pinny capture key reference",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Older / newer captured region"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更早 / 更近的截图区域"
+          }
+        }
+      }
+    },
+    "preferences-shortcuts.pinny-copy-close": {
+      "comment": "Pinny capture key reference",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy and close"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "复制并关闭"
+          }
+        }
+      }
+    },
+    "preferences-shortcuts.pinny-save": {
+      "comment": "Pinny capture key reference",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存"
+          }
+        }
+      }
+    },
+    "preferences-shortcuts.pinny-undo-redo": {
+      "comment": "Pinny capture key reference",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo / redo"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "撤销 / 重做"
+          }
+        }
+      }
+    },
+    "preferences-shortcuts.pinny-delete-annotation": {
+      "comment": "Pinny capture key reference",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete the selected annotation"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "删除选中的标注"
+          }
+        }
+      }
+    },
+    "preferences-shortcuts.pinny-cancel": {
+      "comment": "Pinny capture key reference",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "取消"
+          }
+        }
+      }
+    },
+    "preferences-shortcuts.pinny-pin-section": {
+      "comment": "Pinny capture key reference",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pinned images"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "贴图"
+          }
+        }
+      }
+    },
+    "preferences-shortcuts.pinny-pin-double-click": {
+      "comment": "Pinny capture key reference",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy and close the pin"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "复制并关闭贴图"
+          }
+        }
+      }
+    },
+    "preferences-shortcuts.pinny-pin-scroll": {
+      "comment": "Pinny capture key reference",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zoom the pin"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "缩放贴图"
+          }
+        }
+      }
+    },
+    "preferences-shortcuts.pinny-pin-drag": {
+      "comment": "Pinny capture key reference",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move the pin"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移动贴图"
+          }
+        }
+      }
+    },
+    "preferences-shortcuts.pinny-double-click": {
+      "comment": "Pinny capture key reference",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Double-click"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "双击"
+          }
+        }
+      }
+    },
+    "preferences-shortcuts.pinny-scroll": {
+      "comment": "Pinny capture key reference",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scroll"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "滚轮"
+          }
+        }
+      }
+    },
+    "preferences-shortcuts.pinny-drag": {
+      "comment": "Pinny capture key reference",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drag"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拖动"
+          }
+        }
+      }
+    },
     "preferences-shortcuts.reset-to-defaults": {
       "extractionState": "stale",
       "localizations": {

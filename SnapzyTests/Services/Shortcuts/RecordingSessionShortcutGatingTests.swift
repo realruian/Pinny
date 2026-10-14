@@ -61,7 +61,8 @@ final class RecordingSessionShortcutGatingTests: XCTestCase {
   }
 
   @MainActor
-  func testShouldRegisterNow_sessionKindsFollowActivitySource() {
+  func testShouldRegisterNow_sessionKindsFollowActivitySource() throws {
+    try XCTSkipIf(GlobalShortcutKind.recording.isRetiredCaptureShortcut, "Pinny retires recording shortcuts with the hidden recording feature")
     let manager = KeyboardShortcutManager.shared
     preserveSessionActivitySource(of: manager)
 
@@ -77,7 +78,8 @@ final class RecordingSessionShortcutGatingTests: XCTestCase {
   }
 
   @MainActor
-  func testRecordingStartStopKinds_areNeverSessionGated() {
+  func testRecordingStartStopKinds_areNeverSessionGated() throws {
+    try XCTSkipIf(GlobalShortcutKind.recording.isRetiredCaptureShortcut, "Pinny retires recording shortcuts with the hidden recording feature")
     let manager = KeyboardShortcutManager.shared
     preserveSessionActivitySource(of: manager)
 
@@ -93,7 +95,8 @@ final class RecordingSessionShortcutGatingTests: XCTestCase {
   }
 
   @MainActor
-  func testFnBoundSessionShortcut_excludedFromFnBindingsWhileIdle() {
+  func testFnBoundSessionShortcut_excludedFromFnBindingsWhileIdle() throws {
+    try XCTSkipIf(GlobalShortcutKind.recording.isRetiredCaptureShortcut, "Pinny retires recording shortcuts with the hidden recording feature")
     let manager = KeyboardShortcutManager.shared
     preserveSessionActivitySource(of: manager)
     preserveMasterEnabledState(of: manager)
@@ -162,6 +165,11 @@ final class RecordingSessionShortcutGatingTests: XCTestCase {
 // MARK: - Carbon-level registration gating
 
 final class RecordingSessionHotkeyRegistrationTests: XCTestCase {
+
+  override func setUpWithError() throws {
+    try super.setUpWithError()
+    try XCTSkipIf(GlobalShortcutKind.recording.isRetiredCaptureShortcut, "Pinny retires recording shortcuts with the hidden recording feature")
+  }
 
   /// Exotic combos (Ctrl+Option+Shift+Cmd+F18/F19) — no system/app should hold them.
   private let sessionProbeConfig = ShortcutConfig(

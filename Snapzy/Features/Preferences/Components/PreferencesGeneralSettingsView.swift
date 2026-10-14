@@ -23,6 +23,9 @@ struct GeneralSettingsView: View {
     UpdaterManager.shared.updater
   }
 
+  /// Pinny is a personal build: updates are switched off and issues do not go upstream.
+  private static let showsUpdatesAndIssueReport = false
+
   var body: some View {
     Form {
       Section(L10n.PreferencesGeneral.startupSection) {
@@ -75,6 +78,7 @@ struct GeneralSettingsView: View {
         }
       }
 
+      if Self.showsUpdatesAndIssueReport {
       Section(L10n.PreferencesGeneral.updatesSection) {
         SettingRow(icon: "arrow.triangle.2.circlepath", title: L10n.PreferencesGeneral.checkAutomaticallyTitle, description: L10n.PreferencesGeneral.checkAutomaticallyDescription) {
           Toggle("", isOn: Binding(
@@ -110,6 +114,7 @@ struct GeneralSettingsView: View {
           }
         }
       }
+      }
 
       Section(L10n.PreferencesGeneral.helpSection) {
         SettingRow(icon: "arrow.counterclockwise.circle", title: L10n.PreferencesGeneral.restartOnboardingTitle, description: L10n.PreferencesGeneral.restartOnboardingDescription) {
@@ -120,6 +125,7 @@ struct GeneralSettingsView: View {
           .controlSize(.regular)
         }
 
+        if Self.showsUpdatesAndIssueReport {
         SettingRow(
           icon: "exclamationmark.bubble",
           title: L10n.PreferencesGeneral.reportIssueTitle,
@@ -130,6 +136,7 @@ struct GeneralSettingsView: View {
           }
           .buttonStyle(.bordered)
           .controlSize(.regular)
+        }
         }
       }
     }
