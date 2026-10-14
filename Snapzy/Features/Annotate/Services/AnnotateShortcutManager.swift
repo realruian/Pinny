@@ -97,7 +97,9 @@ final class AnnotateShortcutManager: ObservableObject {
 
   /// Get tool for a given key press
   func tool(for key: Character) -> AnnotationToolType? {
-    shortcuts.first { isShortcutEnabled(for: $0.key) && $0.value == key }?.key
+    shortcuts.first {
+      isShortcutEnabled(for: $0.key) && AnnotateToolVisibility.isVisible($0.key) && $0.value == key
+    }?.key
   }
 
   /// Get current shortcut for a tool

@@ -4029,6 +4029,16 @@ nonisolated enum L10n {
   }
 
   enum PreferencesAnnotate {
+    static let toolbarToolsSection = string(
+      "preferences-capture.section-annotate-toolbar-tools",
+      defaultValue: "Toolbar Tools",
+      comment: "Annotate preferences section listing tools that can be shown or hidden in the capture toolbar"
+    )
+    static let toolbarToolsDescription = string(
+      "preferences-capture.annotate-toolbar-tools-description",
+      defaultValue: "Tools you turn off are hidden from the capture toolbar, and their shortcuts stop working.",
+      comment: "Footer explaining what turning off an annotate tool does"
+    )
     static let behaviorSection = string(
       "preferences-capture.section-annotate",
       defaultValue: "Behavior",

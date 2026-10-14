@@ -43,9 +43,10 @@ final class SmartElementQueryServiceTests: XCTestCase {
 
   func testHoverStabilizesNestedChangesAndCancelDiscardsDelayedResult() throws {
     guard !NSScreen.screens.isEmpty else { throw XCTSkip("Requires display") }
-    let outer = AXElementSnapshot(role: "AXGroup", position: CGPoint(x: 20, y: 20), size: CGSize(width: 240, height: 160))
+    // Both groups are panel-sized, so either may be the default target.
+    let outer = AXElementSnapshot(role: "AXGroup", position: CGPoint(x: 20, y: 20), size: CGSize(width: 300, height: 220))
     let inner = AXElementSnapshot(role: "AXGroup", position: CGPoint(x: 30, y: 30),
-      size: CGSize(width: 100, height: 80), parent: { outer })
+      size: CGSize(width: 200, height: 150), parent: { outer })
     let service = SmartElementQueryService(snapshotProvider: FakeAXSnapshotProvider(snapshotForCall: [outer, inner]),
       permissionChecker: { true }, stabilizationMilliseconds: 60)
     var received: [CGRect?] = []
@@ -56,7 +57,7 @@ final class SmartElementQueryServiceTests: XCTestCase {
     let stabilized = expectation(description: "Stable candidate accepted")
     DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) { stabilized.fulfill() }
     wait(for: [stabilized], timeout: 1)
-    XCTAssertEqual(received.last??.width, 100)
+    XCTAssertEqual(received.last??.width, 200)
     service.cancelPendingQueries()
     XCTAssertNil(received.last!)
     XCTAssertFalse(service.selectAdjacentCandidate(towardParent: true))

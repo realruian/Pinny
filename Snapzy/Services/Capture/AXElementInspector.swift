@@ -68,13 +68,22 @@ enum AXElementInspector {
     "AXList", "AXGrid", "AXForm", "AXRegion", "AXLandmark", "AXSheet", "AXTabGroup"
   ]
 
+  /// Smallest size the default selection may take. Thin bars, rows, icons and labels stay
+  /// reachable with Shift-Tab, but the first highlight should be a panel-sized piece of UI.
+  static let defaultMinWidth: CGFloat = 120
+  static let defaultMinHeight: CGFloat = 100
+  static let defaultMinArea: CGFloat = 30_000
+
+  static func isDefaultSized(_ snapshot: AXElementSnapshot) -> Bool {
+    snapshot.size.width >= defaultMinWidth && snapshot.size.height >= defaultMinHeight
+      && snapshot.size.width * snapshot.size.height >= defaultMinArea
+  }
+
   static func preferredIndex(in candidates: [AXElementSnapshot]) -> Int? {
     guard !candidates.isEmpty else { return nil }
-    // Prefer the nearest useful component, rather than its icon, label, or compact row.
+    // Prefer the nearest panel-sized component, rather than its icon, label, or compact row.
     if let component = candidates.firstIndex(where: {
-      componentRoles.contains($0.role ?? "")
-        && $0.size.width >= 80 && $0.size.height >= 48
-        && $0.size.width * $0.size.height >= 6_000
+      componentRoles.contains($0.role ?? "") && isDefaultSized($0)
     }) {
       // A substantial image is already a useful capture target when the only containing
       // component is an enormous page. A small icon does not receive this exception.
@@ -85,11 +94,10 @@ enum AXElementInspector {
       }) { return image }
       return component
     }
-    // With no card/pane exposed by the app, prefer the enclosing control to its label.
-    if let control = candidates.firstIndex(where: {
-      ["AXButton", "AXLink", "AXTextField", "AXTextArea", "AXPopUpButton", "AXMenuItem"].contains($0.role ?? "")
-    }) { return control }
-    return 0
+    // With no card/pane exposed by the app, take any panel-sized element (text area, web area…).
+    if let panel = candidates.firstIndex(where: isDefaultSized) { return panel }
+    // Otherwise everything is small: take the outermost candidate (usually the window).
+    return candidates.count - 1
   }
 
   static func findMeaningful(_ snapshot: AXElementSnapshot) -> AXElementSnapshot? {

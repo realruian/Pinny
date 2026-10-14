@@ -3913,6 +3913,29 @@
         }
       }
     },
+    "preferences-capture.annotate-toolbar-tools-description": {
+      "comment": "Footer explaining what turning off an annotate tool does",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tools you turn off are hidden from the capture toolbar, and their shortcuts stop working."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关闭的工具不会出现在截图工具栏中，对应的快捷键也会失效。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "關閉的工具不會出現在截圖工具列中，對應的快捷鍵也會失效。"
+          }
+        }
+      }
+    },
     "preferences-capture.auto-crop-subject-description": {
       "extractionState": "stale",
       "localizations": {
@@ -11210,6 +11233,29 @@
           "stringUnit": {
             "state": "translated",
             "value": "行為"
+          }
+        }
+      }
+    },
+    "preferences-capture.section-annotate-toolbar-tools": {
+      "comment": "Annotate preferences section listing tools that can be shown or hidden in the capture toolbar",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toolbar Tools"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "工具栏工具"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "工具列工具"
           }
         }
       }

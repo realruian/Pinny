@@ -4292,6 +4292,8 @@ final class AnnotateState: ObservableObject {
     sanitized.strokeWidth = AnnotationProperties.clampedControlValue(properties.strokeWidth)
     sanitized.cornerRadius = max(0, properties.cornerRadius)
     sanitized.fontSize = min(max(properties.fontSize, 12), 72)
+    // Remembered tool settings may predate the PingFang default; there is no picker to keep them.
+    sanitized.fontName = AnnotationProperties.defaultFontName
     sanitized.opacity = AnnotationProperties.clampedOpacity(properties.opacity)
     sanitized.rotationDegrees = AnnotationProperties.clampedRotationDegrees(properties.rotationDegrees)
     sanitized.spotlightOpacity = AnnotationProperties.clampedSpotlightOpacity(properties.spotlightOpacity)
@@ -4535,7 +4537,7 @@ final class AnnotateState: ObservableObject {
       strokeWidth: 3,
       cornerRadius: 0, // radius-lint:allow — watermark content default, not chrome
       fontSize: 36,
-      fontName: "SF Pro",
+      fontName: AnnotationProperties.defaultFontName,
       opacity: 0.22,
       rotationDegrees: WatermarkStyle.diagonal.defaultRotationDegrees,
       watermarkStyle: .diagonal
@@ -5461,7 +5463,7 @@ final class AnnotateState: ObservableObject {
     }
   }
 
-  private var quickStrokeWidthUsesSizeLabel: Bool {
+  var quickStrokeWidthUsesSizeLabel: Bool {
     switch quickStrokeWidthSemanticTool {
     case .blur, .counter:
       return true

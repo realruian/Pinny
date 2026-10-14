@@ -90,11 +90,12 @@ enum AnnotateToolPreference {
   }
 
   static func initialTool(userDefaults: UserDefaults = .standard) -> AnnotationToolType {
-    guard remembersLastTool(userDefaults: userDefaults) else {
-      return defaultTool(userDefaults: userDefaults)
-    }
-    return storedTool(forKey: PreferencesKeys.annotateLastUsedTool, userDefaults: userDefaults)
-      ?? defaultTool(userDefaults: userDefaults)
+    let tool = remembersLastTool(userDefaults: userDefaults)
+      ? storedTool(forKey: PreferencesKeys.annotateLastUsedTool, userDefaults: userDefaults)
+        ?? defaultTool(userDefaults: userDefaults)
+      : defaultTool(userDefaults: userDefaults)
+    // A tool switched off in Settings must not come back as the starting tool.
+    return AnnotateToolVisibility.isVisible(tool, userDefaults: userDefaults) ? tool : fallbackTool
   }
 
   static func remember(_ tool: AnnotationToolType, userDefaults: UserDefaults = .standard) {

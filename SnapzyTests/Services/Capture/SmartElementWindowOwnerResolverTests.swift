@@ -69,13 +69,26 @@ final class SmartElementWindowOwnerResolverTests: XCTestCase {
     XCTAssertNil(resolver.resolveOwner(at: CGPoint(x: 300, y: 300)))
   }
 
+  func testMinimizedWindowStillListedOnScreenIsSkipped() {
+    // WeChat leaves its minimized main window in the on-screen list above the visible app.
+    let ghostFrame = CGRect(x: 0, y: 100, width: 600, height: 400)
+    let ghost = windowInfo(frame: ghostFrame, pid: 21, windowID: 1)
+    let visible = windowInfo(frame: CGRect(x: 0, y: 50, width: 900, height: 600), pid: 22, windowID: 2)
+    let ghostQuartz = CGRect(dictionaryRepresentation: ghost[kCGWindowBounds as String] as! NSDictionary)!
+    let resolver = makeResolver(windows: [ghost, visible], minimizedFrames: { $0 == 21 ? [ghostQuartz] : [] })
+
+    XCTAssertEqual(resolver.resolveOwner(at: CGPoint(x: 100, y: 200))?.pid, 22)
+  }
+
   private func makeResolver(
     windows: [[String: Any]],
-    ownBundleIdentifier: String? = "com.snapzy.tests"
+    ownBundleIdentifier: String? = "com.snapzy.tests",
+    minimizedFrames: @escaping (pid_t) -> [CGRect] = { _ in [] }
   ) -> SmartElementWindowOwnerResolver {
     SmartElementWindowOwnerResolver(
       windowListSource: FakeSmartElementWindowListSource(windows: windows),
-      ownBundleIdentifier: ownBundleIdentifier
+      ownBundleIdentifier: ownBundleIdentifier,
+      minimizedFrames: minimizedFrames
     )
   }
 

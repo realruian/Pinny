@@ -450,6 +450,59 @@ final class AnnotateCoreTests: XCTestCase {
     XCTAssertEqual(state.quickStrokeWidthBinding.wrappedValue, 6)
   }
 
+  func testHiddenToolsLeaveToolbarAndInitialTool() {
+    let defaults = UserDefaultsFactory.make()
+    defaults.set(AnnotationToolType.watermark.rawValue, forKey: PreferencesKeys.annotateDefaultTool)
+    AnnotateToolVisibility.setVisible(false, for: .watermark, userDefaults: defaults)
+    AnnotateToolVisibility.setVisible(false, for: .selection, userDefaults: defaults)
+
+    let tools = AnnotateToolVisibility.visibleInlineToolGroups(userDefaults: defaults).flatMap { $0 }
+    XCTAssertFalse(tools.contains(.watermark))
+    XCTAssertTrue(tools.contains(.selection), "The selection tool cannot be hidden")
+    XCTAssertEqual(tools.count, AnnotationToolType.inlineAnnotateTools.count - 1)
+    XCTAssertEqual(AnnotateToolPreference.initialTool(userDefaults: defaults), .selection)
+
+    AnnotateToolVisibility.setVisible(true, for: .watermark, userDefaults: defaults)
+    XCTAssertTrue(AnnotateToolVisibility.isVisible(.watermark, userDefaults: defaults))
+    XCTAssertEqual(AnnotateToolPreference.initialTool(userDefaults: defaults), .watermark)
+  }
+
+  func testInlineToolbarGlyphAssetsExist() {
+    var keys = AnnotationToolType.inlineAnnotateTools.map(\.rawValue)
+    keys += TextPresentation.allCases.map { "text-\($0.rawValue)" }
+    keys += BlurType.allCases.map { "blur-\($0.rawValue)" }
+    keys += ArrowStyle.allCases.map { "arrowstyle-\($0.rawValue)" }
+    keys += ArrowType.allCases.map { "arrowtype-\($0.rawValue)" }
+    keys += ArrowEndpointStyle.allCases.map { "endpoint-\($0.rawValue)" }
+    keys += ArrowBendDirection.allCases.map { "bend-\($0.rawValue)" }
+    keys += WatermarkStyle.allCases.map { "watermark-\($0.rawValue)" }
+    keys += ["slider-stroke", "slider-size", "slider-font", "slider-corners", "slider-opacity", "slider-rotation",
+             "properties", "color-dropdown", "color-none", "color-add", "color-drop", "color-remove",
+             "undo", "redo", "copy", "pin", "save", "cancel", "overflow"]
+    for key in keys {
+      XCTAssertNotNil(NSImage(named: "CaptureTool-\(key)"), key)
+    }
+    // Selected tools switch to the solid variant.
+    for tool in [AnnotationToolType.selection, .arrow, .text, .blur, .spotlight, .counter, .pencil] {
+      XCTAssertNotNil(NSImage(named: "CaptureTool-\(tool.rawValue)-fill"), tool.rawValue)
+    }
+  }
+
+  @MainActor
+  func testTextAndWatermarkUsePingFangEvenWithRememberedSFPro() throws {
+    let defaults = UserDefaultsFactory.make()
+    let remembered = PersistedAnnotationProperties(properties: AnnotationProperties(fontName: "SF Pro"))
+    defaults.set(try JSONEncoder().encode([String: PersistedAnnotationProperties](uniqueKeysWithValues: [("text", remembered)])),
+                 forKey: PreferencesKeys.annotateToolParameterDefaults)
+    let state = makeAnnotateState(defaults: defaults)
+
+    for tool in [AnnotationToolType.text, .watermark] {
+      let properties = state.annotationCreationProperties(for: tool)
+      XCTAssertEqual(properties.fontName, "PingFang SC")
+      XCTAssertEqual(AnnotateTextLayout.font(size: 20, fontName: properties.fontName).familyName, "PingFang SC")
+    }
+  }
+
   @MainActor
   func testActivateToolNotifiesOnlyForExplicitActivation() {
     let state = makeAnnotateState(defaults: UserDefaultsFactory.make())
@@ -514,22 +567,48 @@ final class AnnotateCoreTests: XCTestCase {
     )
   }
 
-  func testInlineAreaControls_keepsAbovePlacementWhenThereIsEnoughRoom() {
+  func testInlineAreaControls_placesBelowSelectionWhenThereIsEnoughRoom() {
     let containerSize = CGSize(width: 1512, height: 982)
     let rect = CGRect(x: 120, y: 200, width: 900, height: 300)
+
+    for showsProperties in [false, true] {
+      let placement = InlineAreaControlGeometry.placement(
+        for: rect,
+        containerSize: containerSize,
+        showsProperties: showsProperties,
+        propertiesContentWidth: 0,
+        controlInsets: .zero
+      )
+
+      XCTAssertEqual(
+        placement.toolbarCenter.y,
+        rect.maxY + InlineAreaLayout.selectionGap + InlineAreaLayout.toolbarHeight / 2,
+        accuracy: 0.0001
+      )
+    }
+  }
+
+  func testInlineAreaControls_movesAboveWhenBottomWouldClip() {
+    let containerSize = CGSize(width: 1512, height: 982)
+    let rect = CGRect(x: 120, y: 500, width: 900, height: 450)
 
     let placement = InlineAreaControlGeometry.placement(
       for: rect,
       containerSize: containerSize,
-      showsProperties: false,
+      showsProperties: true,
       propertiesContentWidth: 0,
       controlInsets: .zero
     )
 
+    let reservedHeight = InlineAreaLayout.reservedControlHeight(showsProperties: true)
     XCTAssertEqual(
       placement.toolbarCenter.y,
-      rect.minY - InlineAreaLayout.selectionGap - InlineAreaLayout.toolbarHeight / 2,
+      rect.minY - InlineAreaLayout.selectionGap - reservedHeight + InlineAreaLayout.toolbarHeight / 2,
       accuracy: 0.0001
+    )
+    XCTAssertLessThanOrEqual(
+      placement.propertiesCenter.y + InlineAreaLayout.propertiesHeight / 2,
+      rect.minY - InlineAreaLayout.selectionGap + 0.0001
     )
   }
 

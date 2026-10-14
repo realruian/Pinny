@@ -1270,8 +1270,8 @@ enum InlineAreaToolbarMetrics {
     CGFloat(count) * iconButtonSize + CGFloat(max(0, count - 1)) * itemSpacing
   }
   static var toolsWidth: CGFloat {
-    AnnotationToolType.inlineToolGroups.reduce(0) { $0 + groupWidth($1.count) }
-      + CGFloat(AnnotationToolType.inlineToolGroups.count - 1) * dividerWidth
+    let groups = AnnotateToolVisibility.visibleInlineToolGroups()
+    return groups.reduce(0) { $0 + groupWidth($1.count) } + CGFloat(groups.count - 1) * dividerWidth
   }
   static var idealWidth: CGFloat {
     horizontalPadding * 2 + toolsWidth + groupWidth(2) + groupWidth(4) + dividerWidth * 2
@@ -1405,16 +1405,17 @@ enum InlineAreaControlGeometry {
     let aboveSpace = spaceAbove(rect, controlInsets: controlInsets)
     let belowSpace = spaceBelow(rect, containerSize: containerSize, controlInsets: controlInsets)
 
-    if aboveSpace >= reservedHeight {
-      return .above
-    }
+    // Below the selection by default; move above only when the bottom edge would clip it.
     if belowSpace >= reservedHeight {
       return .below
+    }
+    if aboveSpace >= reservedHeight {
+      return .above
     }
     if rect.minY <= controlInsets.controlTopPadding + InlineAreaLayout.selectionGap {
       return .below
     }
-    return aboveSpace >= belowSpace ? .above : .below
+    return belowSpace >= aboveSpace ? .below : .above
   }
 
   private static func controlCenters(
@@ -1600,7 +1601,7 @@ struct InlineAreaControlDeck: View {
       // Tools can scroll, while history and output actions stay in stable, visible groups.
       ScrollView(.horizontal, showsIndicators: true) {
         HStack(spacing: 0) {
-          ForEach(Array(AnnotationToolType.inlineToolGroups.enumerated()), id: \.offset) { index, tools in
+          ForEach(Array(AnnotateToolVisibility.visibleInlineToolGroups().enumerated()), id: \.offset) { index, tools in
             if index > 0 { InlineAreaDivider() }
             InlineAreaToolGroup(tools: tools, selectedTool: session.state.selectedTool) { tool in
               session.actionMessage = nil
@@ -1657,6 +1658,26 @@ private struct InlineAreaToolbarButtonStyle: ButtonStyle {
   }
 }
 
+/// Hugeicons Pro asset `CaptureTool-<name>`; selected items use the solid `-fill` variant when one exists.
+private struct InlineAreaGlyph: View {
+  let name: String
+  var isSelected = false
+  let size: CGFloat
+
+  var body: some View {
+    Image(Self.assetName(name, isSelected: isSelected))
+      .renderingMode(.template).resizable().scaledToFit()
+      .frame(width: size, height: size)
+  }
+
+  static func assetName(_ name: String, isSelected: Bool) -> String {
+    let filled = "CaptureTool-\(name)-fill"
+    if isSelected && NSImage(named: filled) != nil { return filled }
+    let stroke = "CaptureTool-\(name)"
+    return NSImage(named: stroke) != nil ? stroke : "CaptureTool-properties"
+  }
+}
+
 private struct InlineAreaToolGroup: View {
   let tools: [AnnotationToolType]
   let selectedTool: AnnotationToolType
@@ -1682,9 +1703,7 @@ private struct InlineAreaToolButton: View {
 
   var body: some View {
     Button(action: action) {
-      Image("CaptureTool-" + tool.rawValue)
-        .renderingMode(.template).resizable().scaledToFit()
-        .frame(width: InlineAreaToolbarMetrics.iconSize, height: InlineAreaToolbarMetrics.iconSize)
+      InlineAreaGlyph(name: tool.rawValue, isSelected: isSelected, size: InlineAreaToolbarMetrics.iconSize)
         .foregroundColor(.primary.opacity(isSelected || isHovering ? 1.0 : 0.85))
         .frame(width: InlineAreaChrome.controlSize, height: InlineAreaChrome.controlSize)
         .background(buttonBackground)
@@ -1828,7 +1847,7 @@ private struct InlineAreaPropertiesBar: View {
                 get: { state.quickTextPresentation },
                 set: { state.setTextPresentation($0) }
               ),
-              icon: { $0.icon },
+              icon: { "text-\($0.rawValue)" },
               tooltip: \.helpText
             )
 
@@ -1846,7 +1865,7 @@ private struct InlineAreaPropertiesBar: View {
               title: L10n.AnnotateUI.blurType,
               items: BlurType.allCases,
               selection: state.quickBlurTypeBinding,
-              icon: { $0.icon },
+              icon: { "blur-\($0.rawValue)" },
               tooltip: \.displayName
             )
           }
@@ -1856,8 +1875,7 @@ private struct InlineAreaPropertiesBar: View {
               title: L10n.Common.style,
               items: ArrowStyle.allCases,
               selection: state.quickArrowStyleBinding,
-              icon: { $0.icon },
-              isFlipped: { $0 == .curvedRight },
+              icon: { "arrowstyle-\($0.rawValue)" },
               tooltip: \.displayName
             )
 
@@ -1865,8 +1883,7 @@ private struct InlineAreaPropertiesBar: View {
               title: L10n.Common.display,
               items: ArrowType.allCases,
               selection: state.quickArrowTypeBinding,
-              icon: { $0.icon },
-              isFlipped: { _ in state.arrowStyle == .curvedRight },
+              icon: { "arrowtype-\($0.rawValue)" },
               tooltip: \.displayName
             )
 
@@ -1881,7 +1898,7 @@ private struct InlineAreaPropertiesBar: View {
                 title: L10n.AnnotateUI.arrowStartHead,
                 items: ArrowEndpointStyle.allCases,
                 selection: state.quickArrowStartHeadBinding,
-                icon: { $0.icon },
+                icon: { "endpoint-\($0.rawValue)" },
                 tooltip: \.displayName
               )
 
@@ -1889,7 +1906,7 @@ private struct InlineAreaPropertiesBar: View {
                 title: L10n.AnnotateUI.arrowEndHead,
                 items: ArrowEndpointStyle.allCases,
                 selection: state.quickArrowEndHeadBinding,
-                icon: { $0.icon },
+                icon: { "endpoint-\($0.rawValue)" },
                 tooltip: \.displayName
               )
             }
@@ -1902,7 +1919,7 @@ private struct InlineAreaPropertiesBar: View {
               title: L10n.Common.style,
               items: WatermarkStyle.allCases,
               selection: state.quickWatermarkStyleBinding,
-              icon: { $0.icon },
+              icon: { "watermark-\($0.rawValue)" },
               tooltip: \.displayName
             )
           }
@@ -1910,7 +1927,7 @@ private struct InlineAreaPropertiesBar: View {
           if state.quickPropertiesSupportsStrokeWidth {
             InlineAreaSliderControl(
               title: state.quickStrokeWidthLabel,
-              icon: state.quickStrokeWidthIcon,
+              icon: state.quickStrokeWidthUsesSizeLabel ? "slider-size" : "slider-stroke",
               value: state.quickStrokeWidthBinding,
               range: AnnotationProperties.controlValueRange,
               step: 1,
@@ -1922,7 +1939,7 @@ private struct InlineAreaPropertiesBar: View {
           if state.quickPropertiesSupportsTextFontSize {
             InlineAreaSliderControl(
               title: L10n.Common.size,
-              icon: "textformat.size",
+              icon: "slider-font",
               value: state.quickTextFontSizeBinding,
               range: 12 ... 72,
               step: 1,
@@ -1934,7 +1951,7 @@ private struct InlineAreaPropertiesBar: View {
           if state.quickPropertiesSupportsCornerRadius {
             InlineAreaSliderControl(
               title: L10n.Common.corners,
-              icon: "roundedbottom.horizontal",
+              icon: "slider-corners",
               value: state.quickCornerRadiusBinding,
               range: 0 ... 60,
               step: 1,
@@ -1950,7 +1967,7 @@ private struct InlineAreaPropertiesBar: View {
           if state.quickPropertiesSupportsWatermark {
             InlineAreaSliderControl(
               title: L10n.AnnotateUI.watermarkOpacity,
-              icon: "circle.lefthalf.filled",
+              icon: "slider-opacity",
               value: state.quickWatermarkOpacityBinding,
               range: 0.05 ... 0.65,
               step: 0.01,
@@ -1960,7 +1977,7 @@ private struct InlineAreaPropertiesBar: View {
 
             InlineAreaSliderControl(
               title: L10n.Common.rotation,
-              icon: "rotate.right",
+              icon: "slider-rotation",
               value: state.quickWatermarkRotationBinding,
               range: -45 ... 45,
               step: 1,
@@ -1995,8 +2012,7 @@ private struct InlineAreaPropertiesBar: View {
 
   private var contextPill: some View {
     HStack(spacing: 6) {
-      Image(systemName: state.quickPropertiesTool?.icon ?? "slider.horizontal.3")
-        .font(.system(size: 11, weight: .bold))
+      InlineAreaGlyph(name: state.quickPropertiesTool?.rawValue ?? "properties", size: 13)
 
       Text(state.quickPropertiesContextTitle)
         .font(.system(size: 11, weight: .semibold))
@@ -2040,8 +2056,7 @@ private struct InlineAreaColorControl: View {
         } label: {
           HStack(spacing: 5) {
             InlineAreaColorSwatch(color: selectedColor, isSelected: false, size: 15)
-            Image(systemName: "chevron.down")
-              .font(.system(size: 8, weight: .bold))
+            InlineAreaGlyph(name: "color-dropdown", size: 10)
               .foregroundColor(InlineAreaChrome.secondaryText)
           }
           .frame(width: 40, height: InlineAreaChrome.propertyControlHeight)
@@ -2568,10 +2583,8 @@ private struct InlineAreaPaletteColorButton: View {
 
       if let overlayAction {
         Button(action: overlayAction) {
-          Image(systemName: "xmark.circle.fill")
-            .font(.system(size: 11, weight: .semibold))
-            .symbolRenderingMode(.palette)
-            .foregroundStyle(Color.white, Color.secondary.opacity(0.9))
+          InlineAreaGlyph(name: "color-remove", size: 13)
+            .foregroundStyle(Color.secondary.opacity(0.9))
             .background(
               Circle()
                 .fill(InlineAreaChrome.itemBackground)
@@ -2601,8 +2614,7 @@ private struct InlineAreaFavoriteEmptyDropTarget: View {
 
   var body: some View {
     HStack(spacing: 6) {
-      Image(systemName: isTargeted ? "arrow.down" : "plus")
-        .font(.system(size: 10, weight: .semibold))
+      InlineAreaGlyph(name: isTargeted ? "color-drop" : "color-add", size: 12)
         .foregroundColor(isTargeted ? .accentColor : .secondary)
         .frame(width: 24, height: 24)
         .background(Circle().fill(isTargeted ? Color.accentColor.opacity(0.1) : InlineAreaChrome.itemBackground.opacity(0.75)))
@@ -2641,8 +2653,7 @@ private struct InlineAreaFavoriteDropSlot: View {
   @State private var isTargeted = false
 
   var body: some View {
-    Image(systemName: isTargeted ? "arrow.down" : "plus")
-      .font(.system(size: 9, weight: .semibold))
+    InlineAreaGlyph(name: isTargeted ? "color-drop" : "color-add", size: 11)
       .foregroundColor(isTargeted ? .accentColor : .secondary)
       .frame(width: 22, height: 22)
       .background(Circle().fill(InlineAreaChrome.itemBackground.opacity(0.75)))
@@ -2687,8 +2698,7 @@ private struct InlineAreaColorSwatch: View {
         )
 
       if AnnotateColorPaletteStore.isClear(color) {
-        Image(systemName: "slash.circle")
-          .font(.system(size: max(9, size * 0.5), weight: .semibold))
+        InlineAreaGlyph(name: "color-none", size: max(10, size * 0.6))
           .foregroundColor(InlineAreaChrome.secondaryText)
       }
     }
@@ -2698,8 +2708,8 @@ private struct InlineAreaSegmentedPicker<Item: Identifiable & Equatable>: View {
   let title: String
   let items: [Item]
   @Binding var selection: Item
+  /// Glyph asset key, see `InlineAreaGlyph`.
   let icon: (Item) -> String
-  var isFlipped: ((Item) -> Bool)? = nil
   let tooltip: KeyPath<Item, String>
 
   var body: some View {
@@ -2709,9 +2719,7 @@ private struct InlineAreaSegmentedPicker<Item: Identifiable & Equatable>: View {
           Button {
             selection = item
           } label: {
-            Image(systemName: icon(item))
-              .font(.system(size: 12, weight: .medium))
-              .scaleEffect(x: 1, y: isFlipped?(item) == true ? -1 : 1)
+            InlineAreaGlyph(name: icon(item), isSelected: selection == item, size: 15)
               .foregroundColor(selection == item ? InlineAreaChrome.itemSelectedForeground : InlineAreaChrome.secondaryText)
               .frame(width: 25, height: InlineAreaChrome.propertyControlHeight)
               .background(
@@ -2740,8 +2748,7 @@ private struct InlineAreaArrowBendControl: View {
       Button {
         bendDirection = bendDirection.toggled
       } label: {
-        Image(systemName: bendDirection.icon)
-          .font(.system(size: 12, weight: .medium))
+        InlineAreaGlyph(name: "bend-\(bendDirection.rawValue)", isSelected: bendDirection == .alternate, size: 15)
           .foregroundColor(bendDirection == .alternate ? InlineAreaChrome.itemSelectedForeground : InlineAreaChrome.secondaryText)
           .frame(width: 25, height: InlineAreaChrome.propertyControlHeight)
           .background(
@@ -2802,8 +2809,7 @@ private struct InlineAreaSliderControl: View {
   var body: some View {
     InlineAreaPropertyGroup(title: title) {
       HStack(spacing: 6) {
-        Image(systemName: icon)
-          .font(.system(size: 10, weight: .semibold))
+        InlineAreaGlyph(name: icon, size: 13)
           .foregroundColor(InlineAreaChrome.secondaryText)
 
         Slider(

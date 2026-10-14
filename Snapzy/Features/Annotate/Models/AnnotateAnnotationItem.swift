@@ -1472,6 +1472,9 @@ nonisolated struct AnnotationProperties: Equatable {
   var textPresentation: TextPresentation
   var calloutTailTarget: CGPoint?
 
+  /// Pinny has no font picker: new text and watermarks always use PingFang.
+  static let defaultFontName = "PingFang SC"
+
   init(
     strokeColor: Color = .red,
     fillColor: Color = .clear,
@@ -1479,7 +1482,7 @@ nonisolated struct AnnotationProperties: Equatable {
     lineStyle: LineDashStyle = .solid,
     cornerRadius: CGFloat = 0,
     fontSize: CGFloat = 16,
-    fontName: String = "SF Pro",
+    fontName: String = AnnotationProperties.defaultFontName,
     opacity: CGFloat = 1,
     rotationDegrees: CGFloat = 0,
     watermarkStyle: WatermarkStyle = .single,

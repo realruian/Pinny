@@ -100,6 +100,7 @@ enum WindowSelectionQueryService {
 
       var seenWindowIDs = Set<CGWindowID>()
       var orderedCandidates: [WindowSelectionCandidate] = []
+      var minimizedFramesByPID: [pid_t: [CGRect]] = [:]
 
       for info in rawWindowInfoList {
         let windowID = info.windowID
@@ -112,6 +113,12 @@ enum WindowSelectionQueryService {
         guard frame.width > 32, frame.height > 32 else { continue }
         guard let displayID = displayID(for: frame) else { continue }
         guard info.alpha > 0 else { continue }
+        // A minimized window still listed on screen (WeChat) draws nothing; skip it.
+        if let pid = info.ownerPID, windowLayer == 0 {
+          let minimized = minimizedFramesByPID[pid] ?? MinimizedWindowFilter.minimizedFrames(pid: pid)
+          minimizedFramesByPID[pid] = minimized
+          if MinimizedWindowFilter.matches(quartzBounds, anyOf: minimized) { continue }
+        }
 
         let bundleIdentifier = shareableWindow?.owningApplication?.bundleIdentifier
           ?? info.ownerPID.flatMap { NSRunningApplication(processIdentifier: $0)?.bundleIdentifier }

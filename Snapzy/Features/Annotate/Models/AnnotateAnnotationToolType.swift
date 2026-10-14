@@ -170,3 +170,32 @@ nonisolated enum AnnotationToolType: String, CaseIterable, Identifiable {
     }
   }
 }
+
+/// Pinny: annotation tools the user switched off in Settings. A hidden tool leaves the capture
+/// toolbar and its shortcut stops working; the selection tool cannot be hidden.
+enum AnnotateToolVisibility {
+  static func hiddenTools(userDefaults: UserDefaults = .standard) -> Set<AnnotationToolType> {
+    let rawValues = userDefaults.stringArray(forKey: PreferencesKeys.annotateHiddenTools) ?? []
+    return Set(rawValues.compactMap(AnnotationToolType.init(rawValue:))).subtracting([.selection])
+  }
+
+  static func isVisible(_ tool: AnnotationToolType, userDefaults: UserDefaults = .standard) -> Bool {
+    !hiddenTools(userDefaults: userDefaults).contains(tool)
+  }
+
+  static func setVisible(_ visible: Bool, for tool: AnnotationToolType, userDefaults: UserDefaults = .standard) {
+    guard tool != .selection else { return }
+    var hidden = hiddenTools(userDefaults: userDefaults)
+    if visible { hidden.remove(tool) } else { hidden.insert(tool) }
+    userDefaults.set(AnnotationToolType.drawableTools.filter(hidden.contains).map(\.rawValue),
+                     forKey: PreferencesKeys.annotateHiddenTools)
+  }
+
+  /// `AnnotationToolType.inlineToolGroups` without hidden tools; empty groups are dropped.
+  static func visibleInlineToolGroups(userDefaults: UserDefaults = .standard) -> [[AnnotationToolType]] {
+    let hidden = hiddenTools(userDefaults: userDefaults)
+    return AnnotationToolType.inlineToolGroups
+      .map { $0.filter { !hidden.contains($0) } }
+      .filter { !$0.isEmpty }
+  }
+}

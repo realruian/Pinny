@@ -18,18 +18,23 @@ struct CGWindowListSmartElementSource: SmartElementWindowListSource {
 final class SmartElementWindowOwnerResolver: SmartElementWindowOwnerResolving {
   private let windowListSource: SmartElementWindowListSource
   private let ownBundleIdentifier: String?
+  private let minimizedFrames: (pid_t) -> [CGRect]
 
   init(
     windowListSource: SmartElementWindowListSource = CGWindowListSmartElementSource(),
-    ownBundleIdentifier: String? = Bundle.main.bundleIdentifier
+    ownBundleIdentifier: String? = Bundle.main.bundleIdentifier,
+    minimizedFrames: @escaping (pid_t) -> [CGRect] = MinimizedWindowFilter.minimizedFrames(pid:)
   ) {
     self.windowListSource = windowListSource
     self.ownBundleIdentifier = ownBundleIdentifier
+    self.minimizedFrames = minimizedFrames
   }
 
   func resolveOwner(at point: CGPoint) -> SmartElementWindowOwner? {
     for windowInfo in windowListSource.copyOnScreenWindowInfo() {
       guard let owner = owner(from: windowInfo), owner.frame.contains(point) else { continue }
+      // A minimized window still listed on screen draws nothing; look through it.
+      if MinimizedWindowFilter.matches(owner.quartzFrame, anyOf: minimizedFrames(owner.pid)) { continue }
       return SmartElementWindowOwner(
         pid: owner.pid,
         windowID: owner.windowID,
@@ -65,7 +70,8 @@ final class SmartElementWindowOwnerResolver: SmartElementWindowOwnerResolving {
       pid: ownerPID.int32Value,
       windowID: CGWindowID(windowNumber.uint32Value),
       bundleIdentifier: bundleIdentifier,
-      frame: frame
+      frame: frame,
+      quartzFrame: quartzRect
     )
   }
 
@@ -80,5 +86,6 @@ final class SmartElementWindowOwnerResolver: SmartElementWindowOwnerResolving {
     let windowID: CGWindowID
     let bundleIdentifier: String?
     let frame: CGRect
+    let quartzFrame: CGRect
   }
 }

@@ -319,11 +319,7 @@ nonisolated struct AnnotationRenderer {
     case .classic:
       let cgStrokeColor = NSColor(strokeColor).cgColor
       context.saveGState()
-      context.setShadow(
-        offset: CGSize(width: 0, height: -1.0),
-        blur: 2.0,
-        color: NSColor.black.withAlphaComponent(0.20).cgColor
-      )
+      // Pinny: arrows are drawn flat, without a drop shadow.
       context.setStrokeColor(cgStrokeColor)
       context.setFillColor(cgStrokeColor)
       context.setLineWidth(strokeWidth)
@@ -356,13 +352,7 @@ nonisolated struct AnnotationRenderer {
 
       context.saveGState()
 
-      // 1. Set up a subtle drop shadow
-      context.setShadow(
-        offset: CGSize(width: 0, height: -2.0),
-        blur: 4.5,
-        color: NSColor.black.withAlphaComponent(0.30).cgColor
-      )
-
+      // Pinny: arrows are drawn flat, without a drop shadow.
       if geometry.arrowType == .outlined {
         // 2. Draw the white outline
         context.addPath(arrowPath)

@@ -25,6 +25,7 @@ struct AnnotateSettingsView: View {
   private var annotateCropSnapToEdgesEnabled = true
   @AppStorage(PreferencesKeys.annotateHighlighterTextSnappingEnabled)
   private var annotateHighlighterTextSnappingEnabled = true
+  @State private var hiddenTools = AnnotateToolVisibility.hiddenTools()
 
   var body: some View {
     Form {
@@ -127,8 +128,39 @@ struct AnnotateSettingsView: View {
         }
         .disabled(annotateCloseAfterDrag)
       }
+
+      Section {
+        ForEach(AnnotationToolType.drawableTools) { tool in
+          HStack(spacing: 12) {
+            Image("CaptureTool-" + tool.rawValue)
+              .renderingMode(.template).resizable().scaledToFit()
+              .frame(width: 20, height: 20)
+              .foregroundColor(.secondary)
+              .frame(width: 28)
+            Text(tool.displayName)
+            Spacer()
+            Toggle("", isOn: toolVisibilityBinding(for: tool))
+              .labelsHidden()
+          }
+        }
+      } header: {
+        Text(L10n.PreferencesAnnotate.toolbarToolsSection)
+      } footer: {
+        Text(L10n.PreferencesAnnotate.toolbarToolsDescription)
+          .foregroundColor(.secondary)
+      }
     }
     .formStyle(.grouped)
+  }
+
+  private func toolVisibilityBinding(for tool: AnnotationToolType) -> Binding<Bool> {
+    Binding(
+      get: { !hiddenTools.contains(tool) },
+      set: { visible in
+        AnnotateToolVisibility.setVisible(visible, for: tool)
+        hiddenTools = AnnotateToolVisibility.hiddenTools()
+      }
+    )
   }
 }
 
