@@ -420,6 +420,8 @@ nonisolated final class ScrollingCaptureStitcher: @unchecked Sendable {
   private var lastRaster: RasterImage?
   private var contentSlices: [ContentSlice] = []
   private var headerHeight = 0
+  /// Rows of the first frame kept above the content: the header known when stitching began.
+  private var headerSliceHeight = 0
   private var footerHeight = 0
   private var leadingStaticWidth = 0
   private var trailingStaticWidth = 0
@@ -434,8 +436,32 @@ nonisolated final class ScrollingCaptureStitcher: @unchecked Sendable {
 
   private(set) var acceptedFrameCount = 0
 
+  /// Height of the image handed out: the fixed header once on top, the stitched content, and
+  /// the fixed footer once at the bottom.
   var outputHeight: Int {
+    outputSlices.reduce(0) { $0 + $1.rowCount }
+  }
+
+  /// Stitched rows between the fixed header and footer. Its bottom row always continues at
+  /// row `height - footerHeight` of `lastRaster`.
+  private var contentRowCount: Int {
     contentSlices.reduce(0) { $0 + $1.rowCount }
+  }
+
+  /// Pinny: fixed elements (a sticky nav, a floating button) appear once, as on the page: the
+  /// header from the first frame, the footer from the latest one.
+  private var outputSlices: [ContentSlice] {
+    guard mergeDirection == .appendFromBottom, let baseRaster, let lastRaster else { return contentSlices }
+    var slices: [ContentSlice] = []
+    if headerSliceHeight > 0 {
+      slices.append(ContentSlice(raster: baseRaster, startRow: 0, rowCount: headerSliceHeight))
+    }
+    slices += contentSlices
+    if footerHeight > 0 {
+      slices.append(ContentSlice(raster: lastRaster, startRow: lastRaster.height - footerHeight,
+                                 rowCount: footerHeight))
+    }
+    return slices
   }
 
   func start(with image: CGImage) -> ScrollingCaptureStitchUpdate? {
@@ -445,6 +471,7 @@ nonisolated final class ScrollingCaptureStitcher: @unchecked Sendable {
     lastRaster = raster
     contentSlices = [ContentSlice(raster: raster, startRow: 0, rowCount: raster.height)]
     headerHeight = 0
+    headerSliceHeight = 0
     footerHeight = 0
     leadingStaticWidth = 0
     trailingStaticWidth = 0
@@ -538,7 +565,7 @@ nonisolated final class ScrollingCaptureStitcher: @unchecked Sendable {
             width: raster.width, leadingStaticWidth: leadingStaticWidth,
             trailingStaticWidth: trailingStaticWidth) else { return nil }
     let contentHeight = raster.height - headerHeight - footerHeight
-    let outputHeight = outputHeight
+    let outputHeight = contentRowCount
     let tailHeight = min(outputHeight, contentHeight * Self.relocateSearchViewports)
     guard contentHeight > 48, tailHeight > 0 else { return nil }
 
@@ -563,7 +590,7 @@ nonisolated final class ScrollingCaptureStitcher: @unchecked Sendable {
     else { return nil }
 
     let newBottom = outputHeight - tailHeight + offset + contentHeight
-    guard newBottom <= maxOutputHeight else {
+    guard newBottom + headerSliceHeight + footerHeight <= maxOutputHeight else {
       return currentUpdate(outcome: .reachedHeightLimit, includeMergedImage: renderMergedImage)
     }
     truncate(toRows: outputHeight - tailHeight + offset)
@@ -586,7 +613,7 @@ nonisolated final class ScrollingCaptureStitcher: @unchecked Sendable {
 
   /// Drops stitched rows from the bottom so `rows` remain.
   private func truncate(toRows rows: Int) {
-    var excess = outputHeight - max(0, rows)
+    var excess = contentRowCount - max(0, rows)
     while excess > 0, let last = contentSlices.last {
       contentSlices.removeLast()
       if last.rowCount > excess {
@@ -814,13 +841,28 @@ nonisolated final class ScrollingCaptureStitcher: @unchecked Sendable {
       )
     }
 
+    let fixedBands = match.direction == .appendFromBottom
+      ? detectFixedBands(previous: lastRaster, current: raster, deltaY: match.deltaY)
+      : nil
     if mergeDirection == .unresolved {
       mergeDirection = match.direction
-      headerHeight = inferredHeaderHeight
-      footerHeight = inferredFooterHeight
+      headerHeight = max(inferredHeaderHeight, fixedBands?.header ?? 0)
+      footerHeight = max(inferredFooterHeight, fixedBands?.footer ?? 0)
       leadingStaticWidth = inferredLeadingStaticWidth
       trailingStaticWidth = inferredTrailingStaticWidth
       bootstrapContentSlices(with: baseRaster)
+      headerSliceHeight = mergeDirection == .appendFromBottom ? headerHeight : 0
+    } else if mergeDirection == .appendFromBottom, let fixedBands {
+      headerHeight = max(headerHeight, fixedBands.header)
+      let grownFooter = fixedBands.footer
+      if grownFooter > footerHeight,
+         raster.height - grownFooter - match.deltaY >= headerHeight,
+         contentRowCount > grownFooter - footerHeight {
+        // The stitched bottom continued at the old footer edge; the rows the grown footer
+        // covers showed the fixed element, so they are dropped and come back from above it.
+        truncate(toRows: contentRowCount - (grownFooter - footerHeight))
+        footerHeight = grownFooter
+      }
     }
 
     let remainingHeight = maxOutputHeight - outputHeight
@@ -896,13 +938,14 @@ nonisolated final class ScrollingCaptureStitcher: @unchecked Sendable {
     guard let baseRaster else { return nil }
     let width = baseRaster.width
     let bytesPerRow = baseRaster.bytesPerRow
-    let height = outputHeight
+    let slices = outputSlices
+    let height = slices.reduce(0) { $0 + $1.rowCount }
     guard height > 0 else { return nil }
 
     var mergedPixels = [UInt8](repeating: 0, count: height * bytesPerRow)
     var destinationRow = 0
 
-    for slice in contentSlices {
+    for slice in slices {
       slice.raster.copyRows(
         startRow: slice.startRow,
         rowCount: slice.rowCount,
@@ -954,7 +997,7 @@ nonisolated final class ScrollingCaptureStitcher: @unchecked Sendable {
     context.interpolationQuality = .medium
 
     var destinationRow = 0
-    for slice in contentSlices {
+    for slice in outputSlices {
       guard
         let sliceImage = slice.raster.makeCroppedCGImage(
           xStart: 0,
@@ -1944,6 +1987,75 @@ nonisolated final class ScrollingCaptureStitcher: @unchecked Sendable {
     guard deltaY <= maxUsefulDelta else { return nil }
 
     return deltaY
+  }
+
+  /// Fixed elements near the top or bottom of the selection, given that the content moved
+  /// up by `deltaY`: a block that stays put on screen but does not follow the scroll belongs
+  /// to something fixed (a sticky nav, a floating button), even when it spans only a few
+  /// columns. Blank areas match both ways and are never counted. Returns how far those
+  /// elements reach in from the top and the bottom.
+  private func detectFixedBands(
+    previous: RasterImage,
+    current: RasterImage,
+    deltaY: Int
+  ) -> (header: Int, footer: Int)? {
+    let height = previous.height
+    let width = previous.width
+    guard deltaY >= 6, deltaY < height / 2, current.height == height, current.width == width
+    else { return nil }
+    let blockHeight = 8
+    let blockWidth = max(16, width / 48)
+    // Overlay scroll bars at the edges move with the scroll position; leave them out.
+    let xInset = max(24, width / 40)
+    let zone = height * 35 / 100
+    let staticLimit = 3.0
+    let movedFloor = 12.0
+
+    func isFixed(row: Int, x: Int, compareRow: Int, previousIsReference: Bool) -> Bool {
+      let xEnd = min(x + blockWidth, width - xInset)
+      let staticDifference = previous.blockDifference(
+        comparedTo: current, startRow: row, otherStartRow: row, rowCount: blockHeight,
+        xStart: x, xEnd: xEnd, columnStride: 3, rowStride: 2)
+      guard staticDifference < staticLimit else { return false }
+      let movedDifference = previousIsReference
+        ? previous.blockDifference(
+          comparedTo: current, startRow: row, otherStartRow: compareRow, rowCount: blockHeight,
+          xStart: x, xEnd: xEnd, columnStride: 3, rowStride: 2)
+        : current.blockDifference(
+          comparedTo: previous, startRow: row, otherStartRow: compareRow, rowCount: blockHeight,
+          xStart: x, xEnd: xEnd, columnStride: 3, rowStride: 2)
+      return movedDifference > movedFloor
+    }
+
+    var header = 0
+    var headerHits = 0
+    // Content now at row y was at y + deltaY in the previous frame.
+    for row in stride(from: 0, to: zone - blockHeight, by: blockHeight)
+    where row + deltaY + blockHeight <= height {
+      for x in stride(from: xInset, to: width - xInset - blockWidth / 2, by: blockWidth)
+      where isFixed(row: row, x: x, compareRow: row + deltaY, previousIsReference: false) {
+        header = row + blockHeight
+        headerHits += 1
+      }
+    }
+
+    var footer = 0
+    var footerHits = 0
+    // Content that was at row y is now at y - deltaY.
+    for row in stride(from: height - blockHeight, through: height - zone, by: -blockHeight)
+    where row - deltaY >= 0 {
+      for x in stride(from: xInset, to: width - xInset - blockWidth / 2, by: blockWidth)
+      where isFixed(row: row, x: x, compareRow: row - deltaY, previousIsReference: true) {
+        footer = height - row
+        footerHits += 1
+      }
+    }
+
+    // A single block can be a coincidence in repeating content. The margin covers the partly
+    // covered block at the element's edge and a soft shadow that differs too little to count.
+    let margin = blockHeight * 3
+    return (header: headerHits >= 2 ? min(zone, header + margin) : 0,
+            footer: footerHits >= 2 ? min(zone, footer + margin) : 0)
   }
 
   private func detectStaticSideBandWidth(
