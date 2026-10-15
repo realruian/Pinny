@@ -196,6 +196,7 @@ final class InlineAreaAnnotateSession: ObservableObject {
   private var globalKeyMonitor: Any?
   private var selectionLocalMonitor: Any?
   private var magnifierScrollMonitor: Any?
+  private var elementLevelScrollAccumulator: CGFloat = 0
   private var magnifierHostViewBoxes: [CGDirectDisplayID: InlineAreaMagnifierHostViewBox] = [:]
   private var selectionStartPoint: CGPoint?
   private var stateChangeCancellable: AnyCancellable?
@@ -828,8 +829,10 @@ final class InlineAreaAnnotateSession: ObservableObject {
     magnifierScrollMonitor = NSEvent.addLocalMonitorForEvents(matching: [.scrollWheel]) { [weak self] event in
       guard let self, self.phase == .selecting,
             let window = event.window, self.windows.contains(window) else { return event }
-      guard event.modifierFlags.contains(.command),
-            let displayID = (event.window as? InlineAreaAnnotatePanel)?.displayID,
+      guard event.modifierFlags.contains(.command) else {
+        return self.changeElementLevel(for: event) ? nil : event
+      }
+      guard let displayID = (event.window as? InlineAreaAnnotatePanel)?.displayID,
             let hostView = self.magnifierHostViewBoxes[displayID]?.view else {
         return event
       }
@@ -839,6 +842,33 @@ final class InlineAreaAnnotateSession: ObservableObject {
       return nil
     }
   }
+
+  /// Scrolling over a recognized element walks the element chain, as in PixPin: wheel up
+  /// (or a two-finger swipe toward you with natural scrolling) selects the parent, down the
+  /// child. Trackpad deltas accumulate so one gesture moves one level per notch-sized step.
+  private func changeElementLevel(for event: NSEvent) -> Bool {
+    guard selectionStartPoint == nil, autoDetectElementUnderCursor, hoveredSmartElementRect != nil else {
+      elementLevelScrollAccumulator = 0
+      return false
+    }
+    var delta = event.scrollingDeltaY != 0 ? event.scrollingDeltaY : event.deltaY
+    if event.isDirectionInvertedFromDevice { delta = -delta }
+    guard delta != 0 else { return true }
+    guard event.hasPreciseScrollingDeltas else {
+      SmartElementQueryService.shared.selectAdjacentCandidate(towardParent: delta > 0)
+      return true
+    }
+    if event.phase == .began { elementLevelScrollAccumulator = 0 }
+    elementLevelScrollAccumulator += delta
+    while abs(elementLevelScrollAccumulator) >= Self.elementLevelScrollStep {
+      let towardParent = elementLevelScrollAccumulator > 0
+      elementLevelScrollAccumulator -= towardParent ? Self.elementLevelScrollStep : -Self.elementLevelScrollStep
+      SmartElementQueryService.shared.selectAdjacentCandidate(towardParent: towardParent)
+    }
+    return true
+  }
+
+  private static let elementLevelScrollStep: CGFloat = 24
 
   private func removeMagnifierScrollMonitor() {
     if let magnifierScrollMonitor {

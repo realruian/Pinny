@@ -12,7 +12,7 @@ import XCTest
 
 final class AXElementInspectorTests: XCTestCase {
 
-  func testPrefersCardButKeepsIconAndWindowReachable() {
+  func testDefaultsToReportedIconButKeepsCardAndWindowReachable() {
     let window = AXElementSnapshot(role: "AXWindow", position: .zero, size: CGSize(width: 800, height: 600))
     let card = AXElementSnapshot(role: "AXGroup", position: CGPoint(x: 20, y: 20),
       size: CGSize(width: 240, height: 160), parent: { window })
@@ -20,16 +20,33 @@ final class AXElementInspectorTests: XCTestCase {
       size: CGSize(width: 24, height: 24), parent: { card })
     let options = AXElementInspector.candidates(icon, at: CGPoint(x: 50, y: 50))
     XCTAssertEqual(options.map(\.role), ["AXImage", "AXGroup", "AXWindow"])
-    XCTAssertEqual(AXElementInspector.preferredIndex(in: options), 1)
+    XCTAssertEqual(AXElementInspector.preferredIndex(in: options), 0)
   }
 
-  func testSidebarPreferredOverCompactRowAndText() {
+  func testDefaultsToTextInsideSidebarRow() {
     let sidebar = AXElementSnapshot(role: "AXOutline", position: .zero, size: CGSize(width: 180, height: 600))
     let row = AXElementSnapshot(role: "AXRow", position: CGPoint(x: 0, y: 30),
       size: CGSize(width: 180, height: 28), parent: { sidebar })
     let text = AXElementSnapshot(role: "AXStaticText", position: CGPoint(x: 20, y: 35),
       size: CGSize(width: 60, height: 18), parent: { row })
-    XCTAssertEqual(AXElementInspector.findMeaningful(text)?.role, "AXOutline")
+    XCTAssertEqual(AXElementInspector.findMeaningful(text)?.role, "AXStaticText")
+  }
+
+  // MARK: - Default level (PixPin: the element the system reports; the wheel walks the chain)
+
+  func testDeepElectronChainStillReachesTheWindow() {
+    // Claude desktop nests its sidebar text 30+ levels below the window.
+    let window = AXElementSnapshot(role: "AXWindow", position: .zero, size: CGSize(width: 1728, height: 981))
+    var node = window
+    for level in 0..<34 {
+      let enclosing = node
+      let inset = CGFloat(34 - level)
+      node = AXElementSnapshot(role: "AXGroup", position: CGPoint(x: inset, y: inset),
+        size: CGSize(width: 400 - inset * 2, height: 900 - inset * 2), parent: { enclosing })
+    }
+    let options = AXElementInspector.candidates(node, at: CGPoint(x: 100, y: 100))
+    XCTAssertEqual(options.last?.role, "AXWindow")
+    XCTAssertEqual(AXElementInspector.preferredIndex(in: options), 0)
   }
 
   func testZoomCorrectionMapsFeishuFramesOntoScreen() throws {
@@ -70,7 +87,7 @@ final class AXElementInspectorTests: XCTestCase {
     XCTAssertNil(AXZoomCorrection(window: window, root: CGRect(x: 300, y: 100, width: 1000, height: 800)))
   }
 
-  func testThinBarIsSkippedForTheEnclosingPanel() {
+  func testThinBarIsTheDefaultAndPanelIsOneLevelUp() {
     // Shape observed in Feishu: a 1026x49 toolbar strip inside a 1026x745 chat panel.
     let window = AXElementSnapshot(role: "AXWindow", position: .zero, size: CGSize(width: 1728, height: 981))
     let panel = AXElementSnapshot(role: "AXGroup", position: CGPoint(x: 300, y: 60),
@@ -79,23 +96,23 @@ final class AXElementInspectorTests: XCTestCase {
       size: CGSize(width: 1026, height: 49), parent: { panel })
     let options = AXElementInspector.candidates(strip, at: CGPoint(x: 600, y: 420))
     XCTAssertEqual(options.map(\.size.height), [49, 745, 981])
-    XCTAssertEqual(AXElementInspector.preferredIndex(in: options), 1)
+    XCTAssertEqual(AXElementInspector.preferredIndex(in: options), 0)
   }
 
-  func testSmallControlWithoutPanelFallsBackToWindow() {
+  func testSmallControlIsTheDefault() {
     let window = AXElementSnapshot(role: "AXWindow", position: .zero, size: CGSize(width: 480, height: 320))
     let button = AXElementSnapshot(role: "AXButton", position: CGPoint(x: 20, y: 20),
       size: CGSize(width: 90, height: 32), parent: { window })
     let options = AXElementInspector.candidates(button, at: CGPoint(x: 40, y: 30))
     XCTAssertEqual(options.map(\.role), ["AXButton", "AXWindow"])
-    XCTAssertEqual(AXElementInspector.preferredIndex(in: options), 1)
+    XCTAssertEqual(AXElementInspector.preferredIndex(in: options), 0)
   }
 
-  func testButtonPreferredOverItsLabelWithoutComponentAncestor() {
+  func testLabelIsTheDefaultInsideButton() {
     let button = AXElementSnapshot(role: "AXButton", position: .zero, size: CGSize(width: 90, height: 32))
     let label = AXElementSnapshot(role: "AXStaticText", position: CGPoint(x: 5, y: 5),
       size: CGSize(width: 60, height: 18), parent: { button })
-    XCTAssertEqual(AXElementInspector.findMeaningful(label)?.role, "AXButton")
+    XCTAssertEqual(AXElementInspector.findMeaningful(label)?.role, "AXStaticText")
   }
 
   func testSubstantialImageDoesNotJumpToEnormousPage() {

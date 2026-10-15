@@ -32,11 +32,11 @@ enum AXElementInspector {
   ]
 
   static let minSide: CGFloat = 12
-  static let maxParentDepth = 25
+  /// Electron and web content nest 30+ levels below the window.
+  static let maxParentDepth = 64
   static let windowFillThreshold: CGFloat = 0.95
 
-  /// Keep every distinct ancestor so a precise target stays reachable with Shift-Tab.
-  /// Default selection is a separate policy; it must not discard small controls.
+  /// Keep every distinct ancestor so the scroll wheel can walk up to the window.
   static func candidates(_ snapshot: AXElementSnapshot, at point: CGPoint? = nil) -> [AXElementSnapshot] {
     var result: [AXElementSnapshot] = []
     var current: AXElementSnapshot? = snapshot
@@ -68,36 +68,10 @@ enum AXElementInspector {
     "AXList", "AXGrid", "AXForm", "AXRegion", "AXLandmark", "AXSheet", "AXTabGroup"
   ]
 
-  /// Smallest size the default selection may take. Thin bars, rows, icons and labels stay
-  /// reachable with Shift-Tab, but the first highlight should be a panel-sized piece of UI.
-  static let defaultMinWidth: CGFloat = 120
-  static let defaultMinHeight: CGFloat = 100
-  static let defaultMinArea: CGFloat = 30_000
-
-  static func isDefaultSized(_ snapshot: AXElementSnapshot) -> Bool {
-    snapshot.size.width >= defaultMinWidth && snapshot.size.height >= defaultMinHeight
-      && snapshot.size.width * snapshot.size.height >= defaultMinArea
-  }
-
+  /// Default selection is the element the system reports under the pointer (the innermost
+  /// candidate), as PixPin does; the scroll wheel then walks to its parent or child.
   static func preferredIndex(in candidates: [AXElementSnapshot]) -> Int? {
-    guard !candidates.isEmpty else { return nil }
-    // Prefer the nearest panel-sized component, rather than its icon, label, or compact row.
-    if let component = candidates.firstIndex(where: {
-      componentRoles.contains($0.role ?? "") && isDefaultSized($0)
-    }) {
-      // A substantial image is already a useful capture target when the only containing
-      // component is an enormous page. A small icon does not receive this exception.
-      if let image = candidates[..<component].firstIndex(where: {
-        $0.role == "AXImage" && $0.size.width >= 160 && $0.size.height >= 120
-          && candidates[component].rect.width * candidates[component].rect.height
-            > $0.size.width * $0.size.height * 6
-      }) { return image }
-      return component
-    }
-    // With no card/pane exposed by the app, take any panel-sized element (text area, web area…).
-    if let panel = candidates.firstIndex(where: isDefaultSized) { return panel }
-    // Otherwise everything is small: take the outermost candidate (usually the window).
-    return candidates.count - 1
+    candidates.isEmpty ? nil : 0
   }
 
   static func findMeaningful(_ snapshot: AXElementSnapshot) -> AXElementSnapshot? {
