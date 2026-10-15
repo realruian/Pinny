@@ -206,6 +206,12 @@ final class InlineAreaAnnotateSession: ObservableObject {
   /// Populated asynchronously in `init` (see `startWindowSelectionQuery`) — nil until the
   /// query resolves, so hover hit-testing simply has nothing to match until then.
   private var windowSelectionSnapshot: WindowSelectionSnapshot?
+  /// UI elements recognized under the cursor this session (local coordinates), kept as
+  /// selection snap targets.
+  private var recognizedElementLocalRects: [CGRect] = []
+  private static let maxRecognizedElements = 64
+  private var selectionSnapGuides: InlineAreaSnapGuides?
+  private var selectionSnapState: (x: CGFloat?, y: CGFloat?)?
   private var windowSelectionTask: Task<Void, Never>?
   private var smartElementCancellable: AnyCancellable?
   /// The system cursor is hidden for the whole `.selecting` phase — `InlineAreaAnnotateWindow`
@@ -286,6 +292,7 @@ final class InlineAreaAnnotateSession: ObservableObject {
       .sink { [weak self] rect in
         guard let self, autoDetectElementUnderCursor, phase == .selecting else { return }
         hoveredSmartElementRect = rect
+        if let rect { rememberRecognizedElement(rect) }
       }
   }
 
@@ -476,6 +483,62 @@ final class InlineAreaAnnotateSession: ObservableObject {
 
   func clampedSelectionPreview(for localRect: CGRect) -> CGRect {
     clampedSelectionRect(localRect.standardized)
+  }
+
+  // MARK: Selection snapping
+
+  /// Snaps a dragged selection: `moving` snaps the whole rect, otherwise only the
+  /// `resizing` edges move. Holding ⌘ turns snapping off for as long as it's held.
+  /// Guides are built once per drag; each newly engaged snap taps the trackpad.
+  func snappedSelectionPreview(for localRect: CGRect, resizing edges: InlineAreaSnapEdges? = nil) -> CGRect {
+    let clamped = clampedSelectionRect(localRect.standardized)
+    guard !NSEvent.modifierFlags.contains(.command) else {
+      selectionSnapState = nil
+      return clamped
+    }
+    let guides = selectionSnapGuides ?? makeSelectionSnapGuides()
+    selectionSnapGuides = guides
+    let result: InlineAreaSnapResult
+    if let edges {
+      result = InlineAreaSelectionSnapping.snapResize(
+        clamped, edges: edges, guides: guides, minSize: InlineAreaLayout.minimumSelectionSize
+      )
+    } else {
+      result = InlineAreaSelectionSnapping.snapMove(clamped, guides: guides)
+    }
+    let previous = selectionSnapState
+    let engagedX = result.snappedX != nil && result.snappedX != previous?.x
+    let engagedY = result.snappedY != nil && result.snappedY != previous?.y
+    if engagedX || engagedY {
+      NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .now)
+    }
+    selectionSnapState = (result.snappedX, result.snappedY)
+    return clampedSelectionRect(result.rect)
+  }
+
+  /// Call when a selection drag ends so the next drag rebuilds guides and haptics.
+  func endSelectionSnapping() {
+    selectionSnapGuides = nil
+    selectionSnapState = nil
+  }
+
+  private func makeSelectionSnapGuides() -> InlineAreaSnapGuides {
+    InlineAreaSelectionSnapping.guides(
+      displayFrames: displays.map(\.localFrame),
+      windowFrames: (windowSelectionSnapshot?.orderedCandidates ?? []).map {
+        Self.localRect(for: $0.target.frame, in: desktopFrame)
+      },
+      elementRects: recognizedElementLocalRects
+    )
+  }
+
+  private func rememberRecognizedElement(_ screenRect: CGRect) {
+    let local = Self.localRect(for: screenRect, in: desktopFrame).integral
+    guard !recognizedElementLocalRects.contains(local) else { return }
+    recognizedElementLocalRects.append(local)
+    if recognizedElementLocalRects.count > Self.maxRecognizedElements {
+      recognizedElementLocalRects.removeFirst()
+    }
   }
 
   func handleKeyEvent(_ event: NSEvent, source: InlineAreaKeyEventSource = .local) -> Bool {

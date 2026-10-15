@@ -545,9 +545,12 @@ private struct InlineAreaAnnotateRootView: View {
         onCaptureDoubleClick: { session.copyCurrentImage() },
         onSelectionBackgroundDrag: { translation, finished in
           guard let desktopRect = session.selectionRect else { return }
-          if movingStartRect == nil { movingStartRect = desktopRect }
+          if movingStartRect == nil {
+            movingStartRect = desktopRect
+            session.endSelectionSnapping()
+          }
           guard let start = movingStartRect else { return }
-          let nextRect = session.clampedSelectionPreview(
+          let nextRect = session.snappedSelectionPreview(
             for: start.offsetBy(dx: translation.width, dy: translation.height)
           )
           var transaction = Transaction()
@@ -555,6 +558,7 @@ private struct InlineAreaAnnotateRootView: View {
           withTransaction(transaction) {
             if finished {
               session.moveSelection(to: nextRect, refreshImage: true)
+              session.endSelectionSnapping()
               movingPreviewRect = nil
               movingStartRect = nil
             } else {
@@ -641,9 +645,10 @@ private struct InlineAreaAnnotateRootView: View {
         guard activeResizeHandle == nil else { return }
         if movingStartRect == nil {
           movingStartRect = desktopRect
+          session.endSelectionSnapping()
         }
         guard let start = movingStartRect else { return }
-        let previewRect = session.clampedSelectionPreview(
+        let previewRect = session.snappedSelectionPreview(
           for: start.offsetBy(dx: value.translation.width, dy: value.translation.height)
         )
         var transaction = Transaction()
@@ -656,9 +661,10 @@ private struct InlineAreaAnnotateRootView: View {
       }
       .onEnded { value in
         let start = movingStartRect ?? desktopRect
-        let finalRect = session.clampedSelectionPreview(
+        let finalRect = session.snappedSelectionPreview(
           for: start.offsetBy(dx: value.translation.width, dy: value.translation.height)
         )
+        session.endSelectionSnapping()
         var transaction = Transaction()
         transaction.animation = nil
         withTransaction(transaction) {
@@ -698,13 +704,17 @@ private struct InlineAreaAnnotateRootView: View {
       .onChanged { value in
         if resizingStartRect == nil {
           resizingStartRect = desktopRect
+          session.endSelectionSnapping()
         }
         guard let start = resizingStartRect else { return }
-        let previewRect = resizedSelectionRect(
-          from: start,
-          handle: handle,
-          translation: value.translation,
-          containerSize: containerSize
+        let previewRect = session.snappedSelectionPreview(
+          for: resizedSelectionRect(
+            from: start,
+            handle: handle,
+            translation: value.translation,
+            containerSize: containerSize
+          ),
+          resizing: handle.snapEdges
         )
         var transaction = Transaction()
         transaction.animation = nil
@@ -716,12 +726,16 @@ private struct InlineAreaAnnotateRootView: View {
       }
       .onEnded { value in
         let start = resizingStartRect ?? desktopRect
-        let finalRect = resizedSelectionRect(
-          from: start,
-          handle: handle,
-          translation: value.translation,
-          containerSize: containerSize
+        let finalRect = session.snappedSelectionPreview(
+          for: resizedSelectionRect(
+            from: start,
+            handle: handle,
+            translation: value.translation,
+            containerSize: containerSize
+          ),
+          resizing: handle.snapEdges
         )
+        session.endSelectionSnapping()
         var transaction = Transaction()
         transaction.animation = nil
         withTransaction(transaction) {
@@ -1035,6 +1049,10 @@ enum InlineAreaResizeHandle: CaseIterable, Identifiable {
 
   var id: Self {
     self
+  }
+
+  var snapEdges: InlineAreaSnapEdges {
+    InlineAreaSnapEdges(left: adjustsLeft, right: adjustsRight, top: adjustsTop, bottom: adjustsBottom)
   }
 
   var adjustsLeft: Bool {
