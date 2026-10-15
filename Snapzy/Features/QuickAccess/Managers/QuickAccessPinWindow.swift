@@ -67,12 +67,11 @@ struct PinWindowDragDecider: Equatable {
         return nil
       }
       return applyingManualMove(screenPoint: screenPoint, grabOffset: offset)
-    case let .manual(offset, applied):
-      // Back off if the frame moved without our involvement.
-      guard !frameMoved(currentFrameOrigin, from: applied) else {
-        mode = .native
-        return nil
-      }
+    case let .manual(offset, _):
+      // Pinny: once manual owns the gesture it keeps it until mouse-up. A frame
+      // that differs from the applied origin here means the window server held
+      // it back (e.g. the menu-bar edge between stacked displays), not that a
+      // native drag took over; ceding would freeze the pin at that edge.
       return applyingManualMove(screenPoint: screenPoint, grabOffset: offset)
     }
   }
@@ -123,6 +122,12 @@ final class QuickAccessPinWindow: NSPanel {
     )
     configure()
     installMouseMonitors()
+  }
+
+  // Pinny: no menu-bar / visible-frame clamping, so a pin can be dragged across
+  // the top edge of the built-in display onto a display stacked above it.
+  override func constrainFrameRect(_ frameRect: NSRect, to screen: NSScreen?) -> NSRect {
+    frameRect
   }
 
   override var canBecomeKey: Bool { false }

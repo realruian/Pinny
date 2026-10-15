@@ -89,7 +89,7 @@ final class QuickAccessPinWindowDragDeciderTests: XCTestCase {
     )
   }
 
-  func testManualBacksOffWhenFrameMovesWithoutUs() {
+  func testManualKeepsOwnershipWhenSystemHoldsFrameBack() {
     var decider = PinWindowDragDecider()
     decider.begin(
       startScreenPoint: NSPoint(x: 100, y: 100),
@@ -98,19 +98,20 @@ final class QuickAccessPinWindowDragDeciderTests: XCTestCase {
     )
 
     let first = decider.dragged(
-      screenPoint: NSPoint(x: 160, y: 100),
+      screenPoint: NSPoint(x: 100, y: 160),
       currentFrameOrigin: NSPoint(x: 400, y: 400)
     )
-    XCTAssertEqual(first, NSPoint(x: 110, y: 50))
+    XCTAssertEqual(first, NSPoint(x: 50, y: 110))
 
-    // A future macOS update restores native dragging mid-gesture: the frame
-    // is somewhere we did not put it, so the decider must cede ownership.
+    // The window server clamped the frame at the menu-bar edge between two
+    // stacked displays (seen at y=537 for a 547-pt pin): the drag must keep
+    // following the pointer so the pin can cross onto the upper display.
     let second = decider.dragged(
-      screenPoint: NSPoint(x: 170, y: 100),
-      currentFrameOrigin: NSPoint(x: 118, y: 50)
+      screenPoint: NSPoint(x: 100, y: 260),
+      currentFrameOrigin: NSPoint(x: 50, y: 80)
     )
-    XCTAssertNil(second)
-    XCTAssertEqual(decider.mode, .native)
+    XCTAssertEqual(second, NSPoint(x: 50, y: 210))
+    XCTAssertTrue(decider.isManual)
   }
 
   func testManualMoveUsesAbsolutePositionWithoutDrift() {
