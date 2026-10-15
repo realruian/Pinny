@@ -2558,10 +2558,10 @@ final class DrawingCanvasNSView: NSView {
     switch handle {
     case .topLeft, .bottomRight:
       // NW-SE diagonal resize (↖↘)
-      return NSCursor(image: diagonalResizeCursorImage(nwse: true), hotSpot: NSPoint(x: 8, y: 8))
+      return InlineAreaResizeCursor.diagonal(nwse: true)
     case .topRight, .bottomLeft:
       // NE-SW diagonal resize (↗↙)
-      return NSCursor(image: diagonalResizeCursorImage(nwse: false), hotSpot: NSPoint(x: 8, y: 8))
+      return InlineAreaResizeCursor.diagonal(nwse: false)
     case .top, .bottom:
       return .resizeUpDown
     case .left, .right:
@@ -2569,62 +2569,6 @@ final class DrawingCanvasNSView: NSView {
     case .body:
       return .openHand
     }
-  }
-
-  /// Generate diagonal resize cursor image
-  private func diagonalResizeCursorImage(nwse: Bool) -> NSImage {
-    let size = NSSize(width: 16, height: 16)
-    let image = NSImage(size: size)
-    image.lockFocus()
-
-    let path = NSBezierPath()
-    path.lineWidth = 1.5
-    path.lineCapStyle = .round
-
-    if nwse {
-      // NW-SE diagonal (↖↘)
-      // Arrow pointing to top-left
-      path.move(to: NSPoint(x: 3, y: 13))
-      path.line(to: NSPoint(x: 3, y: 8))
-      path.move(to: NSPoint(x: 3, y: 13))
-      path.line(to: NSPoint(x: 8, y: 13))
-      // Main diagonal line
-      path.move(to: NSPoint(x: 3, y: 13))
-      path.line(to: NSPoint(x: 13, y: 3))
-      // Arrow pointing to bottom-right
-      path.move(to: NSPoint(x: 13, y: 3))
-      path.line(to: NSPoint(x: 13, y: 8))
-      path.move(to: NSPoint(x: 13, y: 3))
-      path.line(to: NSPoint(x: 8, y: 3))
-    } else {
-      // NE-SW diagonal (↗↙)
-      // Arrow pointing to top-right
-      path.move(to: NSPoint(x: 13, y: 13))
-      path.line(to: NSPoint(x: 13, y: 8))
-      path.move(to: NSPoint(x: 13, y: 13))
-      path.line(to: NSPoint(x: 8, y: 13))
-      // Main diagonal line
-      path.move(to: NSPoint(x: 13, y: 13))
-      path.line(to: NSPoint(x: 3, y: 3))
-      // Arrow pointing to bottom-left
-      path.move(to: NSPoint(x: 3, y: 3))
-      path.line(to: NSPoint(x: 3, y: 8))
-      path.move(to: NSPoint(x: 3, y: 3))
-      path.line(to: NSPoint(x: 8, y: 3))
-    }
-
-    // Draw white outline for visibility
-    NSColor.white.setStroke()
-    path.lineWidth = 3
-    path.stroke()
-
-    // Draw black line
-    NSColor.black.setStroke()
-    path.lineWidth = 1.5
-    path.stroke()
-
-    image.unlockFocus()
-    return image
   }
 
   // MARK: - Crop Handling

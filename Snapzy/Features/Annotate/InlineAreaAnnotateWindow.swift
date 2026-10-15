@@ -1682,43 +1682,45 @@ struct InlineAreaHudMaterialBackground: NSViewRepresentable {
   }
 }
 
-private enum InlineAreaResizeCursor {
+/// Diagonal resize cursor for corners. macOS 15+ has the system one (black arrows with a white
+/// outline, like `resizeUpDown` / `resizeLeftRight`); older systems get a drawn one in the
+/// same black-on-white style.
+enum InlineAreaResizeCursor {
   static func diagonal(nwse: Bool) -> NSCursor {
-    let size = NSSize(width: 16, height: 16)
-    let image = NSImage(size: size)
-    image.lockFocus()
-
-    NSColor.clear.setFill()
-    NSRect(origin: .zero, size: size).fill()
-    NSColor.labelColor.setStroke()
-
-    let path = NSBezierPath()
-    path.lineWidth = 1.8
-    path.lineCapStyle = .round
-
-    if nwse {
-      path.move(to: NSPoint(x: 3, y: 13))
-      path.line(to: NSPoint(x: 13, y: 3))
-      path.move(to: NSPoint(x: 3, y: 9))
-      path.line(to: NSPoint(x: 3, y: 13))
-      path.line(to: NSPoint(x: 7, y: 13))
-      path.move(to: NSPoint(x: 9, y: 3))
-      path.line(to: NSPoint(x: 13, y: 3))
-      path.line(to: NSPoint(x: 13, y: 7))
-    } else {
-      path.move(to: NSPoint(x: 3, y: 3))
-      path.line(to: NSPoint(x: 13, y: 13))
-      path.move(to: NSPoint(x: 3, y: 7))
-      path.line(to: NSPoint(x: 3, y: 3))
-      path.line(to: NSPoint(x: 7, y: 3))
-      path.move(to: NSPoint(x: 9, y: 13))
-      path.line(to: NSPoint(x: 13, y: 13))
-      path.line(to: NSPoint(x: 13, y: 9))
+    if #available(macOS 15.0, *) {
+      return NSCursor.frameResize(position: nwse ? .topLeft : .topRight, directions: .all)
     }
+    return nwse ? legacyNWSE : legacyNESW
+  }
 
-    path.stroke()
-    image.unlockFocus()
-    return NSCursor(image: image, hotSpot: NSPoint(x: 8, y: 8))
+  private static let legacyNWSE = drawn(nwse: true)
+  private static let legacyNESW = drawn(nwse: false)
+
+  private static func drawn(nwse: Bool) -> NSCursor {
+    let size = NSSize(width: 18, height: 18)
+    let image = NSImage(size: size, flipped: false) { _ in
+      let path = NSBezierPath()
+      path.lineCapStyle = .round
+      path.lineJoinStyle = .round
+      let (a, b): (NSPoint, NSPoint) = nwse
+        ? (NSPoint(x: 4, y: 14), NSPoint(x: 14, y: 4))
+        : (NSPoint(x: 14, y: 14), NSPoint(x: 4, y: 4))
+      path.move(to: a); path.line(to: b)
+      for (tip, other) in [(a, b), (b, a)] {
+        let dx: CGFloat = other.x > tip.x ? 4.5 : -4.5
+        let dy: CGFloat = other.y > tip.y ? 4.5 : -4.5
+        path.move(to: NSPoint(x: tip.x + dx, y: tip.y)); path.line(to: tip)
+        path.line(to: NSPoint(x: tip.x, y: tip.y + dy))
+      }
+      NSColor.white.setStroke()
+      path.lineWidth = 4
+      path.stroke()
+      NSColor.black.setStroke()
+      path.lineWidth = 1.8
+      path.stroke()
+      return true
+    }
+    return NSCursor(image: image, hotSpot: NSPoint(x: 9, y: 9))
   }
 }
 
