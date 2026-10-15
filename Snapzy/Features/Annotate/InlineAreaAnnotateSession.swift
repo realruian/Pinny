@@ -165,7 +165,10 @@ final class InlineAreaAnnotateSession: ObservableObject {
   /// drag. Pointer-positioned chrome (drawn crosshair, magnifier, coordinate bubble) must
   /// read this instead of gesture-only state, or it freezes at the drag-start point.
   @Published var selectionPointerLocation: CGPoint?
-  @Published var isMoveModifierActive = false
+  @Published var isMoveModifierActive = false {
+    // Space switches to the move hand while the pointer stays still.
+    didSet { if isMoveModifierActive != oldValue { refreshHoverCursor() } }
+  }
   @Published private(set) var isFinishing = false
   /// Pinny: the toolbar shows the recording prep bar (sound, microphone, start). The selection
   /// can still be moved and resized; Return starts, Esc goes back to the capture toolbar.

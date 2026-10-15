@@ -48,6 +48,18 @@ final class PinnyRecordingController: ObservableObject {
     rerecord: @escaping (CGRect) -> Void,
     onRecordingEnded: @escaping () -> Void
   ) {
+    // A recording still playing in place gives way to the new one, after the same question
+    // Close asks when it was neither copied nor saved; Cancel keeps it and records nothing.
+    if phase == .playback, let current = playback {
+      guard current.confirmDiscard() else {
+        current.resume()
+        onRecordingEnded()
+        return
+      }
+      current.close(discardUnexported: true, reactivatePreviousApp: false)
+      playback = nil
+      phase = .idle
+    }
     guard phase == .idle else {
       DiagnosticLogger.shared.log(.debug, .recording, "Pinny recording ignored: busy")
       onRecordingEnded()
@@ -305,6 +317,7 @@ private final class PinnyRecordingFrameWindow: NSPanel {
     backgroundColor = .clear
     hasShadow = false
     ignoresMouseEvents = true
+    isReleasedWhenClosed = false
     level = .statusBar
     sharingType = LongScreenshotChrome.sharingType
     hidesOnDeactivate = false
@@ -333,6 +346,7 @@ final class PinnyRecordingBarWindow: NSPanel {
     super.init(contentRect: .zero, styleMask: [.borderless, .nonactivatingPanel],
                backing: .buffered, defer: false)
     isFloatingPanel = true
+    isReleasedWhenClosed = false
     level = .popUpMenu
     isOpaque = false
     backgroundColor = .clear
@@ -482,6 +496,8 @@ private final class PinnyRecordingPlayback {
   /// Copied or saved: closing no longer asks, and a copied file is kept for pasting.
   private var wasExported = false
   private var wasCopied = false
+  /// A copy or save is under way (set at the press, before any GIF conversion starts).
+  private var isExporting = false
   private var previousApp: NSRunningApplication?
   private var observations: Set<AnyCancellable> = []
 
@@ -568,7 +584,9 @@ private final class PinnyRecordingPlayback {
         try? RecordingMetadataStore.delete(for: url)
       }
     }
-    if reactivatePreviousApp { previousApp?.activate(options: []) }
+    // Hand the keyboard back only while Pinny still has it; never pull focus from an app the
+    // user has switched to since.
+    if reactivatePreviousApp, NSApp.isActive { previousApp?.activate(options: []) }
     previousApp = nil
   }
 
@@ -619,8 +637,10 @@ private final class PinnyRecordingPlayback {
   }
 
   private func copy() {
-    guard !model.isBusy else { return }
+    guard !isExporting else { return }
+    isExporting = true
     Task {
+      defer { isExporting = false }
       guard let url = await outputURL() else { return }
       ClipboardHelper.copyMediaFile(from: url)
       SoundManager.play("Pop")
@@ -631,8 +651,10 @@ private final class PinnyRecordingPlayback {
   }
 
   private func save() {
-    guard !model.isBusy, let directory = actions.save() else { return }
+    guard !isExporting, let directory = actions.save() else { return }
+    isExporting = true
     Task {
+      defer { isExporting = false }
       guard let url = await outputURL() else { return }
       model.isBusy = true
       defer { model.isBusy = false }
@@ -665,7 +687,7 @@ private final class PinnyRecordingPlayback {
   }
 
   private func requestClose() {
-    guard !model.isBusy, confirmDiscard() else { return }
+    guard !isExporting, confirmDiscard() else { return }
     actions.close()
   }
 
@@ -690,6 +712,7 @@ private final class PinnyRecordingVideoWindow: NSPanel {
     self.handleKey = handleKey
     super.init(contentRect: selection, styleMask: [.borderless], backing: .buffered, defer: false)
     isOpaque = false
+    isReleasedWhenClosed = false
     backgroundColor = .clear
     hasShadow = true
     level = .floating
