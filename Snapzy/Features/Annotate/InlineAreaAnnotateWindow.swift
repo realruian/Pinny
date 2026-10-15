@@ -1543,7 +1543,18 @@ struct InlineAreaPanelBackgroundTint: View {
 }
 
 extension View {
+  /// Pinny: native Liquid Glass (Regular) on macOS 26+; the hudWindow material stays as the
+  /// fallback. Chosen against the hudWindow look in validation/liquid-glass-compare-*.png.
+  @ViewBuilder
   func inlineAreaPanelChrome() -> some View {
+    if #available(macOS 26.0, *) {
+      glassEffect(.regular, in: RoundedRectangle(cornerRadius: InlineAreaChrome.cornerRadius, style: .continuous))
+    } else {
+      inlineAreaLegacyPanelChrome()
+    }
+  }
+
+  private func inlineAreaLegacyPanelChrome() -> some View {
     background(InlineAreaPanelBackgroundTint().allowsHitTesting(false))
       .background(InlineAreaHudMaterialBackground(cornerRadius: InlineAreaChrome.cornerRadius).allowsHitTesting(false))
       .clipShape(RoundedRectangle(cornerRadius: InlineAreaChrome.cornerRadius, style: .continuous))
