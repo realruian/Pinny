@@ -1,16 +1,27 @@
-# Unified screenshot workflow
+# Unified screenshot and pin workflow
 
-The primary screenshot entry opens one inline capture session. Choose a detected component/window, drag a region, or select the display inside that session. Basic legacy capture entry points route to this same flow. Retired capture shortcuts are disabled and cleared, and cannot reclaim keys through settings reset or import.
+The primary screenshot shortcut (`F1`) opens a single inline capture session per display. Within that session you can pick a detected UI element or window, drag a custom region, or select the full display. Legacy capture entry points route to this flow, and retired global shortcuts are cleared so they cannot reclaim keys on reset or import.
 
-- Scroll up/down to select parent/child candidates; Tab / Shift-Tab also work.
-- Adjust the selection directly, then annotate in place.
-- Copy, Return, or double-click empty image content: copy the rendered original-resolution image and exit. Text editing keeps Return and double-click behavior.
-- Save / Command-S: explicitly save; a failed save or cancelled directory picker keeps the session open.
-- Pin: create a floating image directly from memory at the selection's screen frame. It does not require a saved file. `inlinePinCopiesImage` defaults to true and is configurable in pin settings.
-- Pinned images use the same square, image-only window for direct captures and clipboard images: drag to move; scroll to resize the entire image and window. Double-click copies original-resolution content and closes only that pin. Source geometry travels with the clipboard item, so re-pinning restores its current frame. External images without geometry are centered at natural logical size; only images exceeding the display are scaled down proportionally.
+## Selection & detection
 
-The capture shortcuts are Screenshot (F1) and Pin Clipboard Image (F2). F2 reads image representations or copied image file URLs from the clipboard and creates an independent pin; it never pins the current capture selection or mutates the clipboard. When our clipboard item includes source geometry, it restores the same position and size; unrelated clipboard images never inherit a previous capture frame. The inline toolbar Pin action remains selection-based.
+- Moving the pointer highlights the accessibility element reported under the cursor (`AXUIElement`, queried off the main thread with a 0.5 s timeout).
+- Scroll up/down to move to parent/child elements (`⌘` + scroll zooms the magnifier).
+- Shortcut labels in the top-left corner show quick actions: `⌘A` full display, `Tab` whole window under pointer, `R` last capture region (`,` cycles recent regions).
+- Once a region is chosen, drag empty content to move the selection or drag any edge/corner to resize. Edges snap within 6 pt to screen bounds, screen centerlines, visible windows, and detected elements (hold `⌘` to suspend snapping).
 
-The menu and screenshot shortcut help present one Screenshot action. Screenshot post-processing switches from the old save-first workflow are no longer exposed as controls for this flow. Recording controls remain unchanged.
+## Inline annotation & scrolling capture
 
-Runtime validation and retained evidence are in the parent workspace's `validation/UNIFIED-CAPTURE-FLOW.md`. This change aligns the interaction, not an undocumented PixPin detection algorithm. Cross-app detection accuracy and mixed-scale multi-display behavior require separate live validation.
+- The toolbar sits below the selection by default (or above when bottom space is tight) and uses native Liquid Glass (`.glassEffect(.regular)`) on macOS 26+.
+- Tools are grouped into Shapes (rectangle, filled rectangle, oval) and Lines (arrow, line) with secondary-bar switching, alongside pencil, highlighter, text (`PingFang SC`), blur (pixelate / Gaussian), spotlight, counter, and watermark.
+- Clicking the scrolling capture button (`CarouselVertical`) starts a frame-paced long screenshot directly from the current selection:
+  - Matches vertical scroll per frame with 3-screen tail relocalization and automatic tail trimming on reverse scroll.
+  - Deduplicates top and bottom fixed headers/bars so they appear once.
+  - Keeps the toolbar anchored below the selection with dimensions, top/bottom crop (`Crop`), copy, pin, save, and close.
+
+## Output & pinning (`F2`)
+
+- **Copy** (`↩`, `⌘C`, or double-click empty image content): hides the overlay immediately and encodes the original-resolution image on a background queue, writing source screen geometry to the pasteboard item.
+- **Save** (`⌘S`): saves to `~/Downloads/Pinny` (`Pinny_` prefix).
+- **Pin**: creates a borderless, square-cornered floating image window directly from memory at the selection's screen frame (for long screenshots, top-left aligned and scaled down if taller than the display).
+- **Pin Clipboard Image (`F2`)**: reads image data or copied image file URLs from the clipboard and opens a pin window. Clipboard items carrying Pinny source geometry restore their original screen position and logical size; external images open centered at natural logical size (scaled down only if larger than the display).
+- **Pin interaction**: drag anywhere to move (including across the menu bar onto a display stacked above), scroll to scale around the pointer, and double-click to copy original-resolution content and close that pin.
