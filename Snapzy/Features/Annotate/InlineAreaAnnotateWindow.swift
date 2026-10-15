@@ -293,6 +293,8 @@ private struct InlineAreaAnnotateRootView: View {
   @State private var activeResizeHandle: InlineAreaResizeHandle?
   @State private var cursorIndicatorPoint: CGPoint?
   @State private var hoverTip: InlineAreaHoverTip?
+  /// Measured width of the secondary bar's content; it sizes the bar's own capsule.
+  @State private var propertiesContentWidth: CGFloat = 0
   /// Viewport point where a gesture began on a hovered window, while it's still ambiguous
   /// whether this will resolve as a click (select the window) or a drag (manual region
   /// selection) — mirrors plain area screenshot's `pendingWindowDetectionStartPoint`.
@@ -670,38 +672,58 @@ private struct InlineAreaAnnotateRootView: View {
   @ViewBuilder
   private func captureControls(rect: CGRect, containerSize: CGSize) -> some View {
     let showsDetails = session.state.showsQuickPropertiesBar || session.actionMessage != nil
+    let insets = display.controlInsets
     let placement = controlPlacement(
       for: rect, containerSize: containerSize,
       showsProperties: showsDetails, propertiesContentWidth: 0,
-      controlInsets: display.controlInsets
+      controlInsets: insets
     )
-    let height = InlineAreaLayout.reservedControlHeight(showsProperties: showsDetails)
 
-    VStack(spacing: InlineAreaLayout.controlStackSpacing) {
-      InlineAreaControlDeck(session: session, maxWidth: placement.toolbarWidth)
-        .frame(height: InlineAreaLayout.toolbarHeight)
-      if let message = session.actionMessage {
-        Text(message)
-          .font(.system(size: 12))
-          .lineLimit(2)
-          .frame(maxWidth: .infinity, alignment: .leading)
-          .padding(.horizontal, 12)
-          .frame(height: InlineAreaLayout.propertiesHeight)
-          .accessibilityIdentifier("inline.actionFeedback")
-      } else if session.state.showsQuickPropertiesBar {
-        InlineAreaPropertiesBar(
-          state: session.state, maxWidth: placement.toolbarWidth,
-          popoverEdge: placement.propertiesPopoverEdge,
-          onContentWidthChange: { _ in }
-        )
+    InlineAreaControlDeck(session: session, maxWidth: placement.toolbarWidth)
+      .frame(width: placement.toolbarWidth, height: InlineAreaLayout.toolbarHeight)
+      .inlineAreaPanelChrome()
+      .position(placement.toolbarCenter)
+      .zIndex(10)
+      .transaction { $0.animation = nil }
+
+    if showsDetails {
+      // Pinny: the secondary bar is its own capsule 8 pt under (or over) the toolbar. It hugs its
+      // content and starts at the toolbar's leading edge, shifting left only when the screen
+      // edge would clip it.
+      let available = max(0, containerSize.width - insets.controlLeadingPadding - insets.controlTrailingPadding)
+      let width = min(available, propertiesContentWidth)
+      let toolbarLeft = placement.toolbarCenter.x - placement.toolbarWidth / 2
+      let left = clamped(toolbarLeft, min: insets.controlLeadingPadding,
+                         max: containerSize.width - insets.controlTrailingPadding - width)
+      Group {
+        if let message = session.actionMessage {
+          Text(message)
+            .font(.system(size: 12))
+            .lineLimit(2)
+            .padding(.horizontal, 14)
+            .frame(maxWidth: available, alignment: .leading)
+            .fixedSize()
+            .accessibilityIdentifier("inline.actionFeedback")
+        } else {
+          InlineAreaPropertiesBar(
+            state: session.state, maxWidth: available,
+            popoverEdge: placement.propertiesPopoverEdge
+          )
+        }
       }
+      .frame(height: InlineAreaLayout.propertiesHeight)
+      .background(
+        GeometryReader { proxy in
+          Color.clear.preference(key: InlineAreaPropertiesContentWidthKey.self, value: proxy.size.width)
+        }
+      )
+      .inlineAreaPanelChrome(cornerRadius: InlineAreaChrome.propertiesBarCornerRadius)
+      .position(x: left + width / 2, y: placement.propertiesCenter.y)
+      .opacity(propertiesContentWidth > 0 ? 1 : 0)
+      .zIndex(10)
+      .transaction { $0.animation = nil }
+      .onPreferenceChange(InlineAreaPropertiesContentWidthKey.self) { propertiesContentWidth = $0 }
     }
-    .frame(width: placement.toolbarWidth, height: height)
-    .inlineAreaPanelChrome()
-    .position(x: placement.toolbarCenter.x,
-              y: placement.toolbarCenter.y - InlineAreaLayout.toolbarHeight / 2 + height / 2)
-    .zIndex(10)
-    .transaction { $0.animation = nil }
   }
 
   private func moveGesture(for desktopRect: CGRect) -> some Gesture {
@@ -1370,16 +1392,18 @@ struct InlineAreaControlPlacement {
   let propertiesPopoverEdge: Edge
 }
 
+/// Pinny toolbar geometry, option C in validation/toolbar-c-all-bars-mockup.html: round 36 pt
+/// buttons in a 48 pt capsule (24 = 18 + 6, concentric), groups split by a hairline.
 enum InlineAreaToolbarMetrics {
-  static let iconButtonSize: CGFloat = ToolbarConstants.iconButtonSize
+  static let iconButtonSize: CGFloat = 36
   static let iconSize: CGFloat = 20
-  static let buttonCornerRadius: CGFloat = ToolbarConstants.buttonCornerRadius
-  static let toolbarCornerRadius: CGFloat = ToolbarConstants.toolbarCornerRadius
-  static let dividerHeight: CGFloat = ToolbarConstants.dividerHeight
+  static let buttonCornerRadius: CGFloat = iconButtonSize / 2
+  static let verticalPadding: CGFloat = 6
+  static let toolbarCornerRadius: CGFloat = buttonCornerRadius + verticalPadding
+  static let dividerHeight: CGFloat = 22
   static let itemSpacing: CGFloat = 2
-  static let groupSpacing: CGFloat = 8
-  static let horizontalPadding: CGFloat = 8
-  static let verticalPadding: CGFloat = ToolbarConstants.verticalPadding
+  static let groupSpacing: CGFloat = 9
+  static let horizontalPadding: CGFloat = 6
   static let hoverAnimation: Animation = ToolbarConstants.hoverAnimation
   static let dividerWidth: CGFloat = 1 + groupSpacing * 2
   static func groupWidth(_ count: Int) -> CGFloat {
@@ -1390,14 +1414,15 @@ enum InlineAreaToolbarMetrics {
     return groups.reduce(0) { $0 + groupWidth($1.count) } + CGFloat(groups.count - 1) * dividerWidth
   }
   static var idealWidth: CGFloat {
-    horizontalPadding * 2 + toolsWidth + groupWidth(2) + groupWidth(6) + dividerWidth * 2
+    horizontalPadding * 2 + toolsWidth + groupWidth(2) + groupWidth(2) + groupWidth(4) + dividerWidth * 3
   }
 }
 
 enum InlineAreaLayout {
   static let toolbarHeight: CGFloat = InlineAreaToolbarMetrics.iconButtonSize + InlineAreaToolbarMetrics.verticalPadding * 2
-  static let propertiesHeight: CGFloat = 38
-  static let controlStackSpacing: CGFloat = 0
+  /// The secondary bar is its own capsule under the toolbar: 28 pt controls + 6 pt padding.
+  static let propertiesHeight: CGFloat = InlineAreaChrome.propertyControlHeight + 12
+  static let controlStackSpacing: CGFloat = 8
   static let selectionGap: CGFloat = 12
   static let screenPadding: CGFloat = 16
   static let controlPanelOuterHorizontalInset: CGFloat = 12
@@ -1593,7 +1618,10 @@ enum InlineAreaChrome {
   static let controlCornerRadius: CGFloat = InlineAreaToolbarMetrics.buttonCornerRadius
   static let controlSize: CGFloat = InlineAreaToolbarMetrics.iconButtonSize
   static let moveControlWidth: CGFloat = 72
-  static let propertyControlHeight: CGFloat = 24
+  static let propertyControlHeight: CGFloat = 28
+  static let propertyCornerRadius: CGFloat = propertyControlHeight / 2
+  /// Secondary bar capsule, concentric with its controls (20 = 14 + 6).
+  static let propertiesBarCornerRadius: CGFloat = propertyCornerRadius + 6
   static let itemBackground = Color.primary.opacity(0.06)
   static let itemSelectedBackground = Color.primary.opacity(0.12)
   static let itemSelectedForeground = Color.primary
@@ -1609,10 +1637,11 @@ enum InlineAreaChrome {
 }
 
 struct InlineAreaPanelBorder: View {
+  var cornerRadius: CGFloat = InlineAreaChrome.cornerRadius
   @Environment(\.colorScheme) var colorScheme
 
   var body: some View {
-    RoundedRectangle(cornerRadius: InlineAreaChrome.cornerRadius, style: .continuous)
+    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
       .strokeBorder(
         colorScheme == .dark ? Color.white.opacity(0.18) : Color.black.opacity(0.12),
         lineWidth: 1.0
@@ -1636,19 +1665,19 @@ extension View {
   /// Pinny: native Liquid Glass (Regular) on macOS 26+; the hudWindow material stays as the
   /// fallback. Chosen against the hudWindow look in validation/liquid-glass-compare-*.png.
   @ViewBuilder
-  func inlineAreaPanelChrome() -> some View {
+  func inlineAreaPanelChrome(cornerRadius: CGFloat = InlineAreaChrome.cornerRadius) -> some View {
     if #available(macOS 26.0, *) {
-      glassEffect(.regular, in: RoundedRectangle(cornerRadius: InlineAreaChrome.cornerRadius, style: .continuous))
+      glassEffect(.regular, in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
     } else {
-      inlineAreaLegacyPanelChrome()
+      inlineAreaLegacyPanelChrome(cornerRadius: cornerRadius)
     }
   }
 
-  private func inlineAreaLegacyPanelChrome() -> some View {
+  private func inlineAreaLegacyPanelChrome(cornerRadius: CGFloat) -> some View {
     background(InlineAreaPanelBackgroundTint().allowsHitTesting(false))
-      .background(InlineAreaHudMaterialBackground(cornerRadius: InlineAreaChrome.cornerRadius).allowsHitTesting(false))
-      .clipShape(RoundedRectangle(cornerRadius: InlineAreaChrome.cornerRadius, style: .continuous))
-      .overlay(InlineAreaPanelBorder().allowsHitTesting(false))
+      .background(InlineAreaHudMaterialBackground(cornerRadius: cornerRadius).allowsHitTesting(false))
+      .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+      .overlay(InlineAreaPanelBorder(cornerRadius: cornerRadius).allowsHitTesting(false))
       .shadow(color: Color.black.opacity(0.18), radius: 12, x: 0, y: 4)
       .shadow(color: Color.black.opacity(0.08), radius: 2, x: 0, y: 1)
   }
@@ -2102,10 +2131,12 @@ struct InlineAreaIconButton: View {
 }
 
 struct InlineAreaDivider: View {
+  var height: CGFloat = InlineAreaToolbarMetrics.dividerHeight
+
   var body: some View {
     Rectangle()
       .fill(InlineAreaChrome.divider)
-      .frame(width: 1, height: InlineAreaToolbarMetrics.dividerHeight)
+      .frame(width: 1, height: height)
       .padding(.horizontal, InlineAreaToolbarMetrics.groupSpacing)
   }
 }
@@ -2114,7 +2145,9 @@ private struct InlineAreaPropertiesBar: View {
   @ObservedObject var state: AnnotateState
   let maxWidth: CGFloat
   let popoverEdge: Edge
-  let onContentWidthChange: (CGFloat) -> Void
+
+  /// Natural width of the controls row; the bar hugs it and scrolls past `maxWidth`.
+  @State private var contentWidth: CGFloat = 0
 
   private let strokeColors: [Color] = [.red, .orange, .yellow, .green, .blue, .purple, .white, .black]
   private let fillColors: [Color] = [.clear, .red, .orange, .yellow, .green, .blue, .purple, .white, .black]
@@ -2134,7 +2167,7 @@ private struct InlineAreaPropertiesBar: View {
   var body: some View {
     ZStack(alignment: .leading) {
       ScrollView(.horizontal, showsIndicators: false) {
-        HStack(spacing: 8) {
+        HStack(spacing: 0) {
           contextPill
 
           if familyOptions.count > 1 {
@@ -2319,7 +2352,6 @@ private struct InlineAreaPropertiesBar: View {
         }
         .fixedSize(horizontal: true, vertical: false)
         .padding(.horizontal, 6)
-        .padding(.vertical, 5)
         .background(
           GeometryReader { proxy in
             Color.clear.preference(
@@ -2329,12 +2361,10 @@ private struct InlineAreaPropertiesBar: View {
           }
         )
       }
-      .frame(maxWidth: max(0, maxWidth - InlineAreaLayout.controlPanelOuterHorizontalInset))
+      .frame(width: min(contentWidth, maxWidth))
     }
-    .frame(width: maxWidth, height: InlineAreaLayout.propertiesHeight, alignment: .leading)
-    .onPreferenceChange(InlineAreaPropertiesContentWidthKey.self) { width in
-      onContentWidthChange(max(0, width))
-    }
+    .frame(height: InlineAreaLayout.propertiesHeight)
+    .onPreferenceChange(InlineAreaPropertiesContentWidthKey.self) { contentWidth = $0 }
   }
 
   private var colorTitle: String {
@@ -2343,10 +2373,10 @@ private struct InlineAreaPropertiesBar: View {
 
   private var contextPill: some View {
     HStack(spacing: 6) {
-      InlineAreaGlyph(name: state.quickPropertiesTool?.rawValue ?? "properties", size: 13)
+      InlineAreaGlyph(name: state.quickPropertiesTool?.rawValue ?? "properties", size: 14)
 
       Text(state.quickPropertiesContextTitle)
-        .font(.system(size: 11, weight: .semibold))
+        .font(.system(size: 12, weight: .semibold))
         .lineLimit(1)
         .truncationMode(.tail)
     }
@@ -2381,18 +2411,18 @@ private struct InlineAreaColorControl: View {
 
   var body: some View {
     InlineAreaPropertyGroup(title: title) {
-      HStack(spacing: 5) {
+      HStack(spacing: 2) {
         Button {
           showsPopover.toggle()
         } label: {
           HStack(spacing: 5) {
-            InlineAreaColorSwatch(color: selectedColor, isSelected: false, size: 15)
+            InlineAreaColorSwatch(color: selectedColor, isSelected: false, size: 18)
             InlineAreaGlyph(name: "color-dropdown", size: 10)
               .foregroundColor(InlineAreaChrome.secondaryText)
           }
-          .frame(width: 40, height: InlineAreaChrome.propertyControlHeight)
+          .frame(width: 48, height: InlineAreaChrome.propertyControlHeight)
           .background(
-            RoundedRectangle(cornerRadius: InlineAreaChrome.controlCornerRadius, style: .continuous)
+            RoundedRectangle(cornerRadius: InlineAreaChrome.propertyCornerRadius, style: .continuous)
               .fill(InlineAreaChrome.itemBackground)
           )
         }
@@ -2416,9 +2446,9 @@ private struct InlineAreaColorControl: View {
             InlineAreaColorSwatch(
               color: color,
               isSelected: AnnotateColorPaletteStore.colorsMatch(selectedColor, color),
-              size: 15
+              size: 18
             )
-            .frame(width: 20, height: InlineAreaChrome.propertyControlHeight)
+            .frame(width: InlineAreaChrome.propertyControlHeight, height: InlineAreaChrome.propertyControlHeight)
           }
           .buttonStyle(.plain)
           .inlineAreaHelp(L10n.Common.favorite)
@@ -3045,20 +3075,20 @@ private struct InlineAreaSegmentedPicker<Item: Identifiable & Equatable>: View {
 
   var body: some View {
     InlineAreaPropertyGroup(title: title) {
-      HStack(spacing: 4) {
+      HStack(spacing: 2) {
         ForEach(items) { item in
           Button {
             selection = item
           } label: {
-            InlineAreaGlyph(name: icon(item), isSelected: selection == item, size: 15)
+            InlineAreaGlyph(name: icon(item), isSelected: selection == item, size: 16)
               .foregroundColor(selection == item ? InlineAreaChrome.itemSelectedForeground : InlineAreaChrome.secondaryText)
-              .frame(width: 25, height: InlineAreaChrome.propertyControlHeight)
+              .frame(width: InlineAreaChrome.propertyControlHeight, height: InlineAreaChrome.propertyControlHeight)
               .background(
-                RoundedRectangle(cornerRadius: InlineAreaChrome.controlCornerRadius, style: .continuous)
-                  .fill(selection == item ? InlineAreaChrome.itemSelectedBackground : InlineAreaChrome.itemBackground)
+                RoundedRectangle(cornerRadius: InlineAreaChrome.propertyCornerRadius, style: .continuous)
+                  .fill(selection == item ? InlineAreaChrome.itemSelectedBackground : Color.clear)
               )
               .overlay(
-                RoundedRectangle(cornerRadius: InlineAreaChrome.controlCornerRadius, style: .continuous)
+                RoundedRectangle(cornerRadius: InlineAreaChrome.propertyCornerRadius, style: .continuous)
                   .stroke(selection == item ? InlineAreaChrome.itemSelectedBorder : InlineAreaChrome.itemBorder, lineWidth: 1)
               )
           }
@@ -3079,15 +3109,15 @@ private struct InlineAreaArrowBendControl: View {
       Button {
         bendDirection = bendDirection.toggled
       } label: {
-        InlineAreaGlyph(name: "bend-\(bendDirection.rawValue)", isSelected: bendDirection == .alternate, size: 15)
+        InlineAreaGlyph(name: "bend-\(bendDirection.rawValue)", isSelected: bendDirection == .alternate, size: 16)
           .foregroundColor(bendDirection == .alternate ? InlineAreaChrome.itemSelectedForeground : InlineAreaChrome.secondaryText)
-          .frame(width: 25, height: InlineAreaChrome.propertyControlHeight)
+          .frame(width: InlineAreaChrome.propertyControlHeight, height: InlineAreaChrome.propertyControlHeight)
           .background(
-            RoundedRectangle(cornerRadius: InlineAreaChrome.controlCornerRadius, style: .continuous)
-              .fill(bendDirection == .alternate ? InlineAreaChrome.itemSelectedBackground : InlineAreaChrome.itemBackground)
+            RoundedRectangle(cornerRadius: InlineAreaChrome.propertyCornerRadius, style: .continuous)
+              .fill(bendDirection == .alternate ? InlineAreaChrome.itemSelectedBackground : Color.clear)
           )
           .overlay(
-            RoundedRectangle(cornerRadius: InlineAreaChrome.controlCornerRadius, style: .continuous)
+            RoundedRectangle(cornerRadius: InlineAreaChrome.propertyCornerRadius, style: .continuous)
               .stroke(bendDirection == .alternate ? InlineAreaChrome.itemSelectedBorder : InlineAreaChrome.itemBorder, lineWidth: 1)
           )
       }
@@ -3103,20 +3133,20 @@ private struct InlineAreaLineStylePicker: View {
 
   var body: some View {
     InlineAreaPropertyGroup(title: L10n.AnnotateUI.lineStyle) {
-      HStack(spacing: 4) {
+      HStack(spacing: 2) {
         ForEach(LineDashStyle.allCases) { style in
           Button {
             selection = style
           } label: {
             LineStyleIcon(style: style)
               .foregroundColor(selection == style ? InlineAreaChrome.itemSelectedForeground : InlineAreaChrome.secondaryText)
-              .frame(width: 25, height: InlineAreaChrome.propertyControlHeight)
+              .frame(width: InlineAreaChrome.propertyControlHeight, height: InlineAreaChrome.propertyControlHeight)
               .background(
-                RoundedRectangle(cornerRadius: InlineAreaChrome.controlCornerRadius, style: .continuous)
-                  .fill(selection == style ? InlineAreaChrome.itemSelectedBackground : InlineAreaChrome.itemBackground)
+                RoundedRectangle(cornerRadius: InlineAreaChrome.propertyCornerRadius, style: .continuous)
+                  .fill(selection == style ? InlineAreaChrome.itemSelectedBackground : Color.clear)
               )
               .overlay(
-                RoundedRectangle(cornerRadius: InlineAreaChrome.controlCornerRadius, style: .continuous)
+                RoundedRectangle(cornerRadius: InlineAreaChrome.propertyCornerRadius, style: .continuous)
                   .stroke(selection == style ? InlineAreaChrome.itemSelectedBorder : InlineAreaChrome.itemBorder, lineWidth: 1)
               )
           }
@@ -3140,7 +3170,7 @@ private struct InlineAreaSliderControl: View {
   var body: some View {
     InlineAreaPropertyGroup(title: title) {
       HStack(spacing: 6) {
-        InlineAreaGlyph(name: icon, size: 13)
+        InlineAreaGlyph(name: icon, size: 14)
           .foregroundColor(InlineAreaChrome.secondaryText)
 
         Slider(
@@ -3148,11 +3178,11 @@ private struct InlineAreaSliderControl: View {
           in: range,
           onEditingChanged: onEditingChanged
         )
-        .frame(width: 58)
+        .frame(width: 64)
         .controlSize(.small)
 
         Text(displayText)
-          .font(.system(size: 10, weight: .medium))
+          .font(.system(size: 11, weight: .medium))
           .foregroundColor(InlineAreaChrome.secondaryText)
           .lineLimit(1)
           .monospacedDigit()
@@ -3176,7 +3206,7 @@ private struct InlineAreaTextFieldControl: View {
         .padding(.horizontal, 8)
         .frame(width: 112, height: InlineAreaChrome.propertyControlHeight)
         .background(
-          RoundedRectangle(cornerRadius: InlineAreaChrome.controlCornerRadius, style: .continuous)
+          RoundedRectangle(cornerRadius: InlineAreaChrome.propertyCornerRadius, style: .continuous)
             .fill(InlineAreaChrome.itemBackground)
         )
     }
@@ -3188,15 +3218,19 @@ private struct InlineAreaPropertyGroup<Content: View>: View {
   @ViewBuilder let content: Content
 
   var body: some View {
-    HStack(spacing: 6) {
-      Text(title)
-        .font(.system(size: 10, weight: .semibold))
-        .foregroundColor(InlineAreaChrome.secondaryText)
-        .lineLimit(1)
-        .minimumScaleFactor(0.82)
-        .fixedSize(horizontal: true, vertical: false)
+    // Every property follows the context pill, so each one leads with the group hairline.
+    HStack(spacing: 0) {
+      InlineAreaDivider(height: 16)
+      HStack(spacing: 6) {
+        Text(title)
+          .font(.system(size: 11, weight: .semibold))
+          .foregroundColor(InlineAreaChrome.secondaryText)
+          .lineLimit(1)
+          .minimumScaleFactor(0.82)
+          .fixedSize(horizontal: true, vertical: false)
 
-      content
+        content
+      }
     }
   }
 }
@@ -3205,32 +3239,37 @@ private struct InlineAreaCaptureActions: View {
   @ObservedObject var session: InlineAreaAnnotateSession
 
   var body: some View {
-    HStack(spacing: InlineAreaToolbarMetrics.itemSpacing) {
-      InlineAreaIconButton(icon: "scrolling", tooltip: L10n.PinnyLongScreenshot.title,
-                          isEnabled: !session.isFinishing) {
-        session.startScrollingCapture()
+    HStack(spacing: 0) {
+      HStack(spacing: InlineAreaToolbarMetrics.itemSpacing) {
+        InlineAreaIconButton(icon: "scrolling", tooltip: L10n.PinnyLongScreenshot.title,
+                            isEnabled: !session.isFinishing) {
+          session.startScrollingCapture()
+        }
+        InlineAreaIconButton(icon: "record", tooltip: L10n.PinnyRecording.title,
+                            isEnabled: !session.isFinishing) {
+          session.beginRecordingPrep()
+        }
       }
-      InlineAreaIconButton(icon: "record", tooltip: L10n.PinnyRecording.title,
-                          isEnabled: !session.isFinishing) {
-        session.beginRecordingPrep()
-      }
-      InlineAreaIconButton(icon: "copy",
-        tooltip: L10n.Common.withShortcut(L10n.AnnotateUI.copyToClipboard, "\(L10n.AnnotateUI.pinnyReturnKey) / ⌘C"),
-        isEnabled: !session.isFinishing) {
-        session.copyCurrentImage()
-      }
-      InlineAreaIconButton(icon: "pin", tooltip: L10n.PreferencesQuickAccess.pinToScreenAction,
-                          isEnabled: !session.isFinishing) {
-        Task { await session.finishAndPin() }
-      }
-      InlineAreaIconButton(icon: "save",
-        tooltip: L10n.Common.withShortcut(L10n.Common.save, "⌘S"),
-        isEnabled: !session.isFinishing) {
-        Task { await session.finish() }
-      }
-      InlineAreaIconButton(icon: "cancel", tooltip: L10n.Common.cancel,
-                          isEnabled: !session.isFinishing) {
-        session.cancel()
+      InlineAreaDivider()
+      HStack(spacing: InlineAreaToolbarMetrics.itemSpacing) {
+        InlineAreaIconButton(icon: "copy",
+          tooltip: L10n.Common.withShortcut(L10n.AnnotateUI.copyToClipboard, "\(L10n.AnnotateUI.pinnyReturnKey) / ⌘C"),
+          isEnabled: !session.isFinishing) {
+          session.copyCurrentImage()
+        }
+        InlineAreaIconButton(icon: "pin", tooltip: L10n.PreferencesQuickAccess.pinToScreenAction,
+                            isEnabled: !session.isFinishing) {
+          Task { await session.finishAndPin() }
+        }
+        InlineAreaIconButton(icon: "save",
+          tooltip: L10n.Common.withShortcut(L10n.Common.save, "⌘S"),
+          isEnabled: !session.isFinishing) {
+          Task { await session.finish() }
+        }
+        InlineAreaIconButton(icon: "cancel", tooltip: L10n.Common.cancel,
+                            isEnabled: !session.isFinishing) {
+          session.cancel()
+        }
       }
     }
     .overlay {

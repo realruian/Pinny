@@ -77,7 +77,7 @@ struct PinnyRecordingPrepBar: View {
   @AppStorage(PreferencesKeys.recordingCaptureMicrophone) private var captureMicrophone = false
 
   static let sizeLabelWidth: CGFloat = 84
-  static let startButtonWidth: CGFloat = 96
+  static let startButtonWidth: CGFloat = 104
 
   /// Fixed so the overlay can place the bar before it is laid out. After Record Again the bar
   /// starts with a Back button in its own group.
@@ -150,8 +150,8 @@ private struct PinnyRecordingStartButton: View {
           .fixedSize()
       }
       .foregroundColor(.white)
-      .padding(.horizontal, 10)
-      .frame(height: 28)
+      .padding(.horizontal, 16)
+      .frame(height: InlineAreaChrome.controlSize)
       .background(
         RoundedRectangle(cornerRadius: InlineAreaChrome.controlCornerRadius, style: .continuous)
           .fill(Color(nsColor: .systemRed).opacity(isHovering ? 0.88 : 1))
@@ -346,10 +346,10 @@ private struct PinnyRecordingFormatPicker: View {
           Text(format.title)
             .font(.system(size: 11, weight: .semibold))
             .foregroundColor(selection == format ? InlineAreaChrome.primaryText : InlineAreaChrome.secondaryText)
-            .padding(.horizontal, 8)
-            .frame(height: 22)
+            .padding(.horizontal, 10)
+            .frame(height: 24)
             .background(
-              RoundedRectangle(cornerRadius: 5, style: .continuous)
+              Capsule(style: .continuous)
                 .fill(selection == format ? Color(nsColor: .controlBackgroundColor) : .clear)
                 .shadow(color: .black.opacity(selection == format ? 0.18 : 0), radius: 1, y: 0.5)
             )
@@ -360,7 +360,7 @@ private struct PinnyRecordingFormatPicker: View {
       }
     }
     .padding(2)
-    .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(InlineAreaChrome.itemBackground))
+    .background(Capsule(style: .continuous).fill(InlineAreaChrome.itemBackground))
     .inlineAreaHelp(L10n.PinnyRecording.formatHint)
   }
 }

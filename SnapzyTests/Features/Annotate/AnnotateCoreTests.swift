@@ -553,6 +553,16 @@ final class AnnotateCoreTests: XCTestCase {
     XCTAssertEqual(activatedTools, [.arrow])
   }
 
+  func testInlineToolbarCapsuleIsConcentric() {
+    // Option C: round buttons in a capsule bar; the secondary bar is a smaller capsule.
+    XCTAssertEqual(InlineAreaLayout.toolbarHeight, 48)
+    XCTAssertEqual(InlineAreaToolbarMetrics.toolbarCornerRadius, InlineAreaLayout.toolbarHeight / 2)
+    XCTAssertEqual(InlineAreaToolbarMetrics.toolbarCornerRadius,
+                   InlineAreaToolbarMetrics.buttonCornerRadius + InlineAreaToolbarMetrics.verticalPadding)
+    XCTAssertEqual(InlineAreaChrome.propertiesBarCornerRadius, InlineAreaLayout.propertiesHeight / 2)
+    XCTAssertEqual(AnnotateToolVisibility.visibleInlineToolGroups(userDefaults: UserDefaultsFactory.make()).count, 1)
+  }
+
   func testInlineAreaControls_nearFullscreenSelectionUsesBottomInnerPlacement() {
     let containerSize = CGSize(width: 1512, height: 982)
     let rect = CGRect(origin: .zero, size: containerSize)
@@ -582,7 +592,7 @@ final class AnnotateCoreTests: XCTestCase {
 
   func testInlineAreaControls_respectsTopInsetWhenClampedAboveSelection() {
     let containerSize = CGSize(width: 1512, height: 982)
-    let rect = CGRect(x: 80, y: 120, width: 1200, height: 862)
+    let rect = CGRect(x: 80, y: 130, width: 1200, height: 852)
     let controlInsets = InlineAreaControlInsets(top: 60)
 
     let placement = InlineAreaControlGeometry.placement(
@@ -662,7 +672,8 @@ final class AnnotateCoreTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(placement.toolbarCenter.y - InlineAreaLayout.toolbarHeight / 2, 16)
         XCTAssertLessThanOrEqual(placement.propertiesCenter.y + InlineAreaLayout.propertiesHeight / 2, size.height - 16)
         XCTAssertEqual(placement.propertiesCenter.y - InlineAreaLayout.propertiesHeight / 2,
-                       placement.toolbarCenter.y + InlineAreaLayout.toolbarHeight / 2)
+                       placement.toolbarCenter.y + InlineAreaLayout.toolbarHeight / 2
+                         + InlineAreaLayout.controlStackSpacing)
       }
     }
   }

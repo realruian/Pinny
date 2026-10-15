@@ -52,9 +52,10 @@ nonisolated enum AnnotationToolType: String, CaseIterable, Identifiable {
     inlineToolFamilies.first { $0.contains(tool) }
   }
   static let inlineToolGroups: [[AnnotationToolType]] = [
-    [.selection],
-    drawableTools.filter { inlineShapeToolSet.contains($0) },
-    drawableTools.filter { !inlineShapeToolSet.contains($0) }
+    // Pinny: one group for every annotation tool; the toolbar splits groups with a hairline,
+    // so fewer, larger groups read calmer (validation/toolbar-c-all-bars-mockup.html).
+    [.selection] + drawableTools.filter { inlineShapeToolSet.contains($0) }
+      + drawableTools.filter { !inlineShapeToolSet.contains($0) }
   ]
 
   var icon: String {
