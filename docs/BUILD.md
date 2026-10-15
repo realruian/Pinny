@@ -30,7 +30,7 @@ python3 scripts/generate-toolbar-icons.py
 
 ## 2. 编译 Release 优化版
 
-Pinny 正式自用包统一采用 `Release` 配置编译（开启 `-O` 与整模块优化，大幅降低空闲内存与 `F1` 浮层内存开销）：
+Pinny 采用 `Release` 配置编译（开启 `-O` 与整模块优化，降低空闲内存与 `F1` 浮层内存开销）：
 
 ```bash
 xcodebuild -project Snapzy.xcodeproj \

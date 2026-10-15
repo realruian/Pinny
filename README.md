@@ -17,9 +17,6 @@
 
 Pinny 将截图、组件识别、原位标注、滚动长截图与剪贴板贴图收敛为两个全局入口：**`F1` 截图**与 **`F2` 贴图**。不设模式前置选择，不使用角落中转卡片。
 
-> [!IMPORTANT]
-> 本仓库包含个人商业授权的 Hugeicons Pro 图标资源，仅限本地自用与私有备份，禁止公开或分发。
-
 ## 功能概览
 
 ### 1. 原位截图（`F1`）
@@ -189,6 +186,5 @@ open /Applications/Pinny.app
 
 ## 许可与说明
 
-- 开源基础部分遵循 BSD 3-Clause 许可，详见 [LICENSE](LICENSE)。
+- 代码基于 BSD 3-Clause 许可开源，详见 [LICENSE](LICENSE)。
 - 为兼容既有配置与数据，Xcode target、URL Scheme（`snapzy://`）及应用支持目录（`~/Library/Application Support/Snapzy`）沿用原标识符。
-- 仓库内含个人商业授权的 Hugeicons Pro 资源，必须保持 Private，仅推送至个人私有远端 `mine`（`https://github.com/realruian/Pinny`）。

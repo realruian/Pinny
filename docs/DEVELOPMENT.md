@@ -15,11 +15,11 @@ git clone https://github.com/realruian/Pinny.git
 cd Pinny
 ```
 
-> **注意**：`pinny` 为默认主分支；远端 `mine` 指向私有仓库 `https://github.com/realruian/Pinny.git`。切勿将提交推送到上游原作者仓库。
+> **注意**：`pinny` 为默认主分支（`https://github.com/realruian/Pinny.git`）。
 
-## 构建并打包自用版 `Pinny.app`（推荐 Release 流程）
+## 构建并打包 `Pinny.app`（Release 流程）
 
-日常安装在 `/Applications/Pinny.app` 的版本应始终使用 **Release 优化构建**，并通过 `scripts/package-preview.py` 使用现有稳定证书（如 `'V2Do Dev'`）签名，以保留 macOS 屏幕录制与辅助功能（设备控制）权限。
+安装在 `/Applications/Pinny.app` 的版本建议使用 **Release 构建**，并通过 `scripts/package-preview.py` 使用本地稳定证书（如 `'V2Do Dev'`）签名，以保留 macOS 屏幕录制与辅助功能权限。
 
 ```bash
 # 1. 编译 Release 优化版
