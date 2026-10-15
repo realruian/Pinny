@@ -46,6 +46,16 @@ ICONS = {
     'pin': ('Pin', 'fixed'),
     'save': ('Download04', 'fixed'),
     'cancel': ('Cancel01', 'fixed'),
+    'record': ('Video01', 'fixed'),
+    # Recording: prep bar, recording bar and in-place playback bar
+    'rec-audio-on': ('VolumeHigh', 'fixed'),
+    'rec-audio-off': ('VolumeOff', 'fixed'),
+    'rec-mic-on': ('Mic01', 'fixed'),
+    'rec-mic-off': ('MicOff01', 'fixed'),
+    'rec-pause': ('Pause', 'fixed'),
+    'rec-play': ('Play', 'fixed'),
+    'rec-stop': ('StopCircle', 'solid'),
+    'rec-redo': ('ArrowReloadHorizontal', 'fixed'),
     'overflow': ('ArrowRight01', 'fixed'),
     # Properties bar: segmented pickers (key suffix is the enum rawValue)
     'text-plain': ('TextFont', 'swap'),

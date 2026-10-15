@@ -725,7 +725,14 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
     }
   }
 
-  private func startInlineAreaAnnotateCapture() {
+  /// Pinny: re-record opens F1 straight into the recording prep bar on the same area.
+  func startRecordingPrep(rect: CGRect) {
+    startInlineAreaAnnotateCapture(recordingPrepRect: rect)
+  }
+
+  private func startInlineAreaAnnotateCapture(recordingPrepRect: CGRect? = nil) {
+    // Pinny: F1 while recording stops the recording.
+    if PinnyRecordingController.shared.stopIfRecording() { return }
     if isAreaSelectionActive {
       DiagnosticLogger.shared.log(.debug, .capture, "captureAreaAnnotate blocked: already active")
       return
@@ -837,7 +844,8 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
           },
           context: captureContext,
           prefetchedContentTask: prefetchedContentTask,
-          excludeOwnApplication: excludeOwnApplication
+          excludeOwnApplication: excludeOwnApplication,
+          recordingPrepRect: recordingPrepRect
         ) { [weak self] result in
           guard let self else {
             hiddenWindowSession.restore()
@@ -852,6 +860,10 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
             lastCaptureResult = nil
             // Own windows stay hidden until the long screenshot ends.
             startLongScreenshot(rect: rect, context: captureContext) { hiddenWindowSession.restore() }
+            return
+          case .recording(let rect):
+            lastCaptureResult = nil
+            startRecording(rect: rect) { hiddenWindowSession.restore() }
             return
           }
           hiddenWindowSession.restore()
@@ -1868,6 +1880,19 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
     if clearFailures {
       lazyAreaSnapshotFailedDisplayIDs.removeAll()
     }
+  }
+
+  /// Pinny: records an F1 selection, then plays it in place to copy or save.
+  private func startRecording(rect: CGRect, onEnded: @escaping @MainActor () -> Void) {
+    PinnyRecordingController.shared.start(
+      rect: rect,
+      saveDirectoryProvider: { [weak self] in
+        self?.fileAccessManager.ensureExportDirectoryForOperation(
+          promptMessage: L10n.Recording.chooseSaveLocationMessage)
+      },
+      rerecord: { [weak self] rect in self?.startRecordingPrep(rect: rect) },
+      onRecordingEnded: onEnded
+    )
   }
 
   /// Pinny: live long screenshot of an F1 selection. Manual scrolling only; the toolbar under

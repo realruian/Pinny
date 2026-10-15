@@ -25,6 +25,7 @@ final class InlineAreaAnnotateCoordinator {
     context: CaptureContext = .empty,
     prefetchedContentTask: ShareableContentPrefetchTask? = nil,
     excludeOwnApplication: Bool = false,
+    recordingPrepRect: CGRect? = nil,
     onComplete: @escaping (InlineCaptureOutcome) -> Void
   ) {
     CaptureTiming.mark("coordinator start")
@@ -104,6 +105,9 @@ final class InlineAreaAnnotateCoordinator {
     }
     if !windows.contains(where: { $0.displayID == primaryDisplayID }) {
       windows.first?.makeKey()
+    }
+    if let recordingPrepRect {
+      session.beginRecordingPrep(screenRect: recordingPrepRect)
     }
     CaptureTiming.mark("panels ordered front")
     DispatchQueue.main.async {
@@ -188,7 +192,7 @@ final class InlineAreaAnnotatePanel: NSPanel {
 
   override func sendEvent(_ event: NSEvent) {
     if event.type == .leftMouseDown, event.clickCount == 2, session.phase == .annotating,
-       session.state.selectedTool == .selection,
+       !session.isRecordingPrep, session.state.selectedTool == .selection,
        session.state.editingTextAnnotationId == nil, session.state.annotations.isEmpty,
        let rect = session.selectionRect {
       let screen = convertPoint(toScreen: event.locationInWindow)
@@ -604,6 +608,33 @@ private struct InlineAreaAnnotateRootView: View {
 
   @ViewBuilder
   private func controls(rect: CGRect, desktopRect: CGRect, containerSize: CGSize) -> some View {
+    if session.isRecordingPrep {
+      recordingPrepBar(rect: rect, desktopRect: desktopRect, containerSize: containerSize)
+    } else {
+      captureControls(rect: rect, containerSize: containerSize)
+    }
+  }
+
+  /// Pinny: the recording prep bar takes the toolbar's place, with the same placement rule.
+  private func recordingPrepBar(rect: CGRect, desktopRect: CGRect, containerSize: CGSize) -> some View {
+    let placement = InlineAreaControlGeometry.placement(
+      for: rect, containerSize: containerSize,
+      showsProperties: false, propertiesContentWidth: 0,
+      controlInsets: display.controlInsets,
+      toolbarWidth: PinnyRecordingPrepBar.width
+    )
+    let scale = NSScreen.screens.first { $0.frame == display.screenFrame }?.backingScaleFactor ?? 2
+    let pixelSize = CGSize(width: (desktopRect.width * scale).rounded(), height: (desktopRect.height * scale).rounded())
+    return PinnyRecordingPrepBar(session: session, pixelSize: pixelSize)
+      .frame(width: placement.toolbarWidth, height: InlineAreaLayout.toolbarHeight)
+      .inlineAreaPanelChrome()
+      .position(placement.toolbarCenter)
+      .zIndex(10)
+      .transaction { $0.animation = nil }
+  }
+
+  @ViewBuilder
+  private func captureControls(rect: CGRect, containerSize: CGSize) -> some View {
     let showsDetails = session.state.showsQuickPropertiesBar || session.actionMessage != nil
     let placement = controlPlacement(
       for: rect, containerSize: containerSize,
@@ -1321,7 +1352,7 @@ enum InlineAreaToolbarMetrics {
     return groups.reduce(0) { $0 + groupWidth($1.count) } + CGFloat(groups.count - 1) * dividerWidth
   }
   static var idealWidth: CGFloat {
-    horizontalPadding * 2 + toolsWidth + groupWidth(2) + groupWidth(5) + dividerWidth * 2
+    horizontalPadding * 2 + toolsWidth + groupWidth(2) + groupWidth(6) + dividerWidth * 2
   }
 }
 
@@ -1347,9 +1378,12 @@ enum InlineAreaControlGeometry {
     containerSize: CGSize,
     showsProperties: Bool,
     propertiesContentWidth: CGFloat,
-    controlInsets: InlineAreaControlInsets
+    controlInsets: InlineAreaControlInsets,
+    toolbarWidth preferredToolbarWidth: CGFloat? = nil
   ) -> InlineAreaControlPlacement {
-    let toolbarWidth = controlDeckWidth(
+    let toolbarWidth = preferredToolbarWidth.map {
+      min($0, availableControlWidth(for: containerSize, controlInsets: controlInsets))
+    } ?? controlDeckWidth(
       for: containerSize,
       controlInsets: controlInsets
     )
@@ -3135,6 +3169,10 @@ private struct InlineAreaCaptureActions: View {
       InlineAreaIconButton(icon: "scrolling", tooltip: L10n.PinnyLongScreenshot.title,
                           isEnabled: !session.isFinishing) {
         session.startScrollingCapture()
+      }
+      InlineAreaIconButton(icon: "record", tooltip: L10n.PinnyRecording.title,
+                          isEnabled: !session.isFinishing) {
+        session.beginRecordingPrep()
       }
       InlineAreaIconButton(icon: "copy",
         tooltip: L10n.Common.withShortcut(L10n.AnnotateUI.copyToClipboard, "\(L10n.AnnotateUI.pinnyReturnKey) / ⌘C"),

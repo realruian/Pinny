@@ -9,5 +9,9 @@ stroke width 1.8 on the 24-unit grid (1.5pt at 20pt); a selected tool or option 
 Rounded variant (`CaptureTool-<key>-fill`). Rectangle, oval, filled rectangle, arrow display types and
 endpoint shapes keep one look in every state because their fill carries meaning.
 
+The recording bars use the same script: `record` (Video01) on the main bar, and `rec-*` for the prep,
+recording and playback bars (VolumeHigh / VolumeOff, Mic01 / MicOff01, Pause, Play, StopCircle in
+Solid Rounded, ArrowReloadHorizontal).
+
 The full Annotate window still uses SF Symbols.
 `Resources/Hugeicons-LICENSE.txt` is the MIT licence of the free set used before 2026-10-15.

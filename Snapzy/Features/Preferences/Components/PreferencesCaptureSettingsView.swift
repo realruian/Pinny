@@ -521,6 +521,62 @@ struct CaptureSettingsView: View {
           }
         }
 
+        // MARK: - Pinny recording (F1 toolbar › Record; sound and microphone are on the prep bar)
+
+        if !Self.showsLegacyOptions {
+          Section(L10n.PinnyRecording.title) {
+            SettingRow(
+              icon: "gauge.with.dots.needle.33percent",
+              title: L10n.PreferencesCapture.frameRateTitle,
+              description: L10n.PreferencesCapture.frameRateDescription
+            ) {
+              Picker("", selection: $fps) {
+                Text("30 FPS").tag(30)
+                Text("60 FPS").tag(60)
+              }
+              .labelsHidden()
+              .pickerStyle(.menu)
+            }
+
+            SettingRow(
+              icon: "sparkles",
+              title: L10n.PreferencesCapture.qualityTitle,
+              description: L10n.PreferencesCapture.qualityDescription
+            ) {
+              Picker("", selection: $quality) {
+                ForEach(VideoQuality.allCases, id: \.self) { option in
+                  Text(option.displayName).tag(option.rawValue)
+                }
+              }
+              .labelsHidden()
+              .pickerStyle(.menu)
+            }
+
+            SettingRow(
+              icon: "cursorarrow",
+              title: L10n.PreferencesCapture.showCursorTitle,
+              description: L10n.PreferencesCapture.recordingShowCursorDescription
+            ) {
+              Toggle("", isOn: $recordingShowCursor)
+                .labelsHidden()
+            }
+
+            SettingRow(
+              icon: "mic.badge.plus",
+              title: L10n.PreferencesCapture.microphoneInputTitle,
+              description: L10n.PreferencesCapture.microphoneInputDescription
+            ) {
+              Picker("", selection: $microphoneDeviceID) {
+                ForEach(microphoneDevices) { device in
+                  Text(device.displayName).tag(device.id)
+                }
+              }
+              .labelsHidden()
+              .frame(width: 220)
+            }
+          }
+        }
+
         // MARK: - Recording
 
         if Self.showsPane(.recording) {

@@ -29,6 +29,8 @@ enum InlineCaptureOutcome {
   case pinned
   /// The selection (AppKit global screen rect) handed to a live long screenshot.
   case scrollingCapture(CGRect)
+  /// Pinny: the selection (AppKit global screen rect) to record, chosen from the prep bar.
+  case recording(CGRect)
   case failure(CaptureError)
 }
 
@@ -165,6 +167,9 @@ final class InlineAreaAnnotateSession: ObservableObject {
   @Published var selectionPointerLocation: CGPoint?
   @Published var isMoveModifierActive = false
   @Published private(set) var isFinishing = false
+  /// Pinny: the toolbar shows the recording prep bar (sound, microphone, start). The selection
+  /// can still be moved and resized; Return starts, Esc goes back to the capture toolbar.
+  @Published private(set) var isRecordingPrep = false
   @Published var actionMessage: String?
   /// The window currently under the cursor while "automatically detect window under cursor"
   /// is on (see `autoDetectWindowUnderCursor`) — mirrors plain area screenshot's
@@ -543,6 +548,7 @@ final class InlineAreaAnnotateSession: ObservableObject {
   }
 
   func handleKeyEvent(_ event: NSEvent, source: InlineAreaKeyEventSource = .local) -> Bool {
+    if isRecordingPrep, let handled = handleRecordingPrepKey(event, source: source) { return handled }
     let action = Self.keyAction(
       for: event,
       source: source,
@@ -589,6 +595,25 @@ final class InlineAreaAnnotateSession: ObservableObject {
       isMoveModifierActive = false
       return false
     }
+  }
+
+  /// Prep bar keys: Return starts, Esc returns to the capture toolbar, arrows still move or
+  /// resize the selection. Copy, save and other capture shortcuts are swallowed. Nil means
+  /// the regular handling applies.
+  private func handleRecordingPrepKey(_ event: NSEvent, source: InlineAreaKeyEventSource) -> Bool? {
+    guard event.type == .keyDown, source == .local || windows.allObjects.contains(where: { $0.isKeyWindow })
+    else { return nil }
+    let plain = event.modifierFlags.intersection([.command, .control, .option, .shift]).isEmpty
+    if plain, Self.matchesFinishShortcut(event) {
+      startRecording()
+      return true
+    }
+    if Self.matchesCancelShortcut(event) {
+      endRecordingPrep()
+      return true
+    }
+    if InlineAreaSelectionNudge(event: event) != nil { return nil }
+    return event.modifierFlags.contains(.command) || plain ? true : nil
   }
 
   /// Arrow-key move / resize of an existing selection. Moving carries annotations with the
@@ -719,6 +744,29 @@ final class InlineAreaAnnotateSession: ObservableObject {
       CaptureTiming.end("clipboard ready")
     }
     isFinishing = false
+  }
+
+  func beginRecordingPrep() {
+    guard phase == .annotating, !didComplete, !isFinishing, selectionRect != nil else { return }
+    actionMessage = nil
+    state.selectedTool = .selection
+    isRecordingPrep = true
+  }
+
+  /// Re-record: open straight into the prep bar on the previous recording's area.
+  func beginRecordingPrep(screenRect: CGRect) {
+    beginAnnotating(with: Self.localRect(for: screenRect, in: desktopFrame))
+    beginRecordingPrep()
+  }
+
+  func endRecordingPrep() {
+    isRecordingPrep = false
+  }
+
+  /// Closes the frozen overlay and hands the selection to a live recording.
+  func startRecording() {
+    guard isRecordingPrep, phase == .annotating, !didComplete, !isFinishing, let selectionRect else { return }
+    complete(.recording(screenRect(for: selectionRect)))
   }
 
   /// Closes the frozen overlay and hands the selection to a live long screenshot.
@@ -936,7 +984,7 @@ final class InlineAreaAnnotateSession: ObservableObject {
     guard !didComplete else { return }
     didComplete = true
     switch result {
-    case .saved, .copied, .pinned, .scrollingCapture:
+    case .saved, .copied, .pinned, .scrollingCapture, .recording:
       if let selectionRect { InlineAreaRegionHistory.record(screenRect(for: selectionRect)) }
     case .failure:
       break

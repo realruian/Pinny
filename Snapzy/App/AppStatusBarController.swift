@@ -27,6 +27,16 @@ final class AppStatusBarController: ObservableObject {
   private var cachedIdleStatusStyle: MenuBarIconStyle?
   private var cachedCustomIconDate: Date?
   private lazy var recordingStopImage = makeRecordingStopImage()
+  private lazy var pinnyRecordingImage: NSImage = {
+    let image = NSImage(size: NSSize(width: 14, height: 14), flipped: false) { rect in
+      NSColor.systemRed.setFill()
+      NSBezierPath(ovalIn: rect.insetBy(dx: 3, dy: 3)).fill()
+      return true
+    }
+    image.isTemplate = false
+    image.accessibilityDescription = L10n.RecordingToolbar.stopRecordingHint
+    return image
+  }()
   private var menu: NSMenu?
   private var didDetectCrash = false
 
@@ -74,6 +84,7 @@ final class AppStatusBarController: ObservableObject {
   }
 
   func stopRecording() {
+    if PinnyRecordingController.shared.stopIfRecording() { return }
     RecordingCoordinator.shared.stopFromStatusItem()
   }
 
@@ -217,7 +228,8 @@ final class AppStatusBarController: ObservableObject {
   /// True while the menu bar item acts as the direct stop control
   /// (recording/paused AND the hover bar is hidden).
   private var isMenuBarActingAsStopControl: Bool {
-    (recorder.state == .recording || recorder.state == .paused) && !isHoverBarVisible
+    (recorder.state == .recording || recorder.state == .paused)
+      && (!isHoverBarVisible || PinnyRecordingController.shared.isRecording)
   }
 
   // MARK: - State Observation
@@ -265,7 +277,12 @@ final class AppStatusBarController: ObservableObject {
     guard let button = statusItem?.button else { return }
     // When the hover bar is hidden during recording, the menu bar item becomes the stop
     // control and shows a distinct stop glyph (macOS ⌘⇧5 parity). Otherwise use the app icon.
-    button.image = isMenuBarActingAsStopControl ? (recordingStopImage ?? idleStatusImage) : idleStatusImage
+    if isMenuBarActingAsStopControl, PinnyRecordingController.shared.isRecording {
+      // Pinny: a red dot next to the time; a click stops the recording.
+      button.image = pinnyRecordingImage
+    } else {
+      button.image = isMenuBarActingAsStopControl ? (recordingStopImage ?? idleStatusImage) : idleStatusImage
+    }
     button.contentTintColor = nil
     button.attributedTitle = statusItemAttributedTitle(for: recorder.state)
     button.toolTip = statusItemTooltip(for: recorder.state)

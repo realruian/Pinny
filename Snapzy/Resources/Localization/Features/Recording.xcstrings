@@ -7604,6 +7604,363 @@
           }
         }
       }
+    },
+    "recording-toolbar.pinny-title": {
+      "comment": "Pinny: F1 toolbar button that opens the recording prep bar for the selection",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Record"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "录屏"
+          }
+        }
+      }
+    },
+    "recording-toolbar.pinny-start": {
+      "comment": "Pinny: Prep bar button that starts recording the selection",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start Recording"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开始录制"
+          }
+        }
+      }
+    },
+    "recording-toolbar.pinny-system-audio-on": {
+      "comment": "Pinny: Prep bar toggle, system sound is recorded",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System sound: on"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系统声音：开"
+          }
+        }
+      }
+    },
+    "recording-toolbar.pinny-system-audio-off": {
+      "comment": "Pinny: Prep bar toggle, system sound is not recorded",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System sound: off"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系统声音：关"
+          }
+        }
+      }
+    },
+    "recording-toolbar.pinny-microphone-on": {
+      "comment": "Pinny: Prep bar toggle, microphone is recorded",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Microphone: on"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "麦克风：开"
+          }
+        }
+      }
+    },
+    "recording-toolbar.pinny-microphone-off": {
+      "comment": "Pinny: Prep bar toggle, microphone is not recorded",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Microphone: off"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "麦克风：关"
+          }
+        }
+      }
+    },
+    "recording-toolbar.pinny-pause": {
+      "comment": "Pinny: Pause the recording or the playback",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pause"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暂停"
+          }
+        }
+      }
+    },
+    "recording-toolbar.pinny-resume": {
+      "comment": "Pinny: Resume a paused recording",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resume"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "继续"
+          }
+        }
+      }
+    },
+    "recording-toolbar.pinny-stop": {
+      "comment": "Pinny: Recording bar button that stops recording",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop Recording"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "停止录制"
+          }
+        }
+      }
+    },
+    "recording-toolbar.pinny-play": {
+      "comment": "Pinny: Play the finished recording",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Play"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "播放"
+          }
+        }
+      }
+    },
+    "recording-toolbar.pinny-space-key": {
+      "comment": "Pinny: Name of the space bar in a shortcut hint",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Space"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "空格"
+          }
+        }
+      }
+    },
+    "recording-toolbar.pinny-rerecord": {
+      "comment": "Pinny: Discard the recording and record the same area again",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Record Again"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重录"
+          }
+        }
+      }
+    },
+    "recording-toolbar.pinny-progress": {
+      "comment": "Pinny: Accessibility label of the playback progress bar",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Playback position"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "播放进度"
+          }
+        }
+      }
+    },
+    "recording-toolbar.pinny-format-hint": {
+      "comment": "Pinny: Help for the MP4/GIF switch on the playback bar",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Format used when copying or saving"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "复制或保存时使用的格式"
+          }
+        }
+      }
+    },
+    "recording-toolbar.pinny-no-output": {
+      "comment": "Pinny: Recording stopped without a file",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The recording produced no video."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "录屏没有生成视频。"
+          }
+        }
+      }
+    },
+    "recording-toolbar.pinny-gif-failed": {
+      "comment": "Pinny: GIF conversion of a recording failed",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't make the GIF"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GIF 转换失败"
+          }
+        }
+      }
+    },
+    "recording-toolbar.pinny-copied": {
+      "comment": "Pinny: Toast after copying a recording",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recording copied"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已复制录屏"
+          }
+        }
+      }
+    },
+    "recording-toolbar.pinny-saved": {
+      "comment": "Pinny: Toast after saving a recording. %@ is the file name.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已保存 %@"
+          }
+        }
+      }
+    },
+    "recording-toolbar.pinny-discard-title": {
+      "comment": "Pinny: Title of the confirmation when closing an unsaved recording",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discard this recording?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "放弃这段录屏？"
+          }
+        }
+      }
+    },
+    "recording-toolbar.pinny-discard-message": {
+      "comment": "Pinny: Message of the confirmation when closing an unsaved recording",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It hasn't been saved or copied and will be deleted."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "还没有保存或复制，关闭后会删除。"
+          }
+        }
+      }
+    },
+    "recording-toolbar.pinny-discard": {
+      "comment": "Pinny: Button that discards an unsaved recording",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discard"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "放弃"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

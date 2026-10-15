@@ -30,8 +30,8 @@ struct PermissionsSettingsView: View {
   private let filesAndFoldersURL =
     "x-apple.systempreferences:com.apple.preference.security?Privacy_FilesAndFolders"
 
-  /// The microphone is only used for screen recording, which Pinny hides.
-  private static let showsMicrophone = false
+  /// The microphone is only used for screen recording (F1 toolbar › Record).
+  private static let showsMicrophone = true
 
   var body: some View {
     Form {

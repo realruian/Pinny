@@ -2963,6 +2963,33 @@ nonisolated enum L10n {
     static let lostDetail = string("scrolling-capture.pinny-lost-detail", defaultValue: "Scroll back a little to where it last matched and it continues from there", comment: "Pinny: how to resume a long screenshot after it lost its place")
   }
 
+  /// Pinny: recording from the F1 toolbar (prep bar, recording bar, in-place playback).
+  enum PinnyRecording {
+    static let title = string("recording-toolbar.pinny-title", defaultValue: "Record", comment: "Pinny: F1 toolbar button that opens the recording prep bar for the selection")
+    static let start = string("recording-toolbar.pinny-start", defaultValue: "Start Recording", comment: "Pinny: Prep bar button that starts recording the selection")
+    static let systemAudioOn = string("recording-toolbar.pinny-system-audio-on", defaultValue: "System sound: on", comment: "Pinny: Prep bar toggle, system sound is recorded")
+    static let systemAudioOff = string("recording-toolbar.pinny-system-audio-off", defaultValue: "System sound: off", comment: "Pinny: Prep bar toggle, system sound is not recorded")
+    static let microphoneOn = string("recording-toolbar.pinny-microphone-on", defaultValue: "Microphone: on", comment: "Pinny: Prep bar toggle, microphone is recorded")
+    static let microphoneOff = string("recording-toolbar.pinny-microphone-off", defaultValue: "Microphone: off", comment: "Pinny: Prep bar toggle, microphone is not recorded")
+    static let pause = string("recording-toolbar.pinny-pause", defaultValue: "Pause", comment: "Pinny: Pause the recording or the playback")
+    static let resume = string("recording-toolbar.pinny-resume", defaultValue: "Resume", comment: "Pinny: Resume a paused recording")
+    static let stop = string("recording-toolbar.pinny-stop", defaultValue: "Stop Recording", comment: "Pinny: Recording bar button that stops recording")
+    static let play = string("recording-toolbar.pinny-play", defaultValue: "Play", comment: "Pinny: Play the finished recording")
+    static let spaceKey = string("recording-toolbar.pinny-space-key", defaultValue: "Space", comment: "Pinny: Name of the space bar in a shortcut hint")
+    static let rerecord = string("recording-toolbar.pinny-rerecord", defaultValue: "Record Again", comment: "Pinny: Discard the recording and record the same area again")
+    static let progress = string("recording-toolbar.pinny-progress", defaultValue: "Playback position", comment: "Pinny: Accessibility label of the playback progress bar")
+    static let formatHint = string("recording-toolbar.pinny-format-hint", defaultValue: "Format used when copying or saving", comment: "Pinny: Help for the MP4/GIF switch on the playback bar")
+    static let noOutput = string("recording-toolbar.pinny-no-output", defaultValue: "The recording produced no video.", comment: "Pinny: Recording stopped without a file")
+    static let gifFailed = string("recording-toolbar.pinny-gif-failed", defaultValue: "Couldn't make the GIF", comment: "Pinny: GIF conversion of a recording failed")
+    static let copied = string("recording-toolbar.pinny-copied", defaultValue: "Recording copied", comment: "Pinny: Toast after copying a recording")
+    static func saved(_ value: String) -> String {
+      format("recording-toolbar.pinny-saved", defaultValue: "Saved %@", comment: "Pinny: Toast after saving a recording. %@ is the file name.", value)
+    }
+    static let discardTitle = string("recording-toolbar.pinny-discard-title", defaultValue: "Discard this recording?", comment: "Pinny: Title of the confirmation when closing an unsaved recording")
+    static let discardMessage = string("recording-toolbar.pinny-discard-message", defaultValue: "It hasn't been saved or copied and will be deleted.", comment: "Pinny: Message of the confirmation when closing an unsaved recording")
+    static let discard = string("recording-toolbar.pinny-discard", defaultValue: "Discard", comment: "Pinny: Button that discards an unsaved recording")
+  }
+
   /// Pinny: keys available inside the F1 capture overlay and on pinned images.
   enum PinnyKeyReference {
     static let selectingSection = string("preferences-shortcuts.pinny-selecting-section", defaultValue: "While choosing an area", comment: "Pinny capture key reference")
