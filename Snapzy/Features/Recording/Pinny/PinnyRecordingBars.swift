@@ -79,15 +79,24 @@ struct PinnyRecordingPrepBar: View {
   static let sizeLabelWidth: CGFloat = 84
   static let startButtonWidth: CGFloat = 96
 
-  /// Fixed so the overlay can place the bar before it is laid out.
-  static var width: CGFloat {
+  /// Fixed so the overlay can place the bar before it is laid out. After Record Again the bar
+  /// starts with a Back button in its own group.
+  static func width(showsBack: Bool) -> CGFloat {
     let metrics = InlineAreaToolbarMetrics.self
-    return metrics.horizontalPadding * 2 + sizeLabelWidth + metrics.groupWidth(2) + startButtonWidth
+    let back = showsBack ? metrics.groupWidth(1) + metrics.dividerWidth : 0
+    return metrics.horizontalPadding * 2 + back + sizeLabelWidth + metrics.groupWidth(2) + startButtonWidth
       + metrics.groupWidth(1) + metrics.dividerWidth * 3
   }
 
   var body: some View {
     HStack(spacing: 0) {
+      if session.recordingPrepReturnsToPlayback {
+        InlineAreaIconButton(icon: "rec-back",
+                             tooltip: L10n.Common.withShortcut(L10n.PinnyRecording.backToRecording, "Esc")) {
+          session.endRecordingPrep()
+        }
+        InlineAreaDivider()
+      }
       PinnyRecordingLabel(text: "\(Int(pixelSize.width)) × \(Int(pixelSize.height))")
         .frame(width: Self.sizeLabelWidth)
       InlineAreaDivider()
@@ -107,16 +116,20 @@ struct PinnyRecordingPrepBar: View {
       PinnyRecordingStartButton { session.startRecording() }
         .frame(width: Self.startButtonWidth)
       InlineAreaDivider()
-      InlineAreaIconButton(
-        icon: "cancel",
-        tooltip: L10n.Common.withShortcut(
-          session.recordingPrepReturnsToPlayback ? L10n.PinnyRecording.backToRecording : L10n.Common.close, "Esc")
-      ) {
-        session.endRecordingPrep()
+      if session.recordingPrepReturnsToPlayback {
+        // After Record Again, X ends the whole recording; Esc and Back return to it.
+        InlineAreaIconButton(icon: "cancel", tooltip: L10n.PinnyRecording.endRecording) {
+          session.endRecordingAndDiscard()
+        }
+      } else {
+        InlineAreaIconButton(icon: "cancel", tooltip: L10n.Common.withShortcut(L10n.Common.close, "Esc")) {
+          session.endRecordingPrep()
+        }
       }
     }
     .padding(.horizontal, InlineAreaToolbarMetrics.horizontalPadding)
-    .frame(width: Self.width, height: InlineAreaLayout.toolbarHeight)
+    .frame(width: Self.width(showsBack: session.recordingPrepReturnsToPlayback),
+           height: InlineAreaLayout.toolbarHeight)
     .environment(\.inlineAreaHoverTipAbove, true)
     .accessibilityElement(children: .contain)
     .accessibilityIdentifier("inline.recordingPrepBar")

@@ -18,7 +18,9 @@ final class PinnyRecordingBarsTests: XCTestCase {
   }
 
   func testPrepBarIsNarrowerThanCaptureToolbar() {
-    XCTAssertLessThan(PinnyRecordingPrepBar.width, InlineAreaToolbarMetrics.idealWidth)
+    XCTAssertLessThan(PinnyRecordingPrepBar.width(showsBack: true), InlineAreaToolbarMetrics.idealWidth)
+    XCTAssertEqual(PinnyRecordingPrepBar.width(showsBack: true) - PinnyRecordingPrepBar.width(showsBack: false),
+                   InlineAreaToolbarMetrics.groupWidth(1) + InlineAreaToolbarMetrics.dividerWidth)
   }
 
   func testPrepBarPlacementUsesItsOwnWidth() {
@@ -27,9 +29,9 @@ final class PinnyRecordingBarsTests: XCTestCase {
       containerSize: CGSize(width: 1440, height: 900),
       showsProperties: false, propertiesContentWidth: 0,
       controlInsets: InlineAreaControlInsets(),
-      toolbarWidth: PinnyRecordingPrepBar.width
+      toolbarWidth: PinnyRecordingPrepBar.width(showsBack: false)
     )
-    XCTAssertEqual(placement.toolbarWidth, PinnyRecordingPrepBar.width)
+    XCTAssertEqual(placement.toolbarWidth, PinnyRecordingPrepBar.width(showsBack: false))
     XCTAssertEqual(placement.toolbarCenter.x, 550)
     XCTAssertGreaterThan(placement.toolbarCenter.y, 400) // below the selection
   }

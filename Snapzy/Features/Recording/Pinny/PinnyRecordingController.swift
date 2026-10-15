@@ -28,6 +28,7 @@ final class PinnyRecordingController: ObservableObject {
   /// Re-record keeps the previous recording hidden until the new one starts, so Esc on the
   /// prep bar can bring it back.
   private var parkedPlayback: (playback: PinnyRecordingPlayback, selection: CGRect)?
+  private var discardsParkedPlayback = false
   private var onRecordingEnded: (() -> Void)?
   private var rerecordHandler: ((CGRect) -> Void)?
   private var saveDirectoryProvider: (() -> URL?)?
@@ -263,9 +264,23 @@ final class PinnyRecordingController: ObservableObject {
     rerecordHandler?(selection)
   }
 
-  /// The re-record prep bar was left without recording: show the previous recording again.
+  /// X on the re-record prep bar: when its overlay closes, end the parked recording instead
+  /// of showing it again.
+  func discardParkedPlaybackOnReturn() {
+    discardsParkedPlayback = parkedPlayback != nil
+  }
+
+  /// The re-record prep bar was left without recording: show the previous recording again, or
+  /// end it after X (asking first when it was neither copied nor saved; Cancel shows it again).
   func restoreParkedPlayback() {
     guard phase == .idle, let parked = parkedPlayback else { return }
+    let discard = discardsParkedPlayback
+    discardsParkedPlayback = false
+    if discard, parked.playback.confirmDiscard() {
+      parkedPlayback = nil
+      parked.playback.close(discardUnexported: true)
+      return
+    }
     parkedPlayback = nil
     selection = parked.selection
     playback = parked.playback
@@ -646,17 +661,21 @@ private final class PinnyRecordingPlayback {
   }
 
   private func requestClose() {
-    guard !model.isBusy else { return }
-    if !wasExported {
-      let alert = NSAlert()
-      alert.messageText = L10n.PinnyRecording.discardTitle
-      alert.informativeText = L10n.PinnyRecording.discardMessage
-      alert.addButton(withTitle: L10n.PinnyRecording.discard)
-      alert.addButton(withTitle: L10n.Common.cancel)
-      alert.buttons.first?.hasDestructiveAction = true
-      guard alert.runModal() == .alertFirstButtonReturn else { return }
-    }
+    guard !model.isBusy, confirmDiscard() else { return }
     actions.close()
+  }
+
+  /// True when it may be dropped: already copied or saved, or the user chose Discard.
+  func confirmDiscard() -> Bool {
+    guard !wasExported else { return true }
+    NSApp.activate(ignoringOtherApps: true)
+    let alert = NSAlert()
+    alert.messageText = L10n.PinnyRecording.discardTitle
+    alert.informativeText = L10n.PinnyRecording.discardMessage
+    alert.addButton(withTitle: L10n.PinnyRecording.discard)
+    alert.addButton(withTitle: L10n.Common.cancel)
+    alert.buttons.first?.hasDestructiveAction = true
+    return alert.runModal() == .alertFirstButtonReturn
   }
 }
 

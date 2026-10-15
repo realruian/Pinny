@@ -56,6 +56,7 @@ ICONS = {
     'rec-play': ('Play', 'fixed'),
     'rec-stop': ('StopCircle', 'solid'),
     'rec-redo': ('ArrowReloadHorizontal', 'fixed'),
+    'rec-back': ('ArrowLeft02', 'fixed'),
     'overflow': ('ArrowRight01', 'fixed'),
     # Properties bar: segmented pickers (key suffix is the enum rawValue)
     'text-plain': ('TextFont', 'swap'),

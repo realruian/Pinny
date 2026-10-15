@@ -765,6 +765,13 @@ final class InlineAreaAnnotateSession: ObservableObject {
     if !isRecordingPrep { cancel() }
   }
 
+  /// X on the prep bar after Record Again: end the recording instead of returning to it.
+  /// The overlay closes first; the controller then asks before discarding an unexported one.
+  func endRecordingAndDiscard() {
+    PinnyRecordingController.shared.discardParkedPlaybackOnReturn()
+    cancel()
+  }
+
   func endRecordingPrep() {
     if recordingPrepReturnsToPlayback {
       cancel()

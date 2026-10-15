@@ -7978,6 +7978,23 @@
           }
         }
       }
+    },
+    "recording-toolbar.pinny-end-recording": {
+      "comment": "Pinny: Prep bar X after Record Again; it ends the recording and discards the previous one",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "End recording"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "结束录屏"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

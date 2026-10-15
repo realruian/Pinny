@@ -621,7 +621,7 @@ private struct InlineAreaAnnotateRootView: View {
       for: rect, containerSize: containerSize,
       showsProperties: false, propertiesContentWidth: 0,
       controlInsets: display.controlInsets,
-      toolbarWidth: PinnyRecordingPrepBar.width
+      toolbarWidth: PinnyRecordingPrepBar.width(showsBack: session.recordingPrepReturnsToPlayback)
     )
     let scale = NSScreen.screens.first { $0.frame == display.screenFrame }?.backingScaleFactor ?? 2
     let pixelSize = CGSize(width: (desktopRect.width * scale).rounded(), height: (desktopRect.height * scale).rounded())
