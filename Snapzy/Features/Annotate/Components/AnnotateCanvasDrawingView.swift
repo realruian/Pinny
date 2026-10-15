@@ -19,6 +19,9 @@ struct CanvasDrawingView: NSViewRepresentable {
   /// Inline capture only: drag empty selection-tool space to move the capture region.
   var onCaptureDoubleClick: (() -> Void)?
   var onSelectionBackgroundDrag: ((CGSize, Bool) -> Void)?
+  /// Inline capture only: the overlay sets the cursor for the whole screen; the canvas only
+  /// reports what it would show (`DrawingCanvasNSView.hoverCursor`).
+  var hoverCursorIsExternal = false
 
   func makeNSView(context _: Context) -> DrawingCanvasNSView {
     let view = DrawingCanvasNSView(state: state, acceptsFirstMouse: acceptsFirstMouse)
@@ -27,6 +30,7 @@ struct CanvasDrawingView: NSViewRepresentable {
     view.interactionBridge = interactionBridge
     view.onCaptureDoubleClick = onCaptureDoubleClick
     view.onSelectionBackgroundDrag = onSelectionBackgroundDrag
+    view.hoverCursorIsExternal = hoverCursorIsExternal
     interactionBridge?.drawingCanvas = view
     return view
   }
@@ -47,6 +51,7 @@ struct CanvasDrawingView: NSViewRepresentable {
     nsView.interactionBridge = interactionBridge
     nsView.onCaptureDoubleClick = onCaptureDoubleClick
     nsView.onSelectionBackgroundDrag = onSelectionBackgroundDrag
+    nsView.hoverCursorIsExternal = hoverCursorIsExternal
     interactionBridge?.drawingCanvas = nsView
   }
 
@@ -300,6 +305,7 @@ final class DrawingCanvasNSView: NSView {
   var acceptsInactiveWindowMouse: Bool
   weak var interactionBridge: CanvasInteractionBridge?
   var onCaptureDoubleClick: (() -> Void)?
+  var hoverCursorIsExternal = false
   var onSelectionBackgroundDrag: ((CGSize, Bool) -> Void)?
   private var selectionBackgroundDragStart: CGPoint?
   private var selectionBackgroundDidMove = false
@@ -2388,7 +2394,7 @@ final class DrawingCanvasNSView: NSView {
 
   override func mouseExited(with _: NSEvent) {
     state.updateCanvasMouseLocation(nil)
-    NSCursor.arrow.set()
+    if !hoverCursorIsExternal { NSCursor.arrow.set() }
   }
 
   override func mouseMoved(with event: NSEvent) {
@@ -2447,14 +2453,22 @@ final class DrawingCanvasNSView: NSView {
   }
 
   private func updateCursor(at displayPoint: CGPoint, optionHeld: Bool) {
+    // Pinny's capture overlay sets one cursor for the whole screen from `hoverCursor`.
+    guard !hoverCursorIsExternal else { return }
+    hoverCursor(atDisplayPoint: displayPoint, optionHeld: optionHeld).set()
+  }
+
+  /// The cursor a hover at this point promises, without setting it. `drawCursor` is what a
+  /// drawing tool shows where a press would draw (the editor keeps the arrow; the capture
+  /// overlay uses a crosshair).
+  func hoverCursor(atDisplayPoint displayPoint: CGPoint, optionHeld: Bool, drawCursor: NSCursor = .arrow) -> NSCursor {
     let imagePoint = displayToImage(displayPoint)
     let isDrawingTool = state.selectedTool != .selection && state.selectedTool != .crop
 
     // A click while editing text only commits the edit (mouseDown checks this
     // before resize handles, for every tool), so promise nothing else.
     if state.editingTextAnnotationId != nil {
-      NSCursor.arrow.set()
-      return
+      return .arrow
     }
 
     // Check resize handles first for single selection (skipped while Option
@@ -2467,8 +2481,7 @@ final class DrawingCanvasNSView: NSView {
       if annotation.supportsResize,
          canResizeAnnotation(annotation),
          let handle = hitTestHandle(at: displayPoint, for: annotation, in: .canvas) {
-        setCursorForHandle(handle)
-        return
+        return cursorForHandle(handle)
       }
     }
 
@@ -2485,82 +2498,76 @@ final class DrawingCanvasNSView: NSView {
         selectedIds: userSelectedAnnotationIds,
         optionHeld: optionHeld
       )
-      Self.drawingToolHoverCursor(for: intent).set()
-      return
+      if case .draw = intent { return drawCursor }
+      return Self.drawingToolHoverCursor(for: intent)
     }
 
     // Check if over a selected annotation body
     if state.selectedAnnotations.contains(where: {
       $0.containsPoint(imagePoint, baseTolerance: annotationHitToleranceInImagePoints)
     }) {
-      NSCursor.openHand.set()
-      return
+      return .openHand
     }
 
     // Show hand cursor when hovering over any annotation (for move/resize)
     if hitTestAnnotation(at: imagePoint) != nil {
-      NSCursor.pointingHand.set()
-      return
+      return .pointingHand
     }
 
     if state.selectedTool == .selection, onSelectionBackgroundDrag != nil {
-      NSCursor.openHand.set()
-      return
+      return .openHand
     }
 
     // Check crop handles when crop tool is active
     if state.selectedTool == .crop, let cropRect = state.cropRect {
       if let handle = hitTestCropHandle(at: imagePoint, for: cropRect) {
-        setCursorForCropHandle(handle)
-        return
+        return cursorForCropHandle(handle)
       }
       if CropDragSelection.shouldBeginDrawing(
         at: imagePoint, cropRect: cropRect, imageBounds: state.sourceImageBounds
       ) {
-        NSCursor.crosshair.set()
-        return
+        return .crosshair
       }
       // Check if over crop body
       if cropRect.contains(imagePoint) {
-        NSCursor.openHand.set()
-        return
+        return .openHand
       }
     }
 
     // Default cursor
-    NSCursor.arrow.set()
+    return .arrow
   }
 
-  private func setCursorForHandle(_ handle: ResizeHandle) {
+  private func cursorForHandle(_ handle: ResizeHandle) -> NSCursor {
     switch handle {
     case .topLeft, .bottomRight, .lineStart, .lineEnd, .arrowControl, .textCalloutTail:
-      NSCursor.crosshair.set()
+      return .crosshair
     case .topRight, .bottomLeft:
-      NSCursor.crosshair.set()
+      return .crosshair
     case .top, .bottom:
-      NSCursor.resizeUpDown.set()
+      return .resizeUpDown
     case .left, .right:
-      NSCursor.resizeLeftRight.set()
+      return .resizeLeftRight
     }
   }
 
-  private func setCursorForCropHandle(_ handle: CropHandle) {
+  private func cursorForCropHandle(_ handle: CropHandle) -> NSCursor {
     // Note: In image coordinates, Y increases upward (bottom-left origin)
     // But visually on screen, Y increases downward (top-left origin)
     // So topLeft visually appears at top-left of screen
     switch handle {
     case .topLeft, .bottomRight:
       // NW-SE diagonal resize (↖↘)
-      NSCursor(image: diagonalResizeCursorImage(nwse: true), hotSpot: NSPoint(x: 8, y: 8)).set()
+      return NSCursor(image: diagonalResizeCursorImage(nwse: true), hotSpot: NSPoint(x: 8, y: 8))
     case .topRight, .bottomLeft:
       // NE-SW diagonal resize (↗↙)
-      NSCursor(image: diagonalResizeCursorImage(nwse: false), hotSpot: NSPoint(x: 8, y: 8)).set()
+      return NSCursor(image: diagonalResizeCursorImage(nwse: false), hotSpot: NSPoint(x: 8, y: 8))
     case .top, .bottom:
-      NSCursor.resizeUpDown.set()
+      return .resizeUpDown
     case .left, .right:
-      NSCursor.resizeLeftRight.set()
+      return .resizeLeftRight
     case .body:
-      NSCursor.openHand.set()
+      return .openHand
     }
   }
 

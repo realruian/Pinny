@@ -202,6 +202,46 @@ final class InlineAreaAnnotatePanel: NSPanel {
       }
     }
     super.sendEvent(event)
+    switch event.type {
+    case .mouseMoved, .mouseEntered, .flagsChanged, .leftMouseUp, .rightMouseUp:
+      applyHoverCursor()
+    default:
+      break
+    }
+  }
+
+  /// Pinny: the one place the annotating overlay sets the cursor, from what is under the
+  /// pointer (see `hoverCursor`). Setting it again on every move also keeps the WindowServer
+  /// from leaving a stale cursor on this non-activating panel.
+  func applyHoverCursor() {
+    hoverCursor(atScreenPoint: NSEvent.mouseLocation)?.set()
+  }
+
+  /// Nil leaves the cursor alone: choosing a region (drawn crosshair), a press in progress
+  /// (the gesture owns it), or text editing (I-beam).
+  private func hoverCursor(atScreenPoint screenPoint: CGPoint) -> NSCursor? {
+    guard session.phase == .annotating, NSEvent.pressedMouseButtons == 0,
+          frame.contains(screenPoint), let contentView else { return nil }
+    let windowPoint = convertPoint(fromScreen: screenPoint)
+    let hit = contentView.hitTest(contentView.superview?.convert(windowPoint, from: nil) ?? windowPoint)
+    if hit is NSTextView || hit?.enclosingScrollView?.documentView is NSTextView { return nil }
+    guard let selection = session.selectionRect else { return .arrow }
+    let point = session.localDesktopPoint(for: screenPoint)
+    if let handle = InlineAreaResizeHandle.handle(at: point, in: selection) {
+      return handle.cursor
+    }
+    if session.isMoveModifierActive, selection.contains(point) {
+      return .openHand
+    }
+    if let canvas = hit as? DrawingCanvasNSView {
+      return canvas.hoverCursor(
+        atDisplayPoint: canvas.convert(windowPoint, from: nil),
+        optionHeld: NSEvent.modifierFlags.contains(.option),
+        drawCursor: .crosshair
+      )
+    }
+    // Outside the selection, and the toolbars wherever they sit.
+    return .arrow
   }
 
   override func keyDown(with event: NSEvent) {
@@ -474,13 +514,13 @@ private struct InlineAreaAnnotateRootView: View {
             session.selectWindow(candidate)
           }
           cursorIndicatorPoint = nil
-          InlineAreaNativeCursor.restoreArrow()
+          session.refreshHoverCursor()
           return
         }
 
         session.endSelection(at: desktopPoint(for: value.location))
         cursorIndicatorPoint = nil
-        InlineAreaNativeCursor.restoreArrow()
+        session.refreshHoverCursor()
       }
   }
 
@@ -569,7 +609,8 @@ private struct InlineAreaAnnotateRootView: View {
               movingPreviewRect = nextRect
             }
           }
-        }
+        },
+        hoverCursorIsExternal: true
       )
       .frame(width: rect.width, height: rect.height)
 
@@ -597,13 +638,6 @@ private struct InlineAreaAnnotateRootView: View {
       .frame(width: rect.width, height: rect.height)
       .position(x: rect.midX, y: rect.midY)
       .gesture(moveGesture(for: desktopRect))
-      .onHover { hovering in
-        if hovering {
-          NSCursor.openHand.set()
-        } else {
-          NSCursor.arrow.set()
-        }
-      }
   }
 
   @ViewBuilder
@@ -704,7 +738,7 @@ private struct InlineAreaAnnotateRootView: View {
           movingStartRect = nil
         }
         cursorIndicatorPoint = nil
-        InlineAreaNativeCursor.restoreOpenHand()
+        session.refreshHoverCursor()
       }
   }
 
@@ -844,7 +878,7 @@ private struct InlineAreaAnnotateRootView: View {
     if isIndicatorVisible {
       InlineAreaNativeCursor.hide()
     } else {
-      InlineAreaNativeCursor.restoreArrow()
+      session.refreshHoverCursor()
     }
   }
 }
@@ -966,10 +1000,6 @@ private enum InlineAreaNativeCursor {
 
   static func restoreArrow() {
     NSCursor.arrow.set()
-  }
-
-  static func restoreOpenHand() {
-    NSCursor.openHand.set()
   }
 }
 
@@ -1133,6 +1163,21 @@ enum InlineAreaResizeHandle: CaseIterable, Identifiable {
     case .topRight, .bottomLeft:
       return InlineAreaResizeCursor.diagonal(nwse: false)
     }
+  }
+
+  /// The handle whose hit target contains `point` (same rects as the overlay's targets;
+  /// corners win where they meet an edge).
+  static func handle(at point: CGPoint, in rect: CGRect) -> InlineAreaResizeHandle? {
+    let corners: [InlineAreaResizeHandle] = [.topLeft, .topRight, .bottomRight, .bottomLeft]
+    let edges: [InlineAreaResizeHandle] = [.top, .right, .bottom, .left]
+    for handle in corners + edges {
+      let size = handle.hitSize(in: rect)
+      let center = handle.position(in: rect)
+      let target = CGRect(x: center.x - size.width / 2, y: center.y - size.height / 2,
+                          width: size.width, height: size.height)
+      if target.contains(point) { return handle }
+    }
+    return nil
   }
 
   /// Continuous edge targets, with disjoint corners taking both resize axes.
@@ -1314,13 +1359,6 @@ private struct InlineAreaResizeHandleHitTarget: View {
     Color.clear
       .frame(width: size.width, height: size.height)
       .contentShape(Rectangle())
-      .onHover { hovering in
-        if hovering {
-          handle.cursor.set()
-        } else {
-          NSCursor.arrow.set()
-        }
-      }
   }
 }
 

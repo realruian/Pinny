@@ -92,6 +92,8 @@ final class PinnyRecordingController: ObservableObject {
     ])
 
     showRecordingChrome()
+    // The overlay may leave its hand cursor behind; the recorded app sets its own from here.
+    NSCursor.arrow.set()
     Task {
       do {
         let temp = TempCaptureManager.shared
@@ -512,6 +514,7 @@ private final class PinnyRecordingPlayback {
     NSApp.activate(ignoringOtherApps: true)
     video.makeKeyAndOrderFront(nil)
     bar.orderFrontRegardless()
+    NSCursor.arrow.set()
 
     timeObserver = player.addPeriodicTimeObserver(
       forInterval: CMTime(value: 1, timescale: 20), queue: .main
@@ -544,6 +547,7 @@ private final class PinnyRecordingPlayback {
     NSApp.activate(ignoringOtherApps: true)
     videoWindow?.makeKeyAndOrderFront(nil)
     barWindow?.orderFrontRegardless()
+    NSCursor.arrow.set()
     if model.isPlaying { player.play() }
   }
 
@@ -729,4 +733,8 @@ private final class PinnyRecordingPlayerView: NSView {
   }
 
   override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+
+  override func resetCursorRects() {
+    addCursorRect(bounds, cursor: .arrow)
+  }
 }

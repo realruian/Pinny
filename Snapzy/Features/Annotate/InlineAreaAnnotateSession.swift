@@ -772,6 +772,15 @@ final class InlineAreaAnnotateSession: ObservableObject {
     cancel()
   }
 
+  /// Re-applies the cursor for the pointer's current place (after a drag, a selection, or a
+  /// change to what is under a still pointer).
+  func refreshHoverCursor() {
+    let location = NSEvent.mouseLocation
+    for case let panel as InlineAreaAnnotatePanel in windows.allObjects where panel.frame.contains(location) {
+      panel.applyHoverCursor()
+    }
+  }
+
   func endRecordingPrep() {
     if recordingPrepReturnsToPlayback {
       cancel()
@@ -979,7 +988,7 @@ final class InlineAreaAnnotateSession: ObservableObject {
     }
   }
 
-  private func localDesktopPoint(for screenPoint: CGPoint) -> CGPoint {
+  func localDesktopPoint(for screenPoint: CGPoint) -> CGPoint {
     CGPoint(
       x: screenPoint.x - desktopFrame.minX,
       y: desktopFrame.maxY - screenPoint.y
