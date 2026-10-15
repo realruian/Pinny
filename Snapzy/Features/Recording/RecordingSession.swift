@@ -379,12 +379,14 @@ nonisolated final class RecordingSession: @unchecked Sendable {
     }
   }
   
-  /// Finish writing asynchronously
-  func finishWriting() async {
+  /// Finish writing asynchronously. Returns whether the writer completed; a failed writer
+  /// (disk full, encoder error) leaves an unusable file.
+  @discardableResult
+  func finishWriting() async -> Bool {
     let writer = lock.withLock { _assetWriter }
     guard let writer = writer else {
       DiagnosticLogger.shared.log(.warning, .recording, "Recording finish requested without asset writer")
-      return
+      return false
     }
 
     DiagnosticLogger.shared.log(.debug, .recording, "Finishing recording writer", context: [
@@ -403,6 +405,7 @@ nonisolated final class RecordingSession: @unchecked Sendable {
     } else {
       logWriterIssue("Recording writer not in writing state during finish", writer: writer)
     }
+    return writer.status == .completed
   }
   
   /// Reset all state

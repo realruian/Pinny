@@ -36,9 +36,6 @@ nonisolated enum BlurEffectRenderer {
   /// Default Gaussian blur radius
   static let defaultGaussianRadius: Double = 20.0
 
-  /// Security-first radius floor relative to smallest blur dimension
-  private static let gaussianSecurityStrengthFactor: CGFloat = 0.35
-
   /// Sampling padding multiplier around target region
   private static let gaussianPaddingMultiplier: CGFloat = 2.0
 
@@ -201,15 +198,18 @@ nonisolated enum BlurEffectRenderer {
     context.restoreGState()
   }
 
-  /// Draw blur preview during drag operation (simpler/faster)
+  /// Draw blur preview during drag operation (simpler/faster). Over a live effect only the
+  /// dashed border is drawn, so the drag shows the real strength.
   static func drawBlurPreview(
     in context: CGContext,
     region: CGRect,
-    strokeColor: CGColor
+    strokeColor: CGColor,
+    fillsRegion: Bool = true
   ) {
-    // Draw semi-transparent overlay with pattern to indicate blur area
-    context.setFillColor(NSColor.gray.withAlphaComponent(0.5).cgColor)
-    context.fill(region)
+    if fillsRegion {
+      context.setFillColor(NSColor.gray.withAlphaComponent(0.5).cgColor)
+      context.fill(region)
+    }
 
     // Draw border
     context.setStrokeColor(strokeColor)
@@ -1090,11 +1090,10 @@ nonisolated enum BlurEffectRenderer {
     imageScale: CGFloat,
     pixelRegion: CGRect
   ) -> CGFloat {
+    // The slider alone sets the strength; a floor tied to the region size made the weakest
+    // setting heavy on any large area.
     let baseRadiusPx = max(1, baseRadius * imageScale)
-    let minDimensionPx = min(pixelRegion.width, pixelRegion.height)
-    let securityFloorPx = minDimensionPx * gaussianSecurityStrengthFactor
-    let adaptiveRadiusPx = max(baseRadiusPx, securityFloorPx)
     let maxRegionRadiusPx = max(24, min(maxAdaptiveGaussianRadius, max(pixelRegion.width, pixelRegion.height) * 0.9))
-    return min(adaptiveRadiusPx, maxRegionRadiusPx)
+    return min(baseRadiusPx, maxRegionRadiusPx)
   }
 }

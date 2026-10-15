@@ -132,6 +132,7 @@ final class AppCoordinator {
   }
 
   private func applyUserConfigurationIfNeeded() -> SnapzyConfigurationAutoImportResult {
+    SnapzyConfigurationPaths.migrateLegacyConfigIfNeeded()
     let result = SnapzyConfigurationAutoImporter.applyIfNeededOnLaunch()
     let context = [
       "file": result.fileURL.path,

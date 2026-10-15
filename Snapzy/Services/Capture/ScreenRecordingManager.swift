@@ -701,6 +701,10 @@ final class ScreenRecordingManager: NSObject, ObservableObject {
   var isPaused: Bool { state == .paused }
   var isActive: Bool { state != .idle }
 
+  /// Called on the main actor when the capture stream stops by itself with an error
+  /// (display disconnected, permission revoked, ...), so the owner can end the recording.
+  var onStreamError: ((Error) -> Void)?
+
   #if DEBUG
   /// Test-only hook: drive `state` without a real capture session so tests can
   /// exercise the real `$state` observation path (KeyboardShortcutManager session
@@ -1279,12 +1283,21 @@ final class ScreenRecordingManager: NSObject, ObservableObject {
 
     session.finishInputs()
 
-    await session.finishWriting()
+    let didFinishWriting = await session.finishWriting()
 
     let videoWriteStats = session.videoWriteStats()
 
     let mouseSamples = mouseTracker?.stop() ?? []
-    let writerURL = outputURL
+    // A failed writer or a file without any duration is not a recording; dropping the URL
+    // lets cleanup() remove it from the processing directory.
+    var writerURL = outputURL
+    if let url = writerURL, !(await Self.isPlayableRecording(at: url, didFinishWriting: didFinishWriting)) {
+      DiagnosticLogger.shared.log(.error, .recording, "Recording output unusable", context: [
+        "file": url.lastPathComponent,
+        "writerCompleted": didFinishWriting ? "true" : "false",
+      ])
+      writerURL = nil
+    }
     await logRecordingFrameDiagnostics(outputURL: writerURL, stats: videoWriteStats)
     let audioNormalization = await normalizeRecordingAudioForCompatibilityIfNeeded(writerURL: writerURL)
     let editorAudioSourceURL = storeRecordingAudioSourceIfNeeded(audioNormalization.audioSourceURL)
@@ -1507,6 +1520,12 @@ final class ScreenRecordingManager: NSObject, ObservableObject {
       ])
       return []
     }
+  }
+
+  private static func isPlayableRecording(at url: URL, didFinishWriting: Bool) async -> Bool {
+    guard didFinishWriting, FileManager.default.fileExists(atPath: url.path),
+          let duration = try? await AVURLAsset(url: url).load(.duration) else { return false }
+    return duration.isNumeric && duration.seconds > 0
   }
 
   private func finalizeRecordingOutput(writerURL: URL?) -> URL? {
@@ -2298,5 +2317,8 @@ extension ScreenRecordingManager: SCStreamOutput {
 extension ScreenRecordingManager: SCStreamDelegate {
   nonisolated func stream(_ stream: SCStream, didStopWithError error: Error) {
     DiagnosticLogger.shared.logError(.recording, error, "Screen recording stream stopped unexpectedly")
+    Task { @MainActor [weak self] in
+      self?.onStreamError?(error)
+    }
   }
 }

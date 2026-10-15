@@ -6314,6 +6314,23 @@
         }
       }
     },
+    "annotate.pinny-more-options": {
+      "comment": "Pinny: secondary bar button that opens the less common options of the active tool",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更多"
+          }
+        }
+      }
+    },
     "annotate.pinny-return-key": {
       "comment": "Pinny: name of the Return key in a button hover label, e.g. Copy (Return / ⌘C)",
       "localizations": {

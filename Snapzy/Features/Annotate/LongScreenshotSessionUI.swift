@@ -70,7 +70,7 @@ final class LongScreenshotToolbarWindow: NSPanel {
     collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary]
     contentView = LongScreenshotFirstClickHostingView(
       rootView: LongScreenshotToolbarView(model: model, actions: actions))
-    // The label switches between the size and the scrolled-too-fast hint.
+    // The label switches between the size and the scrolled-too-fast / height-limit hints.
     observation = model.$guidanceKind.map { _ in () }
       .merge(with: model.$isTrimming.map { _ in () })
       .sink { [weak self] _ in DispatchQueue.main.async { self?.layoutToSelection() } }
@@ -220,6 +220,9 @@ private struct LongScreenshotToolbarView: View {
       Group {
         if model.isLost {
           Text(L10n.PinnyLongScreenshot.lostToolbarHint)
+            .foregroundColor(.orange)
+        } else if model.isAtHeightLimit {
+          Text(L10n.ScrollingCapture.guidanceHeightLimitReached)
             .foregroundColor(.orange)
         } else {
           Text("\(model.stitchedPixelWidth) × \(keptHeight)")

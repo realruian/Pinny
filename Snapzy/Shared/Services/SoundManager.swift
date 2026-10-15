@@ -40,6 +40,12 @@ enum SoundManager {
     NSSound(named: name)?.play()
   }
 
+  /// The system alert sound, only if the user hasn't disabled sounds.
+  static func beep() {
+    guard soundsEnabled else { return }
+    NSSound.beep()
+  }
+
   /// Play the closest available native macOS screenshot sound.
   static func playScreenshotCapture() {
     guard soundsEnabled else { return }

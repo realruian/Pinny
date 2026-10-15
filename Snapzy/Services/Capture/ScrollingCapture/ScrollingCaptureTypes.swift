@@ -441,16 +441,23 @@ final class ScrollingCaptureSessionModel: ObservableObject {
   var viewportPixelHeight = 0
   /// Pinny: crop mode pauses stitching and shows top/bottom handles on the preview.
   @Published var isTrimming = false
-  /// Fractions of the stitched height removed from the top and bottom on output.
+  /// Fractions of the stitched height cut from the top and bottom while the crop handles are shown.
   @Published var trimTop: CGFloat = 0
   @Published var trimBottom: CGFloat = 0
+  /// Top rows cut when crop was left. Kept in pixels so the cut does not grow as stitching
+  /// continues and the image gets taller.
+  @Published var keptTopTrimRows = 0
 
   /// Pinny: the last frame could not be placed; the toolbar asks to scroll back.
   var isLost: Bool { guidanceKind == .scrollBackToResume }
+  /// Pinny: the stitched image hit `maxOutputHeight`; further scrolling adds nothing.
+  var isAtHeightLimit: Bool { guidanceKind == .heightLimitReached }
 
   /// Pixel rows kept after trimming, as a range of the stitched image.
   func trimmedRows(forHeight height: Int) -> Range<Int> {
-    ScrollingCaptureTrim.rows(height: height, top: trimTop, bottom: trimBottom)
+    isTrimming
+      ? ScrollingCaptureTrim.rows(height: height, top: trimTop, bottom: trimBottom)
+      : ScrollingCaptureTrim.rows(height: height, topRows: keptTopTrimRows)
   }
 
   init(selectedRect: CGRect) {
@@ -534,9 +541,14 @@ nonisolated enum ScrollingCaptureTrim {
     return start..<end
   }
 
-  static func crop(_ image: CGImage, top: CGFloat, bottom: CGFloat) -> CGImage {
-    let rows = rows(height: image.height, top: top, bottom: bottom)
-    guard rows.count < image.height else { return image }
+  /// Rows kept when a fixed number of rows is cut from the top; never fewer than one row.
+  static func rows(height: Int, topRows: Int) -> Range<Int> {
+    guard height > 0 else { return 0..<0 }
+    return min(height - 1, max(0, topRows))..<height
+  }
+
+  static func crop(_ image: CGImage, rows: Range<Int>) -> CGImage {
+    guard rows.count < image.height, !rows.isEmpty else { return image }
     return image.cropping(to: CGRect(x: 0, y: rows.lowerBound, width: image.width, height: rows.count)) ?? image
   }
 }

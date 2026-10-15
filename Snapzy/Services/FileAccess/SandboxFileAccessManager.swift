@@ -47,7 +47,8 @@ final class SandboxFileAccessManager {
   }
 
   func ensureExportLocationInitialized() {
-    if defaults.string(forKey: PreferencesKeys.exportLocation)?.isEmpty != false {
+    let storedPath = defaults.string(forKey: PreferencesKeys.exportLocation) ?? ""
+    if storedPath.isEmpty || Self.isInsideTrash(URL(fileURLWithPath: storedPath, isDirectory: true)) {
       defaults.set(defaultExportDirectory.path, forKey: PreferencesKeys.exportLocation)
       DiagnosticLogger.shared.log(
         .info,
@@ -285,6 +286,15 @@ final class SandboxFileAccessManager {
         bookmarkDataIsStale: &isStale
       ).standardizedFileURL
 
+      if Self.isInsideTrash(url) {
+        // Fall back to the stored path (recreated on save) without persisting the Trash location.
+        if removeInvalidBookmark {
+          defaults.removeObject(forKey: PreferencesKeys.exportLocationBookmark)
+        }
+        DiagnosticLogger.shared.log(.warning, .fileAccess, "Export directory bookmark points into the Trash; ignored")
+        return nil
+      }
+
       if isStale {
         _ = setExportDirectory(url)
         DiagnosticLogger.shared.log(
@@ -308,6 +318,12 @@ final class SandboxFileAccessManager {
       )
       return nil
     }
+  }
+
+  /// A save folder moved to the Trash still resolves through its bookmark; never save there.
+  private static func isInsideTrash(_ url: URL) -> Bool {
+    let components = url.standardizedFileURL.resolvingSymlinksInPath().pathComponents
+    return components.contains(".Trash") || components.contains(".Trashes")
   }
 
   private func migrateLegacyPathBookmarkIfPossible() {

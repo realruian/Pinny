@@ -68,10 +68,13 @@ nonisolated struct AnnotationRenderer {
 
     switch annotation.type {
     case .rectangle:
+      // A square-cornered box keeps square outer corners however thick the outline is.
+      if annotation.properties.cornerRadius <= 0 { context.setLineJoin(.miter) }
       context.addPath(Self.roundedRectPath(in: annotation.bounds, cornerRadius: annotation.properties.cornerRadius))
       strokeCurrentPath(lineStyle: annotation.properties.lineStyle, strokeWidth: annotation.properties.strokeWidth)
 
     case .filledRectangle:
+      if annotation.properties.cornerRadius <= 0 { context.setLineJoin(.miter) }
       context.addPath(Self.roundedRectPath(in: annotation.bounds, cornerRadius: annotation.properties.cornerRadius))
       strokeCurrentPath(lineStyle: annotation.properties.lineStyle, strokeWidth: annotation.properties.strokeWidth, mode: .fillStroke)
 
@@ -148,6 +151,8 @@ nonisolated struct AnnotationRenderer {
     context.setStrokeColor(NSColor(strokeColor).cgColor)
     context.setLineWidth(strokeWidth)
     context.setLineCap(.round)
+    // Same corners while dragging as after release (see `draw`).
+    context.setLineJoin((tool == .rectangle || tool == .filledRectangle) && rectangleCornerRadius <= 0 ? .miter : .round)
 
     switch tool {
     case .pencil, .highlighter:
@@ -386,7 +391,8 @@ nonisolated struct AnnotationRenderer {
       break
 
     case .arrow:
-      let arrowLength = min(max(strokeWidth * 3.5, 12), 24)
+      // The 24 pt cap keeps thin arrows tidy; thick lines need a head that outgrows them.
+      let arrowLength = min(max(strokeWidth * 3.5, 12), max(24, strokeWidth * 3))
       let arrowAngle: CGFloat = .pi / 6
 
       let point1 = CGPoint(
@@ -431,7 +437,7 @@ nonisolated struct AnnotationRenderer {
     let fontSize = min(max(rect.height * 0.5, 11), 56)
     let attributes: [NSAttributedString.Key: Any] = [
       .font: NSFont.systemFont(ofSize: fontSize, weight: .bold),
-      .foregroundColor: NSColor.white,
+      .foregroundColor: NSColor(AnnotationProperties.contrastingColor(for: properties.strokeColor)),
     ]
     let text = "\(value)" as NSString
     let textSize = text.size(withAttributes: attributes)
@@ -490,8 +496,8 @@ nonisolated struct AnnotationRenderer {
   }
 
   private func drawWatermark(_ content: String, in bounds: CGRect, properties: AnnotationProperties) {
-    let resolvedText = content.trimmingCharacters(in: .whitespacesAndNewlines)
-    guard !resolvedText.isEmpty else { return }
+    let trimmedText = content.trimmingCharacters(in: .whitespacesAndNewlines)
+    let resolvedText = trimmedText.isEmpty ? AnnotationProperties.defaultWatermarkText : trimmedText
 
     let visibleBounds = bounds.standardized
     guard visibleBounds.width > 0, visibleBounds.height > 0 else { return }
@@ -784,11 +790,22 @@ nonisolated struct AnnotationRenderer {
     let rect = makeRect(from: start, to: currentPoint)
     guard rect.width > 0, rect.height > 0 else { return }
 
+    // Large live regions use mosaic blocks of the same size as a cheap stand-in for the
+    // slower effects; the exact render replaces it on release.
     if (rect.width * rect.height) >= Self.livePreviewFullQualityAreaThreshold {
+      if let sourceImage {
+        BlurEffectRenderer.drawPixelatedRegion(
+          in: context,
+          sourceImage: sourceImage,
+          region: rect,
+          pixelSize: blurEffectValue(for: blurType, controlValue: controlValue)
+        )
+      }
       BlurEffectRenderer.drawBlurPreview(
         in: context,
         region: rect,
-        strokeColor: NSColor(strokeColor).cgColor
+        strokeColor: NSColor(strokeColor).cgColor,
+        fillsRegion: sourceImage == nil
       )
       return
     }
@@ -858,7 +875,8 @@ nonisolated struct AnnotationRenderer {
     BlurEffectRenderer.drawBlurPreview(
       in: context,
       region: rect,
-      strokeColor: NSColor(strokeColor).cgColor
+      strokeColor: NSColor(strokeColor).cgColor,
+      fillsRegion: sourceImage == nil
     )
   }
 

@@ -85,11 +85,11 @@ final class AnnotateState: ObservableObject {
 
   private struct SharedAnnotationParameterDefaults: Codable {
     var strokeWidth: CGFloat?
-    var cornerRadius: CGFloat?
     var fontSize: CGFloat?
     var watermarkOpacity: CGFloat?
     var watermarkRotationDegrees: CGFloat?
-    var spotlightCornerRadius: CGFloat?
+    var blurType: String?
+    var watermarkText: String?
     var arrowStyle: String?
     var arrowType: String?
     var arrowBendDirection: String?
@@ -260,7 +260,10 @@ final class AnnotateState: ObservableObject {
   @Published var arrowBendDirection: ArrowBendDirection = .primary
   @Published var arrowStartHead: ArrowEndpointStyle = .none
   @Published var arrowEndHead: ArrowEndpointStyle = .arrow
-  @Published var watermarkText: String = "Pinny"
+  @Published var watermarkText: String = AnnotationProperties.defaultWatermarkText
+  /// Watermarks whose text is being typed since the last undo checkpoint: one checkpoint
+  /// covers the whole typing run.
+  private var watermarkTextUndoIds: Set<UUID> = []
   @Published var spotlightOpacity: CGFloat = 0.5
   @Published private var annotationToolProperties: [AnnotationToolType: AnnotationProperties] = [:]
   private var isQuickPropertiesGestureEditing = false
@@ -1367,6 +1370,10 @@ final class AnnotateState: ObservableObject {
     }
   }
   @Published private(set) var selectedAnnotationIds: Set<UUID> = []
+  /// The item selected only because it was just drawn (the canvas clears it on the next
+  /// press or selection change). Adjusting it also sets that tool's default, so the next
+  /// one comes out the same; adjusting an older item changes only that item.
+  var justDrawnAnnotationId: UUID?
   @Published var editingTextAnnotationId: UUID? {
     didSet {
       if editingTextAnnotationId == nil {
@@ -1490,6 +1497,7 @@ final class AnnotateState: ObservableObject {
   private var undoStack: [UndoEntry] = []
   private var redoStack: [UndoEntry] = []
   private var textEditingUndoTransaction: TextEditingUndoTransaction?
+  private var newTextUndoSnapshot: (id: UUID, snapshot: AnnotationSnapshot)?
 
   init(
     image: NSImage,
@@ -1575,6 +1583,7 @@ final class AnnotateState: ObservableObject {
     sourceImage = image
     if annotationOffset != .zero {
       translateAnnotations(dx: annotationOffset.x, dy: annotationOffset.y)
+      translateUndoHistory(dx: annotationOffset.x, dy: annotationOffset.y)
     }
     cutoutImage = nil
     isCutoutApplied = false
@@ -2489,6 +2498,7 @@ final class AnnotateState: ObservableObject {
 
   private func pushUndoSnapshot(_ snapshot: AnnotationSnapshot, annotationCount: Int) {
     DiagnosticLogger.shared.log(.debug, .annotate, "Undo checkpoint", context: ["annotations": "\(annotationCount)"])
+    watermarkTextUndoIds = []
     undoStack.append(.annotations(snapshot))
     capUndoStack()
     redoStack.removeAll()
@@ -2584,7 +2594,13 @@ final class AnnotateState: ObservableObject {
       commitTextEditing()
     }
 
-    if recordsUndo,
+    if let pending = newTextUndoSnapshot, pending.id == id {
+      textEditingUndoTransaction = TextEditingUndoTransaction(
+        annotationId: id,
+        snapshotBeforeEdit: pending.snapshot,
+        originalText: ""
+      )
+    } else if recordsUndo,
        let annotation = annotations.first(where: { $0.id == id }),
        case .text(let text) = annotation.type {
       textEditingUndoTransaction = TextEditingUndoTransaction(
@@ -2595,8 +2611,16 @@ final class AnnotateState: ObservableObject {
     } else {
       textEditingUndoTransaction = nil
     }
+    newTextUndoSnapshot = nil
 
     editingTextAnnotationId = id
+  }
+
+  /// New text gets its undo checkpoint only once something is typed, so an abandoned empty
+  /// box leaves no step behind and keeps the redo history.
+  func appendNewTextAnnotation(_ item: AnnotationItem) {
+    newTextUndoSnapshot = (item.id, currentSnapshot())
+    annotations.append(item)
   }
 
   func useAutomaticTextWidth(for id: UUID) {
@@ -3776,11 +3800,17 @@ final class AnnotateState: ObservableObject {
     if let fillColor = colorUpdate.fillColor {
       annotations[index].properties.fillColor = fillColor
       // The background fill only renders for label/callout presentations, so a
-      // colored fill on plain text would stay invisible. Promote it to a label.
-      if case .text = annotations[index].type,
-         fillColor != .clear,
-         annotations[index].properties.textPresentation == .plain {
-        annotations[index].properties.textPresentation = .label
+      // colored fill on plain text would stay invisible. Promote it to a label; taking the
+      // background away makes it plain text again.
+      if case .text = annotations[index].type {
+        if fillColor != .clear, annotations[index].properties.textPresentation == .plain {
+          annotations[index].properties.textPresentation = .label
+          refitTextBounds(at: index)
+        } else if fillColor == .clear, annotations[index].properties.textPresentation != .plain {
+          annotations[index].properties.textPresentation = .plain
+          annotations[index].properties.calloutTailTarget = nil
+          refitTextBounds(at: index)
+        }
       }
     }
     if let cornerRadius = cornerRadius {
@@ -3932,6 +3962,18 @@ final class AnnotateState: ObservableObject {
       constrainedWidth: constrainedWidth,
       maximumHeight: maximumHeight,
       presentation: presentation
+    )
+  }
+
+  /// Labels and callouts pad their text more than plain text; refit after a style change so
+  /// nothing is clipped.
+  private func refitTextBounds(at index: Int) {
+    guard case .text(let content) = annotations[index].type else { return }
+    annotations[index].bounds = resizedTextBounds(
+      id: annotations[index].id,
+      text: content,
+      properties: annotations[index].properties,
+      currentBounds: annotations[index].bounds
     )
   }
 
@@ -4164,10 +4206,16 @@ final class AnnotateState: ObservableObject {
   func setActiveBlurType(_ type: BlurType) {
     let blurAnnotations = selectedBlurAnnotations
     if !blurAnnotations.isEmpty {
+      if blurAnnotations.contains(where: { $0.type != .blur(type) }) {
+        saveState()
+        hasUnsavedChanges = true
+      }
       blurAnnotations.forEach { updateBlurType(id: $0.id, blurType: type) }
-    } else {
-      blurType = type
+      guard justDrawnToolType == .blur else { return }
     }
+    blurType = type
+    sharedAnnotationParameterDefaults.blurType = type.rawValue
+    persistSharedAnnotationParameterDefaults()
   }
 
   var activeWatermarkStyle: WatermarkStyle {
@@ -4179,6 +4227,9 @@ final class AnnotateState: ObservableObject {
     let rotationDegrees = style.defaultRotationDegrees
     let watermarkAnnotations = selectedWatermarkAnnotations
     if !watermarkAnnotations.isEmpty {
+      if watermarkAnnotations.contains(where: { $0.properties.watermarkStyle != style }) {
+        saveState()
+      }
       watermarkAnnotations.forEach {
         updateAnnotationProperties(
           id: $0.id,
@@ -4249,6 +4300,12 @@ final class AnnotateState: ObservableObject {
        let savedEndHead = ArrowEndpointStyle(rawValue: savedEndHeadRaw) {
       arrowEndHead = savedEndHead
     }
+    if let savedBlurType = sharedAnnotationParameterDefaults.blurType.flatMap(BlurType.init(rawValue:)) {
+      blurType = savedBlurType
+    }
+    if let savedWatermarkText = sharedAnnotationParameterDefaults.watermarkText {
+      watermarkText = savedWatermarkText
+    }
   }
 
   private func persistSharedAnnotationParameterDefaults() {
@@ -4261,16 +4318,17 @@ final class AnnotateState: ObservableObject {
   ) -> SharedAnnotationParameterDefaults {
     SharedAnnotationParameterDefaults(
       strokeWidth: defaults.strokeWidth.map(AnnotationProperties.clampedControlValue(_:)),
-      cornerRadius: defaults.cornerRadius.map { max(0, $0) },
       fontSize: defaults.fontSize.map { min(max($0, 12), 72) },
       watermarkOpacity: defaults.watermarkOpacity.map(AnnotationProperties.clampedOpacity(_:)),
       watermarkRotationDegrees: defaults.watermarkRotationDegrees.map(AnnotationProperties.clampedRotationDegrees(_:)),
-      spotlightCornerRadius: defaults.spotlightCornerRadius.map { max(0, $0) },
+      blurType: defaults.blurType.flatMap(BlurType.init(rawValue:)).map(\.rawValue),
+      watermarkText: defaults.watermarkText.flatMap { $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : $0 },
       arrowStyle: defaults.arrowStyle,
       arrowType: defaults.arrowType,
       arrowBendDirection: defaults.arrowBendDirection,
       arrowStartHead: defaults.arrowStartHead,
-      arrowEndHead: defaults.arrowEndHead
+      arrowEndHead: defaults.arrowEndHead,
+      lineStyle: defaults.lineStyle
     )
   }
 
@@ -4314,48 +4372,24 @@ final class AnnotateState: ObservableObject {
     return sanitized
   }
 
+  /// The shared layer is read on top of each tool's own values while sync is on
+  /// (`applySynchronizedQuickProperties`), so per-tool storage is left alone: switching sync
+  /// off brings every tool's own setting back.
   private func rememberSharedAnnotationStrokeWidth(_ strokeWidth: CGFloat) {
     let clampedWidth = AnnotationProperties.clampedControlValue(strokeWidth)
     sharedAnnotationParameterDefaults.strokeWidth = clampedWidth
     persistSharedAnnotationParameterDefaults()
-
-    for tool in AnnotationToolType.allCases where tool.supportsQuickStrokeWidth {
-      updateDefaultAnnotationProperties(for: tool, strokeWidth: clampedWidth)
-    }
 
     if !selectedTool.supportsQuickPropertiesBar {
       self.strokeWidth = clampedWidth
     }
   }
 
-  private func rememberSharedAnnotationCornerRadius(_ cornerRadius: CGFloat) {
-    let clampedRadius = max(0, cornerRadius)
-    sharedAnnotationParameterDefaults.cornerRadius = clampedRadius
+  /// Text size is the one font size users set; it is kept even with sync off so the size
+  /// recommended from the capture is used only until the user picks one.
+  private func rememberTextFontSize(_ fontSize: CGFloat) {
+    sharedAnnotationParameterDefaults.fontSize = min(max(fontSize, 12), 72)
     persistSharedAnnotationParameterDefaults()
-
-    for tool in AnnotationToolType.allCases where tool.supportsQuickCornerRadius && tool != .spotlight {
-      updateDefaultAnnotationProperties(for: tool, cornerRadius: clampedRadius)
-    }
-
-    if !selectedTool.supportsQuickPropertiesBar {
-      rectangleCornerRadius = clampedRadius
-    }
-  }
-
-  private func rememberSharedSpotlightCornerRadius(_ cornerRadius: CGFloat) {
-    let clampedRadius = max(0, cornerRadius)
-    sharedAnnotationParameterDefaults.spotlightCornerRadius = clampedRadius
-    persistSharedAnnotationParameterDefaults()
-    updateDefaultAnnotationProperties(for: .spotlight, cornerRadius: clampedRadius)
-  }
-
-  private func rememberSharedAnnotationFontSize(_ fontSize: CGFloat) {
-    let clampedSize = min(max(fontSize, 12), 72)
-    sharedAnnotationParameterDefaults.fontSize = clampedSize
-    persistSharedAnnotationParameterDefaults()
-
-    updateDefaultAnnotationProperties(for: .text, fontSize: clampedSize)
-    updateDefaultAnnotationProperties(for: .watermark, fontSize: clampedSize)
   }
 
   private func rememberSharedWatermarkOpacity(_ opacity: CGFloat) {
@@ -4373,12 +4407,7 @@ final class AnnotateState: ObservableObject {
   }
 
   private func rememberAnnotationPrimaryColor(_ color: Color, for tool: AnnotationToolType?) {
-    if tool == .spotlight {
-      updateDefaultAnnotationProperties(for: .spotlight, strokeColor: color)
-      guard !isTransparentColor(color) else { return }
-    }
-
-    guard !isQuickPropertiesSyncEnabled else {
+    guard !isQuickPropertiesSyncEnabled || !(tool.map(\.sharesSyncedColor) ?? true) else {
       rememberSharedAnnotationColor(color)
       return
     }
@@ -4391,7 +4420,7 @@ final class AnnotateState: ObservableObject {
   }
 
   private func rememberAnnotationStrokeWidth(_ strokeWidth: CGFloat, for tool: AnnotationToolType?) {
-    guard !isQuickPropertiesSyncEnabled else {
+    guard !isQuickPropertiesSyncEnabled || !(tool.map(\.sharesSyncedStrokeWidth) ?? true) else {
       rememberSharedAnnotationStrokeWidth(strokeWidth)
       return
     }
@@ -4404,16 +4433,8 @@ final class AnnotateState: ObservableObject {
     }
   }
 
+  /// Corners belong to each tool: a rounded label must not round every rectangle.
   private func rememberAnnotationCornerRadius(_ cornerRadius: CGFloat, for tool: AnnotationToolType?) {
-    guard !isQuickPropertiesSyncEnabled else {
-      if tool == .spotlight {
-        rememberSharedSpotlightCornerRadius(cornerRadius)
-      } else {
-        rememberSharedAnnotationCornerRadius(cornerRadius)
-      }
-      return
-    }
-
     let clampedRadius = max(0, cornerRadius)
     if let tool, tool.supportsQuickCornerRadius {
       updateDefaultAnnotationProperties(for: tool, cornerRadius: clampedRadius)
@@ -4425,10 +4446,6 @@ final class AnnotateState: ObservableObject {
   private func rememberSharedAnnotationLineStyle(_ lineStyle: LineDashStyle) {
     sharedAnnotationParameterDefaults.lineStyle = lineStyle.rawValue
     persistSharedAnnotationParameterDefaults()
-
-    for tool in AnnotationToolType.allCases where tool.supportsQuickLineStyle {
-      updateDefaultAnnotationProperties(for: tool, lineStyle: lineStyle)
-    }
   }
 
   private func rememberAnnotationLineStyle(_ lineStyle: LineDashStyle, for tool: AnnotationToolType?) {
@@ -4442,15 +4459,12 @@ final class AnnotateState: ObservableObject {
     }
   }
 
+  /// A watermark is sized for the whole capture, so it never follows the text size.
   private func rememberAnnotationFontSize(_ fontSize: CGFloat, for tool: AnnotationToolType?) {
-    guard !isQuickPropertiesSyncEnabled else {
-      rememberSharedAnnotationFontSize(fontSize)
-      return
-    }
-
-    let clampedSize = min(max(fontSize, 12), 72)
-    if let tool, tool == .text || tool == .watermark {
-      updateDefaultAnnotationProperties(for: tool, fontSize: clampedSize)
+    if tool == .watermark {
+      updateDefaultAnnotationProperties(for: .watermark, fontSize: min(max(fontSize, 12), 72))
+    } else {
+      rememberTextFontSize(fontSize)
     }
   }
 
@@ -4479,22 +4493,6 @@ final class AnnotateState: ObservableObject {
   }
 
   private func applySharedAnnotationColorToToolDefaults(_ color: Color) {
-    for tool in AnnotationToolType.allCases where tool.supportsQuickStrokeColor {
-      if tool == .spotlight {
-        guard let spotlightProperties = annotationToolProperties[.spotlight],
-              !isTransparentColor(spotlightProperties.strokeColor) else {
-          continue
-        }
-      }
-      var properties = defaultAnnotationProperties(for: tool)
-      properties.strokeColor = color
-      if tool == .filledRectangle {
-        properties.fillColor = color
-      }
-      annotationToolProperties[tool] = properties
-    }
-    persistAnnotationToolProperties()
-
     if selectedTool.supportsQuickPropertiesBar {
       applyToolPropertiesToLegacyState(defaultAnnotationProperties(for: selectedTool), for: selectedTool)
     } else {
@@ -4512,8 +4510,22 @@ final class AnnotateState: ObservableObject {
     if isQuickPropertiesSyncEnabled {
       applySynchronizedQuickProperties(to: &properties, for: tool)
     }
+    if tool == .text, let fontSize = sharedAnnotationParameterDefaults.fontSize {
+      properties.fontSize = fontSize
+    }
+    if tool == .text {
+      Self.applyTextLabelFill(to: &properties)
+    }
 
     return properties
+  }
+
+  /// A label or callout without a background of its own takes the chosen text color as its
+  /// background and black or white text on top, so it never ends up black on black.
+  private static func applyTextLabelFill(to properties: inout AnnotationProperties) {
+    guard properties.textPresentation != .plain, properties.fillColor == .clear else { return }
+    properties.fillColor = properties.strokeColor
+    properties.strokeColor = AnnotationProperties.contrastingColor(for: properties.fillColor)
   }
 
   private func baseAnnotationProperties(for tool: AnnotationToolType) -> AnnotationProperties {
@@ -4530,9 +4542,16 @@ final class AnnotateState: ObservableObject {
       return properties
     }
     if tool != .watermark {
-      var properties = AnnotationProperties(strokeColor: sharedAnnotationColor ?? .red)
-      if tool == .blur {
-        properties.strokeWidth = AnnotationProperties.controlValueRange.lowerBound
+      var properties = AnnotationProperties(
+        strokeColor: tool.sharesSyncedColor ? sharedAnnotationColor ?? .red : Self.ownDefaultColor(for: tool)
+      )
+      switch tool {
+      case .blur:
+        properties.strokeWidth = AnnotationProperties.defaultBlurControlValue
+      case .text:
+        properties.cornerRadius = AnnotationProperties.defaultTextCornerRadius
+      default:
+        break
       }
       applySharedParameterDefaults(to: &properties, for: tool)
       if tool == .filledRectangle {
@@ -4541,9 +4560,8 @@ final class AnnotateState: ObservableObject {
       return properties
     }
 
-    let strokeColor = sharedAnnotationColor ?? Color.white
     var properties = AnnotationProperties(
-      strokeColor: strokeColor,
+      strokeColor: Self.ownDefaultColor(for: .watermark),
       fillColor: .clear,
       strokeWidth: 3,
       cornerRadius: 0, // radius-lint:allow — watermark content default, not chrome
@@ -4563,27 +4581,19 @@ final class AnnotateState: ObservableObject {
   ) {
     let sharedProperties = baseAnnotationProperties(for: tool)
 
-    if tool.supportsQuickStrokeColor, tool != .spotlight {
+    if tool.sharesSyncedColor {
       properties.strokeColor = sharedProperties.strokeColor
       if tool == .filledRectangle {
         properties.fillColor = sharedProperties.strokeColor
       }
     }
 
-    if tool.supportsQuickStrokeWidth {
+    if tool.sharesSyncedStrokeWidth {
       properties.strokeWidth = sharedProperties.strokeWidth
-    }
-
-    if tool.supportsQuickCornerRadius {
-      properties.cornerRadius = sharedProperties.cornerRadius
     }
 
     if tool.supportsQuickLineStyle {
       properties.lineStyle = sharedProperties.lineStyle
-    }
-
-    if tool == .text || tool == .watermark {
-      properties.fontSize = sharedProperties.fontSize
     }
 
     if tool == .watermark {
@@ -4602,24 +4612,12 @@ final class AnnotateState: ObservableObject {
   ) {
     let defaults = sharedAnnotationParameterDefaults
 
-    if tool == nil || tool?.supportsQuickStrokeWidth == true,
+    if tool == nil || tool?.sharesSyncedStrokeWidth == true,
        let strokeWidth = defaults.strokeWidth {
       properties.strokeWidth = strokeWidth
     }
 
-    if tool == .spotlight {
-      if let cornerRadius = defaults.spotlightCornerRadius {
-        properties.cornerRadius = cornerRadius
-      } else {
-        properties.cornerRadius = 14
-      }
-    } else if tool == nil || tool?.supportsQuickCornerRadius == true {
-      if let cornerRadius = defaults.cornerRadius {
-        properties.cornerRadius = cornerRadius
-      }
-    }
-
-    if tool == nil || tool == .text || tool == .watermark,
+    if tool == nil || tool == .text,
        let fontSize = defaults.fontSize {
       properties.fontSize = fontSize
     }
@@ -4660,8 +4658,26 @@ final class AnnotateState: ObservableObject {
     return min(max(stepped, 16), 36)
   }
 
+  /// What the size slider shows with nothing selected: the size the next item will get.
+  private var quickDefaultFontSize: CGFloat {
+    if quickPropertiesTool == .text, shouldUseRecommendedTextFontSize {
+      return recommendedTextFontSize()
+    }
+    return defaultAnnotationProperties(for: quickPropertiesTool).fontSize
+  }
+
+  /// Until the user picks a text size, new text is sized from the capture.
   private var shouldUseRecommendedTextFontSize: Bool {
-    sharedAnnotationParameterDefaults.fontSize == nil && annotationToolProperties[.text] == nil
+    sharedAnnotationParameterDefaults.fontSize == nil
+  }
+
+  private static func ownDefaultColor(for tool: AnnotationToolType) -> Color {
+    switch tool {
+    case .highlighter: .yellow
+    case .watermark: .white
+    case .spotlight: .clear
+    default: .red
+    }
   }
 
   private func updateDefaultAnnotationProperties(
@@ -4695,11 +4711,12 @@ final class AnnotateState: ObservableObject {
         properties.fillColor = fillColor
       }
     }
-    if tool == .text,
-       let fillColor = fillColor,
-       fillColor != .clear,
-       properties.textPresentation == .plain {
-      properties.textPresentation = .label
+    if tool == .text, let fillColor = fillColor {
+      if fillColor != .clear, properties.textPresentation == .plain {
+        properties.textPresentation = .label
+      } else if fillColor == .clear {
+        properties.textPresentation = .plain
+      }
     }
     if let cornerRadius = cornerRadius {
       properties.cornerRadius = max(0, cornerRadius)
@@ -4762,6 +4779,11 @@ final class AnnotateState: ObservableObject {
     if tool == .spotlight {
       spotlightOpacity = properties.spotlightOpacity
     }
+  }
+
+  private var justDrawnToolType: AnnotationToolType? {
+    guard let id = justDrawnAnnotationId, selectedAnnotationIds == [id] else { return nil }
+    return annotations.first { $0.id == id }?.type.toolType
   }
 
   private var quickPropertiesSelectionAnnotations: [AnnotationItem] {
@@ -5055,9 +5077,8 @@ final class AnnotateState: ObservableObject {
       var properties = defaultAnnotationProperties(for: .text)
       properties.textPresentation = presentation
       properties.calloutTailTarget = nil
-      if presentation != .plain, properties.fillColor == .clear {
-        properties.fillColor = .black
-      }
+      // The background is derived from the text color on read (`applyTextLabelFill`), so it
+      // follows later color changes.
       annotationToolProperties[.text] = properties
       persistAnnotationToolProperties()
       return
@@ -5075,9 +5096,8 @@ final class AnnotateState: ObservableObject {
       } else {
         annotations[index].properties.calloutTailTarget = nil
       }
-      if presentation != .plain, annotations[index].properties.fillColor == .clear {
-        annotations[index].properties.fillColor = .black
-      }
+      Self.applyTextLabelFill(to: &annotations[index].properties)
+      refitTextBounds(at: index)
     }
     hasUnsavedChanges = true
   }
@@ -5118,12 +5138,12 @@ final class AnnotateState: ObservableObject {
             return false
           }
         }).first?.properties.fontSize
-          ?? self.defaultAnnotationProperties(for: self.quickPropertiesTool).fontSize
+          ?? self.quickDefaultFontSize
       },
       set: { [weak self] newSize in
         guard let self else { return }
         let clampedSize = min(max(newSize, 12), 72)
-        if !self.updateQuickSelectionProperties(
+        if self.updateQuickSelectionProperties(
           fontSize: clampedSize,
           recordsUndo: true,
           matching: {
@@ -5135,6 +5155,10 @@ final class AnnotateState: ObservableObject {
             }
           }
         ) {
+          if let tool = self.justDrawnToolType {
+            self.rememberAnnotationFontSize(clampedSize, for: tool)
+          }
+        } else {
           self.rememberAnnotationFontSize(clampedSize, for: self.quickPropertiesTool)
         }
       }
@@ -5164,6 +5188,8 @@ final class AnnotateState: ObservableObject {
           if let tool = self.quickPropertiesTool {
             self.updateDefaultAnnotationProperties(for: tool, fillColor: newColor)
           }
+        } else if self.justDrawnToolType == .text {
+          self.updateDefaultAnnotationProperties(for: .text, fillColor: newColor)
         }
       }
     )
@@ -5217,7 +5243,7 @@ final class AnnotateState: ObservableObject {
   var quickWatermarkTextBinding: Binding<String> {
     Binding(
       get: { [weak self] in
-        guard let self else { return "Pinny" }
+        guard let self else { return AnnotationProperties.defaultWatermarkText }
         if let annotation = self.quickSelectionTargets(matching: {
           if case .watermark = $0 { return true }
           return false
@@ -5235,7 +5261,16 @@ final class AnnotateState: ObservableObject {
         })
         if selected.isEmpty {
           self.watermarkText = newText
+          if !newText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            self.sharedAnnotationParameterDefaults.watermarkText = newText
+            self.persistSharedAnnotationParameterDefaults()
+          }
         } else {
+          let ids = Set(selected.map(\.id))
+          if ids != self.watermarkTextUndoIds {
+            self.saveState()
+            self.watermarkTextUndoIds = ids
+          }
           selected.forEach { self.updateWatermarkText(id: $0.id, text: newText) }
         }
       }
@@ -5405,18 +5440,29 @@ final class AnnotateState: ObservableObject {
 
   var quickPropertiesSupportsStrokeWidth: Bool {
     if !quickPropertiesSelectionAnnotations.isEmpty {
-      return quickSelectionAnySupport { $0.supportsQuickStrokeWidth }
+      return quickPropertiesSelectionTargets.contains { $0.type.supportsQuickStrokeWidth && showsOutlineControls(for: $0) }
     }
-    return quickPropertiesTool?.supportsQuickStrokeWidth ?? false
+    guard let tool = quickPropertiesTool, tool.supportsQuickStrokeWidth else { return false }
+    return tool != .spotlight || spotlightDefaultHasBorder
+  }
+
+  /// A spotlight border is clear by default; width and dashes only appear once it has a color.
+  private func showsOutlineControls(for annotation: AnnotationItem) -> Bool {
+    annotation.type.toolType != .spotlight || !isTransparentColor(annotation.properties.strokeColor)
+  }
+
+  private var spotlightDefaultHasBorder: Bool {
+    !isTransparentColor(defaultAnnotationProperties(for: .spotlight).strokeColor)
   }
 
   /// Dash styles apply to stroked geometry only; the arrow tool qualifies just
   /// for the classic (stroked) display type.
   var quickPropertiesSupportsLineStyle: Bool {
     if !quickPropertiesSelectionAnnotations.isEmpty {
-      return quickSelectionAnySupport { $0.supportsQuickLineStyle }
+      return quickPropertiesSelectionTargets.contains { $0.type.supportsQuickLineStyle && showsOutlineControls(for: $0) }
     }
     guard let tool = quickPropertiesTool, tool.supportsQuickLineStyle else { return false }
+    if tool == .spotlight { return spotlightDefaultHasBorder }
     return tool != .arrow || activeArrowType == .classic
   }
 
@@ -5493,16 +5539,32 @@ final class AnnotateState: ObservableObject {
     return quickPropertiesTool
   }
 
+  /// With different kinds selected the slider only changes line thickness; it must not turn
+  /// a blur stronger or a counter bigger at the same time.
+  private var quickStrokeWidthTargets: (AnnotationType) -> Bool {
+    let kinds = Set(quickSelectionTargets(matching: { $0.supportsQuickStrokeWidth }).map { $0.type.toolType })
+    guard kinds.count > 1 else { return { $0.supportsQuickStrokeWidth } }
+    return { $0.supportsQuickStrokeWidth && $0.toolType.sharesSyncedStrokeWidth }
+  }
+
   private var quickStrokeWidthValue: CGFloat {
     quickSelectionTargets(matching: { $0.supportsQuickStrokeWidth }).first?.properties.strokeWidth
       ?? defaultAnnotationProperties(for: quickPropertiesTool).strokeWidth
   }
 
+  /// Plain text has no box, so its corners only appear once it is a label or callout.
   var quickPropertiesSupportsCornerRadius: Bool {
     if !quickPropertiesSelectionAnnotations.isEmpty {
-      return quickSelectionAnySupport { $0.toolType.supportsQuickCornerRadius }
+      return quickPropertiesSelectionTargets.contains {
+        Self.showsCornerRadius(for: $0.type.toolType, presentation: $0.properties.textPresentation)
+      }
     }
-    return quickPropertiesTool?.supportsQuickCornerRadius ?? false
+    guard let tool = quickPropertiesTool else { return false }
+    return Self.showsCornerRadius(for: tool, presentation: defaultAnnotationProperties(for: tool).textPresentation)
+  }
+
+  private static func showsCornerRadius(for tool: AnnotationToolType, presentation: TextPresentation) -> Bool {
+    tool.supportsQuickCornerRadius && (tool != .text || presentation != .plain)
   }
 
   var quickPropertiesSupportsSpotlightOpacity: Bool {
@@ -5516,26 +5578,27 @@ final class AnnotateState: ObservableObject {
     Binding(
       get: { [weak self] in
         guard let self else { return .red }
-        return self.quickSelectionTargets(matching: { $0.supportsQuickStrokeColor }).first?.properties.strokeColor
-          ?? self.defaultAnnotationProperties(for: self.quickPropertiesTool).strokeColor
+        if let selected = self.quickSelectionTargets(matching: { $0.supportsQuickStrokeColor }).first {
+          return selected.properties.strokeColor
+        }
+        // For a new label the chosen color is its background (see `applyTextLabelFill`).
+        if self.quickPropertiesTool == .text,
+           let stored = self.annotationToolProperties[.text], stored.textPresentation != .plain,
+           stored.fillColor == .clear {
+          return self.defaultAnnotationProperties(for: .text).fillColor
+        }
+        return self.defaultAnnotationProperties(for: self.quickPropertiesTool).strokeColor
       },
       set: { [weak self] newColor in
         guard let self else { return }
-        let selectedStrokeTargets = self.quickSelectionTargets(matching: { $0.supportsQuickStrokeColor })
-        let hasSpotlightTarget = selectedStrokeTargets.contains { $0.type.toolType == .spotlight }
         let didUpdateSelection = self.updateQuickSelectionProperties(
           strokeColor: newColor,
           recordsUndo: true,
           matching: { $0.supportsQuickStrokeColor }
         )
         if didUpdateSelection {
-          if hasSpotlightTarget {
-            self.updateDefaultAnnotationProperties(for: .spotlight, strokeColor: newColor)
-          }
-          if self.isQuickPropertiesSyncEnabled && !(
-            hasSpotlightTarget && self.isTransparentColor(newColor)
-          ) {
-            self.rememberSharedAnnotationColor(newColor)
+          if let tool = self.justDrawnToolType {
+            self.rememberAnnotationPrimaryColor(newColor, for: tool)
           }
         } else {
           self.rememberAnnotationPrimaryColor(newColor, for: self.quickPropertiesTool)
@@ -5580,11 +5643,15 @@ final class AnnotateState: ObservableObject {
       },
       set: { [weak self] newWidth in
         guard let self else { return }
-        if !self.updateQuickSelectionProperties(
+        if self.updateQuickSelectionProperties(
           strokeWidth: newWidth,
           recordsUndo: true,
-          matching: { $0.supportsQuickStrokeWidth }
+          matching: self.quickStrokeWidthTargets
         ) {
+          if let tool = self.justDrawnToolType {
+            self.rememberAnnotationStrokeWidth(newWidth, for: tool)
+          }
+        } else {
           self.rememberAnnotationStrokeWidth(newWidth, for: self.quickPropertiesTool)
         }
       }
@@ -5601,11 +5668,15 @@ final class AnnotateState: ObservableObject {
       set: { [weak self] newRadius in
         guard let self else { return }
         let clampedRadius = max(0, newRadius)
-        if !self.updateQuickSelectionProperties(
+        if self.updateQuickSelectionProperties(
           cornerRadius: clampedRadius,
           recordsUndo: true,
           matching: { $0.toolType.supportsQuickCornerRadius }
         ) {
+          if let tool = self.justDrawnToolType {
+            self.rememberAnnotationCornerRadius(clampedRadius, for: tool)
+          }
+        } else {
           self.rememberAnnotationCornerRadius(clampedRadius, for: self.quickPropertiesTool)
         }
       }
@@ -5621,11 +5692,15 @@ final class AnnotateState: ObservableObject {
       },
       set: { [weak self] newStyle in
         guard let self else { return }
-        if !self.updateQuickSelectionProperties(
+        if self.updateQuickSelectionProperties(
           lineStyle: newStyle,
           recordsUndo: true,
           matching: { $0.supportsQuickLineStyle }
         ) {
+          if let tool = self.justDrawnToolType {
+            self.rememberAnnotationLineStyle(newStyle, for: tool)
+          }
+        } else {
           self.rememberAnnotationLineStyle(newStyle, for: self.quickPropertiesTool)
         }
       }
@@ -5641,11 +5716,21 @@ final class AnnotateState: ObservableObject {
       },
       set: { [weak self] newOpacity in
         guard let self else { return }
-        if !self.updateQuickSelectionProperties(
+        if self.updateQuickSelectionProperties(
           spotlightOpacity: newOpacity,
           recordsUndo: true,
           matching: { if case .spotlight = $0 { return true }; return false }
         ) {
+          // The dim is one layer over the whole capture (the compositor reads the first
+          // spotlight), so every spotlight takes the new value.
+          let clamped = AnnotationProperties.clampedSpotlightOpacity(newOpacity)
+          for index in self.annotations.indices where self.annotations[index].type.toolType == .spotlight {
+            self.annotations[index].properties.spotlightOpacity = clamped
+          }
+          if self.justDrawnToolType == .spotlight {
+            self.rememberAnnotationSpotlightOpacity(newOpacity, for: .spotlight)
+          }
+        } else {
           self.rememberAnnotationSpotlightOpacity(newOpacity, for: self.quickPropertiesTool)
         }
       }
@@ -5731,6 +5816,18 @@ final class AnnotateState: ObservableObject {
     for index in annotations.indices {
       translateAnnotation(at: index, dx: dx, dy: dy)
     }
+  }
+
+  /// The image origin moved under the annotations; earlier snapshots must move with them or
+  /// undo would bring items back shifted.
+  private func translateUndoHistory(dx: CGFloat, dy: CGFloat) {
+    func shifted(_ entry: UndoEntry) -> UndoEntry {
+      guard case .annotations(var snapshot) = entry else { return entry }
+      snapshot.annotations = snapshot.annotations.map { $0.translatedBy(dx: dx, dy: dy) }
+      return .annotations(snapshot)
+    }
+    undoStack = undoStack.map(shifted)
+    redoStack = redoStack.map(shifted)
   }
 
   private func translateAnnotation(at index: Int, dx: CGFloat, dy: CGFloat) {

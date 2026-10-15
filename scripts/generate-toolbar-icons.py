@@ -58,6 +58,7 @@ ICONS = {
     'rec-redo': ('ArrowReloadHorizontal', 'fixed'),
     'rec-back': ('ArrowLeft02', 'fixed'),
     'overflow': ('ArrowRight01', 'fixed'),
+    'more': ('MoreHorizontal', 'fixed'),
     # Properties bar: segmented pickers (key suffix is the enum rawValue)
     'text-plain': ('TextFont', 'swap'),
     'text-label': ('Label', 'swap'),

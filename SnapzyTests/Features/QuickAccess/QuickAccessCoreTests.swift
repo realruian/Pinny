@@ -558,7 +558,7 @@ final class QuickAccessCoreTests: XCTestCase {
     XCTAssertEqual(panel.contentView?.superview?.layer?.cornerRadius ?? 0, 0)
   }
 
-  func testPinDoubleClick_copiesOriginalPixelsClosesOnlyClickedPin() throws {
+  func testPinDoubleClick_copiesOriginalPixelsClosesOnlyClickedPin() async throws {
     let pasteboard = NSPasteboard.general
     let savedItems = (pasteboard.pasteboardItems ?? []).map { item in
       item.types.compactMap { type in item.data(forType: type).map { (type, $0) } }
@@ -604,6 +604,7 @@ final class QuickAccessCoreTests: XCTestCase {
     panel.sendEvent(doubleClick)
     XCTAssertFalse(panel.isVisible)
     XCTAssertEqual(closed, [item.id])
+    await ClipboardHelper.waitForPendingImageCopy()
     let copied = try XCTUnwrap(NSImage(pasteboard: pasteboard))
     let copiedBitmap = try XCTUnwrap(NSBitmapImageRep(data: try XCTUnwrap(copied.tiffRepresentation)))
     XCTAssertEqual(copiedBitmap.pixelsWide, 160)

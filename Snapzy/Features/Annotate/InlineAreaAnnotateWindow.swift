@@ -191,6 +191,11 @@ final class InlineAreaAnnotatePanel: NSPanel {
   }
 
   override func sendEvent(_ event: NSEvent) {
+    // Only the first display's panel is made key on open; a click on another display's panel
+    // must take the keyboard too, or Delete, ⌘Z and arrows would go nowhere.
+    if event.type == .leftMouseDown, !isKeyWindow {
+      makeKey()
+    }
     if event.type == .leftMouseDown, event.clickCount == 2, session.phase == .annotating,
        !session.isRecordingPrep, session.state.selectedTool == .selection,
        session.state.editingTextAnnotationId == nil, session.state.annotations.isEmpty,
@@ -287,9 +292,7 @@ private struct InlineAreaAnnotateRootView: View {
   let display: InlineAreaAnnotateDisplay
 
   @State private var movingStartRect: CGRect?
-  @State private var movingPreviewRect: CGRect?
   @State private var resizingStartRect: CGRect?
-  @State private var resizePreviewRect: CGRect?
   @State private var activeResizeHandle: InlineAreaResizeHandle?
   @State private var cursorIndicatorPoint: CGPoint?
   @State private var hoverTip: InlineAreaHoverTip?
@@ -309,10 +312,10 @@ private struct InlineAreaAnnotateRootView: View {
       let hoveredWindowDesktopRect = hoveredHighlightScreenRect.map {
         InlineAreaAnnotateSession.localFrame(for: $0, in: session.desktopFrame)
       }
-      let desktopRect = resizePreviewRect ?? movingPreviewRect ?? session.selectionRect ?? hoveredWindowDesktopRect
+      let desktopRect = session.resizePreviewRect ?? session.movingPreviewRect ?? session.selectionRect ?? hoveredWindowDesktopRect
       let viewportRect = desktopRect.map(rectInViewport)
-      let isSelectionPreviewing = resizePreviewRect != nil || movingPreviewRect != nil
-      let showsCursorIndicator = movingPreviewRect != nil
+      let isSelectionPreviewing = session.resizePreviewRect != nil || session.movingPreviewRect != nil
+      let showsCursorIndicator = session.movingPreviewRect != nil
       // Pointer position for the drawn crosshair / magnifier during `.selecting`. Prefer the
       // session-published desktop point, which the drag local monitor keeps fresh while it
       // consumes `.leftMouseDragged` (starving the SwiftUI gesture that feeds
@@ -341,7 +344,9 @@ private struct InlineAreaAnnotateRootView: View {
         if let desktopRect, let viewportRect {
           if session.phase == .annotating {
             annotateSurface(rect: viewportRect, usesBackdropPreview: isSelectionPreviewing)
-            if session.isMoveModifierActive {
+            // Kept until the drag ends even if Space is released first, or the gesture would
+            // be torn down without committing the move.
+            if session.isMoveModifierActive || movingStartRect != nil {
               spaceMoveHitArea(rect: viewportRect, desktopRect: desktopRect)
             }
             resizeHandles(rect: viewportRect, desktopRect: desktopRect)
@@ -376,6 +381,9 @@ private struct InlineAreaAnnotateRootView: View {
             }
             .padding(.top, chipMargin)
             .padding(.leading, chipMargin)
+            // Out of the way while a region is being dragged across them.
+            .opacity(session.selectionRect == nil ? 1 : 0)
+            .allowsHitTesting(session.selectionRect == nil)
             Spacer()
           }.zIndex(20)
           InlineAreaMagnifierOverlay(
@@ -466,8 +474,10 @@ private struct InlineAreaAnnotateRootView: View {
       .onChanged { value in
         guard session.phase == .selecting else { return }
 
+        // A highlighted element alone (menu bar, Dock, desktop icons, or before the window
+        // list has loaded) is clickable too.
         if pendingWindowSelectionStart == nil, session.selectionRect == nil,
-           session.hoveredWindowCandidate != nil {
+           session.hoveredWindowCandidate != nil || session.hoveredSmartElementRect != nil {
           // Don't commit to a manual drag yet — the gesture might resolve as a click on the
           // hovered window instead; crossing the threshold below promotes it to a real drag.
           pendingWindowSelectionStart = value.startLocation
@@ -574,9 +584,13 @@ private struct InlineAreaAnnotateRootView: View {
 
   private func annotateSurface(rect: CGRect, usesBackdropPreview: Bool) -> some View {
     let imageSize = session.state.sourceImage?.size ?? rect.size
-    let displayScale = max(rect.width / max(imageSize.width, 1), 0.0001)
+    // While an edge is dragged the image is not re-cropped yet. Keep the annotations at 1:1 where
+    // they are on screen and only clip them to the preview rect, instead of stretching them into it.
+    let canvasRect = session.resizePreviewRect == nil ? rect : (session.selectionRect.map(rectInViewport) ?? rect)
+    let canvasOffset = CGSize(width: canvasRect.minX - rect.minX, height: canvasRect.minY - rect.minY)
+    let displayScale = max(canvasRect.width / max(imageSize.width, 1), 0.0001)
 
-    return ZStack {
+    return ZStack(alignment: .topLeading) {
       if !usesBackdropPreview, let image = session.state.effectiveSourceImage {
         Image(nsImage: image)
           .resizable()
@@ -605,16 +619,17 @@ private struct InlineAreaAnnotateRootView: View {
             if finished {
               session.moveSelection(to: nextRect, refreshImage: true)
               session.endSelectionSnapping()
-              movingPreviewRect = nil
+              session.movingPreviewRect = nil
               movingStartRect = nil
             } else {
-              movingPreviewRect = nextRect
+              session.movingPreviewRect = nextRect
             }
           }
         },
         hoverCursorIsExternal: true
       )
-      .frame(width: rect.width, height: rect.height)
+      .frame(width: canvasRect.width, height: canvasRect.height)
+      .offset(canvasOffset)
 
       if session.state.editingTextAnnotationId != nil {
         TextEditOverlay(
@@ -622,11 +637,12 @@ private struct InlineAreaAnnotateRootView: View {
           scale: displayScale,
           canvasBounds: CGRect(origin: .zero, size: imageSize)
         )
-        .frame(width: rect.width, height: rect.height)
-        .clipped()
+        .frame(width: canvasRect.width, height: canvasRect.height)
+        .offset(canvasOffset)
       }
     }
-    .frame(width: rect.width, height: rect.height)
+    .frame(width: rect.width, height: rect.height, alignment: .topLeading)
+    .clipped()
     .overlay(
       selectionBorder(rect: CGRect(origin: .zero, size: rect.size))
         .allowsHitTesting(false)
@@ -742,7 +758,7 @@ private struct InlineAreaAnnotateRootView: View {
         transaction.animation = nil
         withTransaction(transaction) {
           cursorIndicatorPoint = value.location
-          movingPreviewRect = previewRect
+          session.movingPreviewRect = previewRect
         }
         updateNativeCursorForIndicator(true)
       }
@@ -756,7 +772,7 @@ private struct InlineAreaAnnotateRootView: View {
         transaction.animation = nil
         withTransaction(transaction) {
           session.moveSelection(to: finalRect, refreshImage: true)
-          movingPreviewRect = nil
+          session.movingPreviewRect = nil
           movingStartRect = nil
         }
         cursorIndicatorPoint = nil
@@ -807,8 +823,8 @@ private struct InlineAreaAnnotateRootView: View {
         transaction.animation = nil
         withTransaction(transaction) {
           activeResizeHandle = handle
-          movingPreviewRect = nil
-          resizePreviewRect = previewRect
+          session.movingPreviewRect = nil
+          session.resizePreviewRect = previewRect
         }
       }
       .onEnded { value in
@@ -827,7 +843,7 @@ private struct InlineAreaAnnotateRootView: View {
         transaction.animation = nil
         withTransaction(transaction) {
           session.resizeSelection(to: finalRect, previousRect: start)
-          resizePreviewRect = nil
+          session.resizePreviewRect = nil
           resizingStartRect = nil
           activeResizeHandle = nil
         }
@@ -841,7 +857,9 @@ private struct InlineAreaAnnotateRootView: View {
     containerSize: CGSize
   ) -> CGRect {
     let rect = start.standardized
-    let minSize = InlineAreaLayout.minimumSelectionSize
+    // A selection already smaller than the minimum (a small icon picked by click) keeps its
+    // size as the floor, so touching an edge does not make it jump.
+    let minSize = min(InlineAreaLayout.minimumSelectionSize, rect.width, rect.height)
     var minX = rect.minX
     var maxX = rect.maxX
     var minY = rect.minY
@@ -1487,7 +1505,9 @@ enum InlineAreaControlGeometry {
       propertiesWidth: propertiesWidth,
       toolbarCenter: CGPoint(x: toolbarX, y: centers.toolbar),
       propertiesCenter: CGPoint(x: propertiesX, y: centers.properties),
-      propertiesPopoverEdge: verticalSide == .above ? .bottom : .top
+      // The secondary bar always sits under the main bar, so its popovers attach to its bottom
+      // edge and open downward; opening upward would cover the main bar.
+      propertiesPopoverEdge: .bottom
     )
   }
 
@@ -1847,6 +1867,7 @@ private struct InlineAreaHelpModifier: ViewModifier {
   @Environment(\.inlineAreaHoverTipAbove) private var prefersAbove
   @State private var frame: CGRect = .zero
   @State private var pending: Task<Void, Never>?
+  @State private var isShowing = false
 
   func body(content: Content) -> some View {
     if let report {
@@ -1855,22 +1876,31 @@ private struct InlineAreaHelpModifier: ViewModifier {
           let current = proxy.frame(in: .named(InlineAreaCoordinateSpace.root))
           Color.clear
             .onAppear { frame = current }
-            .onChange(of: current) { newValue in frame = newValue }
+            .onChange(of: current) { newValue in
+              frame = newValue
+              // The toolbar moved under a showing tip (arrow keys move the selection).
+              if isShowing {
+                report(InlineAreaHoverTip(text: text, frame: newValue, prefersAbove: prefersAbove), text)
+              }
+            }
         })
         .onHover { hovering in
           pending?.cancel()
           guard hovering else {
+            isShowing = false
             report(nil, text)
             return
           }
           pending = Task { @MainActor in
             try? await Task.sleep(nanoseconds: 450_000_000)
             guard !Task.isCancelled else { return }
+            isShowing = true
             report(InlineAreaHoverTip(text: text, frame: frame, prefersAbove: prefersAbove), text)
           }
         }
         .onDisappear {
           pending?.cancel()
+          isShowing = false
           report(nil, text)
         }
     } else {
@@ -1879,7 +1909,29 @@ private struct InlineAreaHelpModifier: ViewModifier {
   }
 }
 
+private struct InlineAreaPopoverRegistration: ViewModifier {
+  @Binding var isPresented: Bool
+  @State private var id = UUID()
+
+  func body(content: Content) -> some View {
+    content
+      .onChange(of: isPresented) { presented in
+        if presented {
+          InlineAreaPopoverStack.push(id) { isPresented = false }
+        } else {
+          InlineAreaPopoverStack.remove(id)
+        }
+      }
+      .onDisappear { InlineAreaPopoverStack.remove(id) }
+  }
+}
+
 extension View {
+  /// Lets the capture session see this popover is open (see `InlineAreaPopoverStack`).
+  func inlineAreaPopoverRegistration(isPresented: Binding<Bool>) -> some View {
+    modifier(InlineAreaPopoverRegistration(isPresented: isPresented))
+  }
+
   /// Hover label for a capture overlay control; a native tooltip anywhere else.
   func inlineAreaHelp(_ text: String) -> some View {
     modifier(InlineAreaHelpModifier(text: text))
@@ -1931,36 +1983,34 @@ private struct InlineAreaKeyChip: View {
   let key: String
   var action: (() -> Void)?
 
-  private static let inset: CGFloat = 4
-  private static let keyRadius: CGFloat = 5
+  /// A dark capsule that stays readable over the dimmed screen whatever is under it; the
+  /// key capsule is concentric with the chip (16 = 10 + 6).
+  private static let height: CGFloat = 32
+  private static let inset: CGFloat = 6
+  private static let keyHeight: CGFloat = height - inset * 2
   @State private var isHovering = false
 
   var body: some View {
-    let chip = HStack(spacing: 6) {
+    let chip = HStack(spacing: 8) {
       Text(title)
-        .font(.system(size: 12, weight: .medium))
+        .font(.system(size: 13, weight: .semibold))
         .foregroundColor(.white)
       Text(key)
-        .font(.system(size: 11, weight: .medium))
-        .foregroundColor(Color.white.opacity(0.9))
-        .padding(.horizontal, 6)
-        .frame(height: 20)
-        .background(
-          RoundedRectangle(cornerRadius: Self.keyRadius, style: .continuous)
-            .fill(Color.white.opacity(0.16))
-        )
+        .font(.system(size: 11, weight: .semibold))
+        .foregroundColor(Color.white.opacity(0.88))
+        .padding(.horizontal, 7)
+        .frame(minWidth: Self.keyHeight, minHeight: Self.keyHeight)
+        .background(Capsule().fill(Color.white.opacity(0.16)))
     }
-    .padding(.leading, 10)
+    .padding(.leading, 12)
     .padding(.trailing, Self.inset)
-    .padding(.vertical, Self.inset)
+    .frame(height: Self.height)
     .background(
-      RoundedRectangle(cornerRadius: Self.keyRadius + Self.inset, style: .continuous)
-        .fill(Color.black.opacity(isHovering && action != nil ? 0.84 : 0.72))
+      Capsule().fill(Color(white: 0.11).opacity(isHovering && action != nil ? 0.92 : 0.82))
     )
-    .overlay(
-      RoundedRectangle(cornerRadius: Self.keyRadius + Self.inset, style: .continuous)
-        .stroke(Color.white.opacity(0.12), lineWidth: 1)
-    )
+    .overlay(Capsule().strokeBorder(Color.white.opacity(0.14), lineWidth: 0.5))
+    .shadow(color: Color.black.opacity(0.28), radius: 7, x: 0, y: 4)
+    .contentShape(Capsule())
     .fixedSize()
 
     if let action {
@@ -2165,11 +2215,9 @@ private struct InlineAreaPropertiesBar: View {
   }
 
   var body: some View {
-    ZStack(alignment: .leading) {
+    HStack(spacing: 0) {
       ScrollView(.horizontal, showsIndicators: false) {
         HStack(spacing: 0) {
-          contextPill
-
           if familyOptions.count > 1 {
             InlineAreaSegmentedPicker(
               title: familyOptions.contains(.arrow) ? L10n.AnnotateUI.pinnyLineTool : L10n.AnnotateUI.pinnyShapeTool,
@@ -2203,27 +2251,6 @@ private struct InlineAreaPropertiesBar: View {
             )
           }
 
-          if state.quickPropertiesSupportsTextBackground {
-            InlineAreaSegmentedPicker(
-              title: L10n.AnnotateUI.textStyle,
-              items: TextPresentation.allCases,
-              selection: Binding(
-                get: { state.quickTextPresentation },
-                set: { state.setTextPresentation($0) }
-              ),
-              icon: { "text-\($0.rawValue)" },
-              tooltip: \.helpText
-            )
-
-            InlineAreaColorControl(
-              title: L10n.Common.background,
-              selectedColor: state.quickTextBackgroundBinding,
-              colors: textBackgroundColors,
-              role: .textBackground,
-              popoverEdge: popoverEdge
-            )
-          }
-
           if state.quickPropertiesSupportsBlurType {
             InlineAreaSegmentedPicker(
               title: L10n.AnnotateUI.blurType,
@@ -2232,48 +2259,6 @@ private struct InlineAreaPropertiesBar: View {
               icon: { "blur-\($0.rawValue)" },
               tooltip: \.displayName
             )
-          }
-
-          if state.quickPropertiesSupportsArrowStyle {
-            InlineAreaSegmentedPicker(
-              title: L10n.Common.style,
-              items: ArrowStyle.allCases,
-              selection: state.quickArrowStyleBinding,
-              icon: { "arrowstyle-\($0.rawValue)" },
-              tooltip: \.displayName
-            )
-
-            InlineAreaSegmentedPicker(
-              title: L10n.Common.display,
-              items: ArrowType.allCases,
-              selection: state.quickArrowTypeBinding,
-              icon: { "arrowtype-\($0.rawValue)" },
-              tooltip: \.displayName
-            )
-
-            if state.quickPropertiesSupportsArrowBendDirection {
-              InlineAreaArrowBendControl(
-                bendDirection: state.quickArrowBendDirectionBinding
-              )
-            }
-
-            if state.quickPropertiesSupportsArrowEndpoints {
-              InlineAreaSegmentedPicker(
-                title: L10n.AnnotateUI.arrowStartHead,
-                items: ArrowEndpointStyle.allCases,
-                selection: state.quickArrowStartHeadBinding,
-                icon: { "endpoint-\($0.rawValue)" },
-                tooltip: \.displayName
-              )
-
-              InlineAreaSegmentedPicker(
-                title: L10n.AnnotateUI.arrowEndHead,
-                items: ArrowEndpointStyle.allCases,
-                selection: state.quickArrowEndHeadBinding,
-                icon: { "endpoint-\($0.rawValue)" },
-                tooltip: \.displayName
-              )
-            }
           }
 
           if state.quickPropertiesSupportsWatermark {
@@ -2312,19 +2297,19 @@ private struct InlineAreaPropertiesBar: View {
             )
           }
 
-          if state.quickPropertiesSupportsCornerRadius {
+          if state.quickPropertiesSupportsSpotlightOpacity {
             InlineAreaSliderControl(
-              title: L10n.Common.corners,
-              icon: "slider-corners",
-              value: state.quickCornerRadiusBinding,
-              range: 0 ... 60,
-              step: 1,
-              displayText: "\(Int(state.quickCornerRadiusBinding.wrappedValue.rounded()))",
+              title: L10n.AnnotateUI.spotlightOpacity,
+              icon: "slider-opacity",
+              value: state.quickSpotlightOpacityBinding,
+              range: 0.1 ... 0.9,
+              step: 0.05,
+              displayText: "\(Int((state.quickSpotlightOpacityBinding.wrappedValue * 100).rounded()))%",
               onEditingChanged: state.setQuickPropertiesControlEditing
             )
           }
 
-          if state.quickPropertiesSupportsLineStyle {
+          if state.quickPropertiesSupportsLineStyle && !collapsesLineOptions {
             InlineAreaLineStylePicker(selection: state.quickLineStyleBinding)
           }
 
@@ -2349,45 +2334,187 @@ private struct InlineAreaPropertiesBar: View {
               onEditingChanged: state.setQuickPropertiesControlEditing
             )
           }
+
         }
         .fixedSize(horizontal: true, vertical: false)
-        .padding(.horizontal, 6)
+        // Every group leads with a hairline; hide the first one so the bar starts with a control.
+        .padding(.leading, -InlineAreaToolbarMetrics.dividerWidth)
+        .clipped()
+        .padding(.leading, 6)
+        .padding(.trailing, hasMoreOptions ? 0 : 6)
         .background(
           GeometryReader { proxy in
             Color.clear.preference(
               key: InlineAreaPropertiesContentWidthKey.self,
-              value: proxy.size.width
+              value: proxy.size.width + moreWidth
             )
           }
         )
       }
-      .frame(width: min(contentWidth, maxWidth))
+      .frame(width: min(contentWidth, maxWidth) - moreWidth)
+
+      // Outside the scroll view so it stays in reach when the controls have to scroll.
+      if hasMoreOptions {
+        InlineAreaMoreControl(popoverEdge: popoverEdge) {
+          InlineAreaMoreOptions(
+            state: state,
+            collapsesLineOptions: collapsesLineOptions,
+            textBackgroundColors: textBackgroundColors,
+            popoverEdge: popoverEdge
+          )
+        }
+        .padding(.trailing, 6)
+      }
     }
     .frame(height: InlineAreaLayout.propertiesHeight)
     .onPreferenceChange(InlineAreaPropertiesContentWidthKey.self) { contentWidth = $0 }
+  }
+
+  /// Arrow and line keep their family, color and width in the bar; the rest goes under More.
+  private var collapsesLineOptions: Bool {
+    state.quickPropertiesSupportsArrowStyle || familyOptions.contains(.arrow)
+      || state.quickPropertiesTool == .arrow || state.quickPropertiesTool == .line
+  }
+
+  /// Hairline, button and trailing inset of the More control.
+  private var moreWidth: CGFloat {
+    hasMoreOptions ? InlineAreaToolbarMetrics.dividerWidth + InlineAreaChrome.propertyControlHeight + 6 : 0
+  }
+
+  private var hasMoreOptions: Bool {
+    state.quickPropertiesSupportsArrowStyle
+      || (collapsesLineOptions && state.quickPropertiesSupportsLineStyle)
+      || state.quickPropertiesSupportsTextBackground
+      || state.quickPropertiesSupportsCornerRadius
   }
 
   private var colorTitle: String {
     state.quickPropertiesTool == .text ? L10n.Common.text : L10n.Common.color
   }
 
-  private var contextPill: some View {
-    HStack(spacing: 6) {
-      InlineAreaGlyph(name: state.quickPropertiesTool?.rawValue ?? "properties", size: 14)
+}
 
-      Text(state.quickPropertiesContextTitle)
-        .font(.system(size: 12, weight: .semibold))
-        .lineLimit(1)
-        .truncationMode(.tail)
+/// The "More" button at the end of the secondary bar: a popover with one titled row per option.
+private struct InlineAreaMoreControl<Content: View>: View {
+  let popoverEdge: Edge
+  @ViewBuilder let content: Content
+  @State private var showsPopover = false
+
+  var body: some View {
+    InlineAreaPropertyGroup(title: L10n.AnnotateUI.pinnyMoreOptions) {
+      Button {
+        showsPopover.toggle()
+      } label: {
+        InlineAreaGlyph(name: "more", size: 16)
+          .foregroundColor(showsPopover ? InlineAreaChrome.itemSelectedForeground : InlineAreaChrome.secondaryText)
+          .frame(width: InlineAreaChrome.propertyControlHeight, height: InlineAreaChrome.propertyControlHeight)
+          .background(
+            Circle().fill(showsPopover ? InlineAreaChrome.itemSelectedBackground : Color.clear)
+          )
+      }
+      .buttonStyle(.plain)
+      .inlineAreaHelp(L10n.AnnotateUI.pinnyMoreOptions)
+      .accessibilityLabel(L10n.AnnotateUI.pinnyMoreOptions)
+      .inlineAreaPopoverRegistration(isPresented: $showsPopover)
+      .popover(isPresented: $showsPopover, arrowEdge: popoverEdge) {
+        VStack(alignment: .leading, spacing: 6) {
+          content
+        }
+        .padding(12)
+        .environment(\.inlineAreaPropertyRows, true)
+        .environment(\.inlineAreaHoverTip, nil)
+      }
     }
-    .foregroundColor(InlineAreaChrome.primaryText)
-    .padding(.horizontal, 8)
-    .frame(height: InlineAreaChrome.propertyControlHeight)
-    .frame(maxWidth: 142)
-    .background(
-      Capsule()
-        .fill(InlineAreaChrome.itemBackground)
-    )
+  }
+}
+
+private struct InlineAreaMoreOptions: View {
+  @ObservedObject var state: AnnotateState
+  let collapsesLineOptions: Bool
+  let textBackgroundColors: [Color]
+  let popoverEdge: Edge
+
+  var body: some View {
+    if state.quickPropertiesSupportsArrowStyle {
+      InlineAreaSegmentedPicker(
+        title: L10n.Common.style,
+        items: ArrowStyle.allCases,
+        selection: state.quickArrowStyleBinding,
+        icon: { "arrowstyle-\($0.rawValue)" },
+        tooltip: \.displayName
+      )
+
+      InlineAreaSegmentedPicker(
+        title: L10n.Common.display,
+        items: ArrowType.allCases,
+        selection: state.quickArrowTypeBinding,
+        icon: { "arrowtype-\($0.rawValue)" },
+        tooltip: \.displayName
+      )
+
+      if state.quickPropertiesSupportsArrowBendDirection {
+        InlineAreaArrowBendControl(
+          bendDirection: state.quickArrowBendDirectionBinding
+        )
+      }
+
+      if state.quickPropertiesSupportsArrowEndpoints {
+        InlineAreaSegmentedPicker(
+          title: L10n.AnnotateUI.arrowStartHead,
+          items: ArrowEndpointStyle.allCases,
+          selection: state.quickArrowStartHeadBinding,
+          icon: { "endpoint-\($0.rawValue)" },
+          tooltip: \.displayName
+        )
+
+        InlineAreaSegmentedPicker(
+          title: L10n.AnnotateUI.arrowEndHead,
+          items: ArrowEndpointStyle.allCases,
+          selection: state.quickArrowEndHeadBinding,
+          icon: { "endpoint-\($0.rawValue)" },
+          tooltip: \.displayName
+        )
+      }
+    }
+
+    if collapsesLineOptions && state.quickPropertiesSupportsLineStyle {
+      InlineAreaLineStylePicker(selection: state.quickLineStyleBinding)
+    }
+
+    if state.quickPropertiesSupportsTextBackground {
+      InlineAreaSegmentedPicker(
+        title: L10n.AnnotateUI.textStyle,
+        items: TextPresentation.allCases,
+        selection: Binding(
+          get: { state.quickTextPresentation },
+          set: { state.setTextPresentation($0) }
+        ),
+        icon: { "text-\($0.rawValue)" },
+        tooltip: \.helpText
+      )
+
+      InlineAreaColorControl(
+        title: L10n.Common.background,
+        selectedColor: state.quickTextBackgroundBinding,
+        colors: textBackgroundColors,
+        role: .textBackground,
+        popoverEdge: popoverEdge
+      )
+    }
+
+    // Corners are rarely changed, so every tool keeps them here; text shows them only as a
+    // label or callout (see `quickPropertiesSupportsCornerRadius`).
+    if state.quickPropertiesSupportsCornerRadius {
+      InlineAreaSliderControl(
+        title: L10n.Common.corners,
+        icon: "slider-corners",
+        value: state.quickCornerRadiusBinding,
+        range: 0 ... 60,
+        step: 1,
+        displayText: "\(Int(state.quickCornerRadiusBinding.wrappedValue.rounded()))",
+        onEditingChanged: state.setQuickPropertiesControlEditing
+      )
+    }
   }
 }
 
@@ -2428,6 +2555,8 @@ private struct InlineAreaColorControl: View {
         }
         .buttonStyle(.plain)
         .inlineAreaHelp(title)
+        .accessibilityLabel(title)
+        .inlineAreaPopoverRegistration(isPresented: $showsPopover)
         .popover(isPresented: $showsPopover, arrowEdge: popoverEdge) {
           InlineAreaColorPopover(
             title: title,
@@ -2437,22 +2566,9 @@ private struct InlineAreaColorControl: View {
           ) {
             showsPopover = false
           }
-        }
-
-        ForEach(Array(paletteStore.favoriteColors(for: role).prefix(3)), id: \.self) { color in
-          Button {
-            selectedColor = color
-          } label: {
-            InlineAreaColorSwatch(
-              color: color,
-              isSelected: AnnotateColorPaletteStore.colorsMatch(selectedColor, color),
-              size: 18
-            )
-            .frame(width: InlineAreaChrome.propertyControlHeight, height: InlineAreaChrome.propertyControlHeight)
-          }
-          .buttonStyle(.plain)
-          .inlineAreaHelp(L10n.Common.favorite)
-          .annotateColorDraggable(color, sourceFavoriteRole: role)
+          // A popover is its own window; the overlay's self-drawn tips would land in the
+          // wrong place, so its buttons fall back to plain help.
+          .environment(\.inlineAreaHoverTip, nil)
         }
       }
     }
@@ -3094,6 +3210,7 @@ private struct InlineAreaSegmentedPicker<Item: Identifiable & Equatable>: View {
           }
           .buttonStyle(.plain)
           .inlineAreaHelp(item[keyPath: tooltip])
+          .accessibilityLabel("\(title): \(item[keyPath: tooltip])")
         }
       }
     }
@@ -3152,6 +3269,7 @@ private struct InlineAreaLineStylePicker: View {
           }
           .buttonStyle(.plain)
           .inlineAreaHelp(style.displayName)
+          .accessibilityLabel("\(L10n.AnnotateUI.lineStyle): \(style.displayName)")
         }
       }
     }
@@ -3180,6 +3298,8 @@ private struct InlineAreaSliderControl: View {
         )
         .frame(width: 64)
         .controlSize(.small)
+        .accessibilityLabel(title)
+        .accessibilityValue(displayText)
 
         Text(displayText)
           .font(.system(size: 11, weight: .medium))
@@ -3187,7 +3307,10 @@ private struct InlineAreaSliderControl: View {
           .lineLimit(1)
           .monospacedDigit()
           .frame(width: 34, alignment: .trailing)
+          .accessibilityHidden(true)
       }
+      // The bar has no group titles, so the name shows on hover.
+      .inlineAreaHelp(title)
     }
   }
 }
@@ -3200,6 +3323,11 @@ private struct InlineAreaTextFieldControl: View {
     InlineAreaPropertyGroup(title: title) {
       TextField("", text: $text)
         .textFieldStyle(.plain)
+        .accessibilityLabel(title)
+        .inlineAreaHelp(title)
+        // Return or Esc hands the keyboard back to the capture (copy, cancel, arrows).
+        .onSubmit { NSApp.keyWindow?.makeFirstResponder(nil) }
+        .onExitCommand { NSApp.keyWindow?.makeFirstResponder(nil) }
         .font(.system(size: 11, weight: .medium))
         .foregroundColor(InlineAreaChrome.primaryText)
         .lineLimit(1)
@@ -3216,22 +3344,39 @@ private struct InlineAreaTextFieldControl: View {
 private struct InlineAreaPropertyGroup<Content: View>: View {
   let title: String
   @ViewBuilder let content: Content
+  @Environment(\.inlineAreaPropertyRows) private var showsAsRow
 
   var body: some View {
-    // Every property follows the context pill, so each one leads with the group hairline.
-    HStack(spacing: 0) {
-      InlineAreaDivider(height: 16)
-      HStack(spacing: 6) {
+    if showsAsRow {
+      HStack(spacing: 10) {
         Text(title)
           .font(.system(size: 11, weight: .semibold))
           .foregroundColor(InlineAreaChrome.secondaryText)
           .lineLimit(1)
-          .minimumScaleFactor(0.82)
-          .fixedSize(horizontal: true, vertical: false)
+          .frame(width: 52, alignment: .leading)
 
         content
       }
+      .frame(height: InlineAreaChrome.propertyControlHeight + 4)
+    } else {
+      // Titles live in each control's hover tip; groups are separated by the hairline only.
+      HStack(spacing: 0) {
+        InlineAreaDivider(height: 16)
+        content
+      }
     }
+  }
+}
+
+private struct InlineAreaPropertyRowsKey: EnvironmentKey {
+  static let defaultValue = false
+}
+
+extension EnvironmentValues {
+  /// Inside the More popover each property is a row with its title in front.
+  var inlineAreaPropertyRows: Bool {
+    get { self[InlineAreaPropertyRowsKey.self] }
+    set { self[InlineAreaPropertyRowsKey.self] = newValue }
   }
 }
 

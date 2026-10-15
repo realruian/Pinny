@@ -154,11 +154,34 @@ nonisolated enum AnnotationToolType: String, CaseIterable, Identifiable {
     false
   }
 
+  /// A filled rectangle is one solid block; outline width and dashes would only nibble its edge.
   var supportsQuickStrokeWidth: Bool {
     switch self {
-    case .rectangle, .filledRectangle, .oval, .arrow, .line, .highlighter, .blur, .spotlight, .counter, .pencil:
+    case .rectangle, .oval, .arrow, .line, .highlighter, .blur, .spotlight, .counter, .pencil:
       return true
-    case .selection, .crop, .text, .watermark, .mockup:
+    case .selection, .crop, .filledRectangle, .text, .watermark, .mockup:
+      return false
+    }
+  }
+
+  /// While parameter sync is on these tools share one color. Highlighter, watermark and
+  /// spotlight keep their own: a yellow marker, a white watermark, a borderless spotlight.
+  var sharesSyncedColor: Bool {
+    switch self {
+    case .rectangle, .filledRectangle, .oval, .arrow, .line, .text, .counter, .pencil:
+      return true
+    case .selection, .crop, .highlighter, .blur, .spotlight, .watermark, .mockup:
+      return false
+    }
+  }
+
+  /// The width slider means line thickness only for outlines. For blur it is the strength,
+  /// for a counter the badge size, for a marker the band height, so those are not shared.
+  var sharesSyncedStrokeWidth: Bool {
+    switch self {
+    case .rectangle, .oval, .arrow, .line, .pencil:
+      return true
+    case .selection, .crop, .filledRectangle, .text, .highlighter, .blur, .spotlight, .counter, .watermark, .mockup:
       return false
     }
   }
@@ -174,9 +197,9 @@ nonisolated enum AnnotationToolType: String, CaseIterable, Identifiable {
 
   var supportsQuickLineStyle: Bool {
     switch self {
-    case .rectangle, .filledRectangle, .oval, .arrow, .line, .spotlight:
+    case .rectangle, .oval, .arrow, .line, .spotlight:
       return true
-    case .selection, .crop, .text, .highlighter, .blur, .counter, .watermark, .pencil, .mockup:
+    case .selection, .crop, .filledRectangle, .text, .highlighter, .blur, .counter, .watermark, .pencil, .mockup:
       return false
     }
   }

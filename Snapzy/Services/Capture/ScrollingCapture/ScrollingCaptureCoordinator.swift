@@ -657,11 +657,13 @@ final class ScrollingCaptureCoordinator {
   }
 
   /// Crop pauses stitching so the trimmed image cannot move under the handles. Leaving crop
-  /// resumes stitching at the bottom, so only the top trim is kept.
+  /// resumes stitching at the bottom, so only the top trim is kept, as a fixed number of rows.
   private func toggleTrimming() {
     guard let sessionModel, sessionModel.phase == .capturing else { return }
     if sessionModel.isTrimming {
+      sessionModel.keptTopTrimRows = sessionModel.trimmedRows(forHeight: sessionModel.stitchedPixelHeight).lowerBound
       sessionModel.isTrimming = false
+      sessionModel.trimTop = 0
       sessionModel.trimBottom = 0
     } else {
       framePacedTask?.cancel()
@@ -669,6 +671,8 @@ final class ScrollingCaptureCoordinator {
       pendingScrollDistancePoints = 0
       pendingScrollDirection = nil
       pendingMixedDirections = false
+      let height = sessionModel.stitchedPixelHeight
+      sessionModel.trimTop = height > 0 ? CGFloat(sessionModel.keptTopTrimRows) / CGFloat(height) : 0
       sessionModel.isTrimming = true
     }
   }
@@ -725,7 +729,7 @@ final class ScrollingCaptureCoordinator {
         sessionMetrics.recordFinalizingCompleted(at: ProcessInfo.processInfo.systemUptime)
         flushSessionMetricsIfNeeded(reason: "handed-off")
         let image = ScrollingCaptureTrim.crop(
-          latestImage, top: sessionModel.trimTop, bottom: sessionModel.trimBottom)
+          latestImage, rows: sessionModel.trimmedRows(forHeight: latestImage.height))
         let result = ScrollingCaptureResult(
           output: requestedOutput, image: image, scaleFactor: captureScaleFactor, selectedRect: selectedRect)
         cancel()

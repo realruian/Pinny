@@ -88,7 +88,9 @@ enum PreferencesKeys {
   static let annotateBringForwardAfterDrag = "annotate.bringForwardAfterDrag"
   static let annotatePrimaryColor = "annotate.primaryColor.v1"
   static let annotateParameterDefaults = "annotate.parameterDefaults.v1"
-  static let annotateToolParameterDefaults = "annotate.toolParameterDefaults.v1"
+  /// v2: v1 values were overwritten across tools by the old sync (one corner radius, color
+  /// and size for everything), so they start over.
+  static let annotateToolParameterDefaults = "annotate.toolParameterDefaults.v2"
   static let annotateQuickPropertiesSyncEnabled = "annotate.quickPropertiesSyncEnabled"
   static let annotateCropSnapToEdgesEnabled = "annotate.cropSnapToEdgesEnabled"
   static let annotateHighlighterTextSnappingEnabled = "annotate.highlighterTextSnappingEnabled"

@@ -20721,6 +20721,23 @@
         }
       }
     },
+    "scrolling-capture.pinny-save-failed-copied": {
+      "comment": "Pinny: toast when saving a finished long screenshot fails and the image is copied instead",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't save the long screenshot, so it was copied to the clipboard"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "长截图没能保存，已复制到剪贴板"
+          }
+        }
+      }
+    },
     "scrolling-capture.preview-finishing-saving-capture": {
       "extractionState": "stale",
       "localizations": {

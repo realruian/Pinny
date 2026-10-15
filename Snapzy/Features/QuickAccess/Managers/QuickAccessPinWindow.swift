@@ -105,7 +105,6 @@ final class QuickAccessPinWindow: NSPanel {
   private var localMouseMonitor: Any?
   private var globalMouseMonitor: Any?
   private var localKeyMonitor: Any?
-  private var globalKeyMonitor: Any?
 
   // Native-first background drag ownership: the manual path in
   // `PinWindowDragDecider` only takes over when the native path does not
@@ -219,10 +218,6 @@ final class QuickAccessPinWindow: NSPanel {
       NSEvent.removeMonitor(localKeyMonitor)
       self.localKeyMonitor = nil
     }
-    if let globalKeyMonitor {
-      NSEvent.removeMonitor(globalKeyMonitor)
-      self.globalKeyMonitor = nil
-    }
     isMouseMonitorsSuspended = false
     super.close()
   }
@@ -301,26 +296,7 @@ final class QuickAccessPinWindow: NSPanel {
         return didHandle ? nil : event
       }
     }
-
-    if globalKeyMonitor == nil {
-      globalKeyMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
-        Task { @MainActor in
-          _ = self?.handleEscapeIfNeeded(event)
-        }
-      }
-    }
-  }
-
-  private func removeEventMonitors() {
-    removeMouseMonitorsOnly()
-    if let localKeyMonitor {
-      NSEvent.removeMonitor(localKeyMonitor)
-      self.localKeyMonitor = nil
-    }
-    if let globalKeyMonitor {
-      NSEvent.removeMonitor(globalKeyMonitor)
-      self.globalKeyMonitor = nil
-    }
+    // No global key monitor: Esc pressed in another app must never close a pin.
   }
 
   private func removeMouseMonitorsOnly() {
@@ -440,9 +416,17 @@ final class QuickAccessPinWindow: NSPanel {
     return false
   }
 
+  /// Esc belongs to the F1 overlay, a long screenshot or a recording while one is running.
+  private static var isCaptureSessionActive: Bool {
+    ScrollingCaptureCoordinator.shared.isActive
+      || PinnyRecordingController.shared.isActive
+      || NSApp.windows.contains { $0 is InlineAreaAnnotatePanel && $0.isVisible }
+  }
+
   private func handleEscapeIfNeeded(_ event: NSEvent) -> Bool {
     guard event.keyCode == 53 else { return false }
     guard let pinState, !pinState.isLocked else { return false }
+    guard !Self.isCaptureSessionActive else { return false }
     guard isKeyWindow || frame.contains(NSEvent.mouseLocation) else { return false }
 
     onEscapeRequested?()

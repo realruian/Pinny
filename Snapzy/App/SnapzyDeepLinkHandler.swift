@@ -41,6 +41,16 @@ struct SnapzyDeepLinkHandler {
       return
     }
 
+    guard action.isAvailableInPinny else {
+      DiagnosticLogger.shared.log(
+        .info,
+        .action,
+        "Ignored deeplink to a retired feature",
+        context: ["action": action.logName]
+      )
+      return
+    }
+
     DiagnosticLogger.shared.log(
       .info,
       .action,
@@ -191,6 +201,19 @@ enum SnapzyDeepLinkAction: Equatable {
       self = .openSettings(Self.preferencesTab(from: components, pathParts: pathParts))
     default:
       return nil
+    }
+  }
+
+  /// Pinny exposes only the unified F1 capture and the visible settings pages;
+  /// retired flows still parse (so they can be logged) but are never run.
+  var isAvailableInPinny: Bool {
+    switch self {
+    case .captureAreaAnnotate:
+      return true
+    case .openSettings(let tab):
+      return tab.map { PreferencesTab.visibleTabs.contains($0) } ?? true
+    default:
+      return false
     }
   }
 

@@ -37,11 +37,16 @@ enum LongScreenshotOutput {
       SoundManager.play("Pop")
       ClipboardHelper.copyImageInBackground(image, sourceScreenRect: pinRect)
     case .pin:
+      SoundManager.play("Pop")
       QuickAccessPinWindowManager.shared.show(image: image, sourceScreenRect: pinRect)
       let shouldCopy = UserDefaults.standard.object(forKey: "inlinePinCopiesImage") as? Bool ?? true
       if shouldCopy { ClipboardHelper.copyImageInBackground(image, sourceScreenRect: pinRect) }
     case .save:
-      guard let directory = saveDirectoryProvider() else { return }
+      // The session is already gone, so a failed save must not drop the image: copy it instead.
+      guard let directory = saveDirectoryProvider() else {
+        copyInsteadOfSaving(image, sourceScreenRect: pinRect, reason: "no save directory")
+        return
+      }
       Task { @MainActor in
         let saved = await ScreenCaptureManager.shared.saveProcessedImage(
           result.image, to: directory, format: format,
@@ -51,10 +56,16 @@ enum LongScreenshotOutput {
         case .success:
           SoundManager.playScreenshotCapture()
         case .failure(let error):
-          AppToastManager.shared.show(message: error.localizedDescription, style: .error)
+          copyInsteadOfSaving(image, sourceScreenRect: pinRect, reason: error.localizedDescription)
         }
       }
     }
+  }
+
+  private static func copyInsteadOfSaving(_ image: NSImage, sourceScreenRect: CGRect, reason: String) {
+    DiagnosticLogger.shared.log(.warning, .capture, "Long screenshot save failed; copied instead", context: ["reason": reason])
+    ClipboardHelper.copyImageInBackground(image, sourceScreenRect: sourceScreenRect)
+    AppToastManager.shared.show(message: L10n.PinnyLongScreenshot.saveFailedCopied, style: .warning)
   }
 
   private static func screen(containing rect: CGRect) -> NSScreen {

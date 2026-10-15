@@ -515,11 +515,13 @@ nonisolated enum LineDashStyle: String, CaseIterable, Identifiable, Equatable, C
 
   /// Dash segment lengths scaled to the annotation's stroke width.
   /// Empty means solid; a zero-length segment with round caps renders as a dot.
+  /// Round caps reach half a width into each gap, so dash gaps are drawn 3 widths long
+  /// to leave a visible 2-width break.
   func dashLengths(for strokeWidth: CGFloat) -> [CGFloat] {
     let width = max(strokeWidth, 1)
     switch self {
     case .solid: return []
-    case .dashed: return [width * 3, width * 2]
+    case .dashed: return [width * 3, width * 3]
     case .dotted: return [0, width * 2]
     }
   }
@@ -1478,6 +1480,12 @@ nonisolated struct AnnotationProperties: Equatable {
 
   /// Pinny has no font picker: new text and watermarks always use PingFang.
   static let defaultFontName = "PingFang SC"
+  /// Shown when a watermark's text is emptied, so the item never turns invisible.
+  static let defaultWatermarkText = "Pinny"
+  /// Light enough to keep shapes recognisable, strong enough to hide text.
+  static let defaultBlurControlValue: CGFloat = 6
+  /// Labels and callouts get soft corners; plain text has no box to round.
+  static let defaultTextCornerRadius: CGFloat = 6
 
   init(
     strokeColor: Color = .red,
@@ -1509,6 +1517,17 @@ nonisolated struct AnnotationProperties: Equatable {
     self.calloutTailTarget = calloutTailTarget
   }
 
+  /// Black or white, whichever reads on `color` (WCAG relative luminance).
+  static func contrastingColor(for color: Color) -> Color {
+    guard let rgb = NSColor(color).usingColorSpace(.sRGB) else { return .white }
+    func linear(_ c: CGFloat) -> CGFloat {
+      c <= 0.03928 ? c / 12.92 : pow((c + 0.055) / 1.055, 2.4)
+    }
+    let luminance = 0.2126 * linear(rgb.redComponent) + 0.7152 * linear(rgb.greenComponent)
+      + 0.0722 * linear(rgb.blueComponent)
+    return luminance > 0.4 ? .black : .white
+  }
+
   static func clampedControlValue(_ value: CGFloat) -> CGFloat {
     min(max(value, controlValueRange.lowerBound), controlValueRange.upperBound)
   }
@@ -1521,12 +1540,13 @@ nonisolated struct AnnotationProperties: Equatable {
     clampedControlValue((max(diameter, 16) - 12) / 4)
   }
 
+  /// The lowest setting is a light touch (3.5 pt blocks), the highest fully hides large text.
   static func pixelatedBlurSize(for controlValue: CGFloat) -> CGFloat {
-    6 + clampedControlValue(controlValue) * 2
+    2 + clampedControlValue(controlValue) * 1.5
   }
 
   static func gaussianBlurRadius(for controlValue: CGFloat) -> CGFloat {
-    8 + clampedControlValue(controlValue) * 4
+    1.5 + clampedControlValue(controlValue) * 1.5
   }
 
   static func hexagonalScale(for controlValue: CGFloat) -> CGFloat {

@@ -27,6 +27,42 @@ final class SnapzyConfigurationPathsTests: XCTestCase {
     XCTAssertEqual(url.path, "/Users/example/.config/snapzy")
   }
 
+  func testPinnyBundleUsesSeparateConfigDirectory() {
+    let home = URL(fileURLWithPath: "/Users/example", isDirectory: true)
+
+    let url = SnapzyConfigurationPaths.suggestedConfigURL(
+      homeDirectory: home,
+      bundleIdentifier: SnapzyConfigurationPaths.pinnyBundleIdentifier
+    )
+
+    XCTAssertEqual(url.path, "/Users/example/.config/pinny/config.toml")
+  }
+
+  func testMigrateLegacyConfigCopiesSnapzyFileOnceForPinny() throws {
+    let home = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+    defer { try? FileManager.default.removeItem(at: home) }
+    let legacyURL = SnapzyConfigurationPaths.suggestedConfigURL(homeDirectory: home, bundleIdentifier: nil)
+    try FileManager.default.createDirectory(at: legacyURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+    try "legacy = true\n".write(to: legacyURL, atomically: true, encoding: .utf8)
+    let pinnyURL = SnapzyConfigurationPaths.suggestedConfigURL(
+      homeDirectory: home,
+      bundleIdentifier: SnapzyConfigurationPaths.pinnyBundleIdentifier
+    )
+
+    SnapzyConfigurationPaths.migrateLegacyConfigIfNeeded(
+      homeDirectory: home,
+      bundleIdentifier: SnapzyConfigurationPaths.pinnyBundleIdentifier
+    )
+    XCTAssertEqual(try String(contentsOf: pinnyURL, encoding: .utf8), "legacy = true\n")
+
+    try FileManager.default.removeItem(at: pinnyURL)
+    SnapzyConfigurationPaths.migrateLegacyConfigIfNeeded(
+      homeDirectory: home,
+      bundleIdentifier: SnapzyConfigurationPaths.pinnyBundleIdentifier
+    )
+    XCTAssertFalse(FileManager.default.fileExists(atPath: pinnyURL.path))
+  }
+
   func testCollapsingHomePathConvertsAbsolutePathToTilde() {
     let home = URL(fileURLWithPath: "/Users/example", isDirectory: true)
 

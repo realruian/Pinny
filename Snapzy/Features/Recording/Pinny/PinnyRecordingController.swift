@@ -33,10 +33,14 @@ final class PinnyRecordingController: ObservableObject {
   private var rerecordHandler: ((CGRect) -> Void)?
   private var saveDirectoryProvider: (() -> URL?)?
 
-  private init() {}
+  private init() {
+    recorder.onStreamError = { [weak self] error in self?.handleStreamError(error) }
+  }
 
   /// True while recording or paused: F1 and the menu bar icon stop it.
   var isRecording: Bool { phase == .starting || phase == .recording || phase == .stopping }
+  /// True from the start of a recording until its in-place playback closes.
+  var isActive: Bool { phase != .idle }
 
   /// - Parameters:
   ///   - rect: the selection in AppKit global screen coordinates.
@@ -185,6 +189,20 @@ final class PinnyRecordingController: ObservableObject {
       }
       SoundManager.play("Glass")
       showPlayback(url: url)
+    }
+  }
+
+  /// The capture stream died on its own (display unplugged, permission revoked, ...): end the
+  /// recording as failed instead of leaving the red frame up over a stream that records nothing.
+  private func handleStreamError(_ error: Error) {
+    guard phase == .recording else { return }
+    phase = .stopping
+    Task {
+      await recorder.cancelRecording()
+      closeRecordingChrome()
+      endRecordingPhase()
+      phase = .idle
+      showFailure(error.localizedDescription)
     }
   }
 

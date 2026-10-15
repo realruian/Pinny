@@ -21,16 +21,25 @@ enum QuickAccessPinWindowSizing {
     return min(8, max(1, min(visibleSize.width / baseSize.width, visibleSize.height / baseSize.height)))
   }
 
-  static func repositionAfterZoom(_ frame: CGRect, within bounds: CGRect) -> CGRect {
-    // Preserve image size/aspect ratio, including original captures spanning displays.
+  /// Pins move freely (drag, zoom), across displays and over the menu bar. Only a pin that is
+  /// completely off every display is moved onto the nearest one's visible area, keeping its size.
+  static func frameKeptOnScreen(_ frame: CGRect, screens: [(frame: CGRect, visibleFrame: CGRect)]) -> CGRect {
+    guard !screens.contains(where: { $0.frame.intersects(frame) }),
+          let nearest = screens.min(by: { gap(frame, $0.frame) < gap(frame, $1.frame) }) else { return frame }
+    let bounds = nearest.visibleFrame
     var result = frame
-    if frame.width <= bounds.width {
-      result.origin.x = min(max(frame.minX, bounds.minX), bounds.maxX - frame.width)
-    }
-    if frame.height <= bounds.height {
-      result.origin.y = min(max(frame.minY, bounds.minY), bounds.maxY - frame.height)
-    }
+    result.origin.x = frame.width <= bounds.width
+      ? min(max(frame.minX, bounds.minX), bounds.maxX - frame.width) : bounds.minX
+    result.origin.y = frame.height <= bounds.height
+      ? min(max(frame.minY, bounds.minY), bounds.maxY - frame.height) : bounds.maxY - frame.height
     return result
+  }
+
+  /// Squared distance between two rects (0 when they touch or overlap).
+  private static func gap(_ a: CGRect, _ b: CGRect) -> CGFloat {
+    let dx = max(b.minX - a.maxX, a.minX - b.maxX, 0)
+    let dy = max(b.minY - a.maxY, a.minY - b.maxY, 0)
+    return dx * dx + dy * dy
   }
 
   static func validSourceRect(_ rect: CGRect?) -> CGRect? {

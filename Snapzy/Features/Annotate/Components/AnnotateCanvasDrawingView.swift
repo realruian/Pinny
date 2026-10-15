@@ -326,7 +326,10 @@ final class DrawingCanvasNSView: NSView {
   /// bar edits it). Drawing-tool routing ignores that selection, so the next
   /// stroke may start on the new item; the next press or any selection
   /// change clears the marker and the selection then counts as the user's.
-  private var autoSelectedAnnotationId: UUID?
+  private var autoSelectedAnnotationId: UUID? {
+    get { state.justDrawnAnnotationId }
+    set { state.justDrawnAnnotationId = newValue }
+  }
 
   /// A drawing-tool press: its routing and how far the pointer has moved.
   private struct DrawingToolGesture {
@@ -1115,7 +1118,6 @@ final class DrawingCanvasNSView: NSView {
       // Only create new text annotation when not already editing one
       // (if we were editing, commitTextEditing() above already handled it)
       Task { @MainActor in
-        state.saveState()
         createTextAnnotation(at: imagePoint)
       }
       resetDrawingInteraction()
@@ -1940,11 +1942,13 @@ final class DrawingCanvasNSView: NSView {
     )
     // Start with empty text - user will type in the overlay
     let item = AnnotationItem(type: .text(""), bounds: bounds, properties: properties)
-    state.annotations.append(item)
+    state.appendNewTextAnnotation(item)
     state.useAutomaticTextWidth(for: item.id)
     state.prepareTextCalloutTail(for: item.id)
     state.selectedAnnotationId = item.id
     state.beginTextEditing(id: item.id, recordsUndo: false) // Enter edit mode immediately
+    // After the selection publish above, which clears the marker.
+    autoSelectedAnnotationId = item.id
   }
 
   // MARK: - Drawing

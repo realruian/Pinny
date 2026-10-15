@@ -60,6 +60,29 @@ nonisolated enum InlineAreaKeyAction: Equatable {
   case resetMoveModifierAndPassThrough
 }
 
+/// Open capture-toolbar popovers, innermost last. A popover of buttons never becomes key, so
+/// its keys reach the overlay panel; the session uses this to keep them from copying or
+/// cancelling the capture, and to let Esc close just the popover.
+@MainActor
+enum InlineAreaPopoverStack {
+  private static var closers: [(id: UUID, close: () -> Void)] = []
+
+  static var isOpen: Bool { !closers.isEmpty }
+
+  static func push(_ id: UUID, close: @escaping () -> Void) {
+    closers.removeAll { $0.id == id }
+    closers.append((id, close))
+  }
+
+  static func remove(_ id: UUID) {
+    closers.removeAll { $0.id == id }
+  }
+
+  static func closeTop() {
+    closers.popLast()?.close()
+  }
+}
+
 /// Pinny keyboard adjustment of the selection, in desktop-local points (y grows downward).
 /// Plain arrows move, ⌘ pushes the edge on that side outward, ⌥ pulls the opposite edge in
 /// that direction (shrinks); ⇧ makes any of them 10 points.
@@ -158,6 +181,10 @@ final class InlineAreaAnnotateSession: ObservableObject {
 
   @Published var phase: InlineAreaAnnotatePhase = .selecting
   @Published var selectionRect: CGRect?
+  /// Where the selection is being dragged or resized to, before the gesture ends. Shared so
+  /// every display's panel draws the same in-flight selection.
+  @Published var movingPreviewRect: CGRect?
+  @Published var resizePreviewRect: CGRect?
   /// Authoritative pointer position in desktop-local coordinates for the `.selecting` phase.
   /// Fed by every input path — SwiftUI hover/drag callbacks *and* the drag local monitor
   /// (`installSelectionMonitorIfNeeded`), which consumes `.leftMouseDragged` before AppKit
@@ -225,6 +252,8 @@ final class InlineAreaAnnotateSession: ObservableObject {
   private var selectionSnapGuides: InlineAreaSnapGuides?
   private var selectionSnapState: (x: CGFloat?, y: CGFloat?)?
   private var windowSelectionTask: Task<Void, Never>?
+  private let excludesOwnApplicationFromWindows: Bool
+  private var screenChangeObserver: NSObjectProtocol?
   private var smartElementCancellable: AnyCancellable?
   /// The system cursor is hidden for the whole `.selecting` phase — `InlineAreaAnnotateWindow`
   /// draws the crosshair itself (the same image/positioning as plain area screenshot's
@@ -269,6 +298,7 @@ final class InlineAreaAnnotateSession: ObservableObject {
     self.context = context
     self.onComplete = onComplete
     self.pinImage = pinImage
+    self.excludesOwnApplicationFromWindows = excludeOwnApplication
     self.state = AnnotateState(
       defaults: defaults,
       appliesDefaultCanvasPresetOnNewImages: false
@@ -291,11 +321,10 @@ final class InlineAreaAnnotateSession: ObservableObject {
     subscribeToSmartElementHighlights()
   }
 
+  // Pending element queries were cancelled in `complete`; doing it again here could land after
+  // the next F1 and blank that session's highlight.
   deinit {
     windowSelectionTask?.cancel()
-    Task { @MainActor in
-      SmartElementQueryService.shared.cancelPendingQueries()
-    }
   }
 
   private func subscribeToSmartElementHighlights() {
@@ -329,9 +358,10 @@ final class InlineAreaAnnotateSession: ObservableObject {
   /// path on first use, which shouldn't happen for users who never enabled this.
   private func startWindowSelectionQuery(
     prefetchedContentTask: ShareableContentPrefetchTask?,
-    excludeOwnApplication: Bool
+    excludeOwnApplication: Bool,
+    force: Bool = false
   ) {
-    guard autoDetectWindowUnderCursor else { return }
+    guard force || autoDetectWindowUnderCursor else { return }
     windowSelectionTask = Task { [weak self] in
       let snapshot = await WindowSelectionQueryService.prepareSnapshot(
         prefetchedContentTask: prefetchedContentTask,
@@ -394,6 +424,7 @@ final class InlineAreaAnnotateSession: ObservableObject {
     windows.add(window)
     if localKeyMonitor == nil, globalKeyMonitor == nil {
       installKeyMonitors()
+      installScreenChangeObserver()
     }
     installMagnifierScrollMonitorIfNeeded()
   }
@@ -467,6 +498,8 @@ final class InlineAreaAnnotateSession: ObservableObject {
   }
 
   func moveSelection(to localRect: CGRect, refreshImage: Bool) {
+    // A save in progress already took the old area; don't move it under the file.
+    guard !isFinishing else { return }
     let clampedRect = clampedSelectionRect(localRect.standardized)
     guard refreshImage else {
       selectionRect = clampedRect
@@ -478,6 +511,7 @@ final class InlineAreaAnnotateSession: ObservableObject {
   }
 
   func resizeSelection(to localRect: CGRect, previousRect: CGRect) {
+    guard !isFinishing else { return }
     let clampedRect = clampedSelectionRect(localRect.standardized)
     guard clampedRect.width > 5,
           clampedRect.height > 5,
@@ -513,7 +547,8 @@ final class InlineAreaAnnotateSession: ObservableObject {
     let result: InlineAreaSnapResult
     if let edges {
       result = InlineAreaSelectionSnapping.snapResize(
-        clamped, edges: edges, guides: guides, minSize: InlineAreaLayout.minimumSelectionSize
+        clamped, edges: edges, guides: guides,
+        minSize: min(InlineAreaLayout.minimumSelectionSize, clamped.width, clamped.height)
       )
     } else {
       result = InlineAreaSelectionSnapping.snapMove(clamped, guides: guides)
@@ -554,7 +589,19 @@ final class InlineAreaAnnotateSession: ObservableObject {
   }
 
   func handleKeyEvent(_ event: NSEvent, source: InlineAreaKeyEventSource = .local) -> Bool {
+    // Keys typed in a popover (a color field, the More options) belong to it: Return must not
+    // copy the capture and Esc must not throw it away. A popover of buttons is not key, so its
+    // keys arrive at the overlay panel; hand them to the popover (Esc closes it).
+    if source == .local {
+      if let window = event.window, !windows.allObjects.contains(window) { return false }
+      if InlineAreaPopoverStack.isOpen {
+        // Esc closes the topmost popover; other keys must not reach the capture meanwhile.
+        if Self.matchesCancelShortcut(event) { InlineAreaPopoverStack.closeTop() }
+        return true
+      }
+    }
     if isRecordingPrep, let handled = handleRecordingPrepKey(event, source: source) { return handled }
+    if handleToolShortcut(event, source: source) { return true }
     let action = Self.keyAction(
       for: event,
       source: source,
@@ -603,6 +650,22 @@ final class InlineAreaAnnotateSession: ObservableObject {
     }
   }
 
+  /// Tool letters work as soon as the selection exists, without clicking the canvas first,
+  /// and only for tools the capture toolbar shows (not crop or mockup).
+  private func handleToolShortcut(_ event: NSEvent, source: InlineAreaKeyEventSource) -> Bool {
+    guard phase == .annotating, !isRecordingPrep, event.type == .keyDown,
+          source == .local || windows.allObjects.contains(where: { $0.isKeyWindow }),
+          !windows.allObjects.contains(where: { $0.firstResponder is NSTextView }),
+          event.modifierFlags.intersection([.command, .control, .option]).isEmpty,
+          let character = event.charactersIgnoringModifiers?.lowercased().first,
+          let tool = AnnotateShortcutManager.shared.tool(for: character),
+          AnnotationToolType.inlineToolGroups.joined().contains(tool) else { return false }
+    state.commitTextEditing()
+    state.deselectAnnotation()
+    state.activateTool(tool)
+    return true
+  }
+
   /// Prep bar keys: Return starts, Esc returns to the capture toolbar, arrows still move or
   /// resize the selection. Copy, save and other capture shortcuts are swallowed. Nil means
   /// the regular handling applies.
@@ -625,7 +688,7 @@ final class InlineAreaAnnotateSession: ObservableObject {
   /// Arrow-key move / resize of an existing selection. Moving carries annotations with the
   /// image, resizing keeps them where they are on screen, matching mouse drags.
   private func adjustSelection(_ nudge: InlineAreaSelectionNudge) -> Bool {
-    guard phase == .annotating, let rect = selectionRect else { return false }
+    guard phase == .annotating, !isFinishing, let rect = selectionRect else { return false }
     recalledRegionIndex = nil
     let target = nudge.applied(to: rect)
     if nudge.mode == .move {
@@ -680,14 +743,31 @@ final class InlineAreaAnnotateSession: ObservableObject {
   }
 
   /// The whole window under the pointer; the display when no window is detected there.
+  /// Tab works with window detection switched off or the window list still loading: the list
+  /// is fetched on demand. Over no window (the desktop) nothing is selected rather than
+  /// silently taking the whole screen.
   func selectWindowUnderPointer() {
     guard phase == .selecting else { return }
     let local = selectionPointerLocation ?? currentDesktopMouseLocation
     let screenPoint = CGPoint(x: desktopFrame.minX + local.x, y: desktopFrame.maxY - local.y)
     if let candidate = hoveredWindowCandidate ?? windowSelectionSnapshot?.hitTest(at: screenPoint) {
       selectWindow(candidate)
-    } else {
-      selectDisplayUnderPointer()
+      return
+    }
+    guard windowSelectionSnapshot == nil else { return }
+    if windowSelectionTask == nil {
+      startWindowSelectionQuery(
+        prefetchedContentTask: nil,
+        excludeOwnApplication: excludesOwnApplicationFromWindows,
+        force: true
+      )
+    }
+    let pending = windowSelectionTask
+    Task { [weak self] in
+      await pending?.value
+      guard let self, self.phase == .selecting,
+            let candidate = self.windowSelectionSnapshot?.hitTest(at: screenPoint) else { return }
+      self.selectWindow(candidate)
     }
   }
 
@@ -742,6 +822,7 @@ final class InlineAreaAnnotateSession: ObservableObject {
     let shouldCopy = defaults.object(forKey: "inlinePinCopiesImage") as? Bool ?? true
     complete(.pinned)
     CaptureTiming.mark("overlay closed")
+    SoundManager.play("Pop")
     pinImage(image, sourceRect)
     CaptureTiming.mark("pin window shown")
     if shouldCopy { ClipboardHelper.copyImageInBackground(image, sourceScreenRect: sourceRect) }
@@ -873,6 +954,16 @@ final class InlineAreaAnnotateSession: ObservableObject {
     return result
   }
 
+  /// A display plugged in, removed or rearranged invalidates the frozen backdrops and panel
+  /// frames, so the capture is dropped rather than shown misaligned.
+  private func installScreenChangeObserver() {
+    screenChangeObserver = NotificationCenter.default.addObserver(
+      forName: NSApplication.didChangeScreenParametersNotification, object: nil, queue: .main
+    ) { [weak self] _ in
+      MainActor.assumeIsolated { self?.cancel() }
+    }
+  }
+
   private func installKeyMonitors() {
     localKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .keyUp]) { [weak self] event in
       guard self?.handleKeyEvent(event) == true else { return event }
@@ -886,6 +977,10 @@ final class InlineAreaAnnotateSession: ObservableObject {
   }
 
   private func removeKeyMonitors() {
+    if let screenChangeObserver {
+      NotificationCenter.default.removeObserver(screenChangeObserver)
+      self.screenChangeObserver = nil
+    }
     if let localKeyMonitor {
       NSEvent.removeMonitor(localKeyMonitor)
       self.localKeyMonitor = nil
@@ -1107,6 +1202,9 @@ final class InlineAreaAnnotateSession: ObservableObject {
     hasKeyWindow: Bool,
     hasSelectedAnnotation: Bool = false
   ) -> InlineAreaKeyAction {
+    // Keys typed in another app (Spotlight, after ⌘Tab) reach the global monitor too; they
+    // are that app's, and the monitor cannot swallow them anyway.
+    if source == .global && !hasKeyWindow { return .passThrough }
     let ownsKeyboard = source == .local || hasKeyWindow
     let plainKey = event.modifierFlags.intersection([.command, .control, .option, .shift]).isEmpty
     guard phase == .annotating else {

@@ -151,6 +151,23 @@ final class SnapzyDeepLinkHandlerTests: XCTestCase {
     }
   }
 
+  func testOnlyUnifiedCaptureAndVisibleSettingsAreAvailableInPinny() throws {
+    let available = ["snapzy://capture", "snapzy://capture/area-annotate", "snapzy://settings", "snapzy://settings/shortcuts"]
+    let retired = [
+      "snapzy://capture/fullscreen", "snapzy://capture/scrolling", "snapzy://record/screen",
+      "snapzy://open/annotate", "snapzy://open/history", "snapzy://settings/cloud", "snapzy://settings/history",
+    ]
+
+    for route in available {
+      let action = try XCTUnwrap(SnapzyDeepLinkAction(url: XCTUnwrap(URL(string: route))))
+      XCTAssertTrue(action.isAvailableInPinny, route)
+    }
+    for route in retired {
+      let action = try XCTUnwrap(SnapzyDeepLinkAction(url: XCTUnwrap(URL(string: route))))
+      XCTAssertFalse(action.isAvailableInPinny, route)
+    }
+  }
+
   func testDeepLinkHandlerChecksUrlSchemeEnabled() throws {
     let defaults = UserDefaults.standard
     let originalValue = defaults.object(forKey: PreferencesKeys.urlSchemeEnabled)

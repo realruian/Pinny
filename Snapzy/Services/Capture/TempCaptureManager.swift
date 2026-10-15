@@ -288,12 +288,20 @@ final class TempCaptureManager {
     var skipped = 0
     var preservedForRetention = 0
     var directoriesToPrune: [URL] = []
+    var clipboardFiles: [(url: URL, date: Date)] = []
 
     for case let fileURL as URL in enumerator {
       guard
         let values = try? fileURL.resourceValues(forKeys: [.isRegularFileKey]),
         values.isRegularFile == true
       else {
+        continue
+      }
+
+      // Clipboard copies are never history items; decide on them after the scan.
+      if Self.isClipboardTempFile(fileURL) {
+        let dates = try? fileURL.resourceValues(forKeys: [.contentModificationDateKey, .creationDateKey])
+        clipboardFiles.append((fileURL, dates?.contentModificationDate ?? dates?.creationDate ?? .distantPast))
         continue
       }
 
@@ -332,6 +340,15 @@ final class TempCaptureManager {
       }
     }
 
+    // Only the newest clipboard file can still be what the pasteboard references
+    // (pasteboard contents aren't read here to avoid paste-consent prompts).
+    for clipboardFile in clipboardFiles.sorted(by: { $0.date > $1.date }).dropFirst() {
+      if (try? fm.removeItem(at: clipboardFile.url)) != nil {
+        directoriesToPrune.append(clipboardFile.url.deletingLastPathComponent())
+        count += 1
+      }
+    }
+
     for directory in directoriesToPrune {
       pruneEmptyTempDirectories(startingAt: directory)
     }
@@ -366,6 +383,11 @@ final class TempCaptureManager {
   }
 
   // MARK: - Private
+
+  private static func isClipboardTempFile(_ url: URL) -> Bool {
+    let name = url.lastPathComponent
+    return name.hasPrefix("Pinny_clipboard_") || name.hasPrefix("Snapzy_clipboard_")
+  }
 
   private static func tempCaptureRootDirectory() -> URL {
     guard let appSupport = FileManager.default.urls(

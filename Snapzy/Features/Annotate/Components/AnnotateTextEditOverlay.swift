@@ -139,7 +139,7 @@ struct TextEditOverlay: View {
     if let editingId = state.editingTextAnnotationId,
        let annotation = state.annotations.first(where: { $0.id == editingId }),
        case .text(let text) = annotation.type,
-       text.isEmpty {
+       text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
       state.annotations.removeAll { $0.id == editingId }
       state.selectedAnnotationId = nil
     }

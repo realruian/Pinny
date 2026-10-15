@@ -7,6 +7,7 @@
 
 import AppKit
 import SwiftUI
+import UniformTypeIdentifiers
 
 @MainActor
 final class QuickAccessPinWindowManager {
@@ -14,7 +15,16 @@ final class QuickAccessPinWindowManager {
 
   private var controllers: [UUID: QuickAccessPinWindowController] = [:]
 
-  private init() {}
+  private init() {
+    NotificationCenter.default.addObserver(
+      forName: NSApplication.didChangeScreenParametersNotification, object: nil, queue: .main
+    ) { _ in
+      MainActor.assumeIsolated {
+        // A display was unplugged or rearranged: bring back pins left completely off-screen.
+        for controller in QuickAccessPinWindowManager.shared.controllers.values { controller.keepOnScreen() }
+      }
+    }
+  }
 
   @discardableResult
   func show(item: QuickAccessItem, sourceScreenRect: CGRect? = nil, onUserClose: @escaping (UUID) -> Void) -> Bool {
@@ -47,18 +57,23 @@ final class QuickAccessPinWindowManager {
     return id
   }
 
-  /// Reads image representations or image file URLs copied in Finder. Never changes the clipboard.
+  /// Reads image file URLs copied in Finder, then image representations. Never changes the clipboard.
+  /// File URLs come first: a non-image file copied in Finder also carries its icon as image data.
   static func clipboardImage(from pasteboard: NSPasteboard) -> NSImage? {
-    if let image = NSImage(pasteboard: pasteboard), image.isValid { return image }
     let urls = pasteboard.readObjects(forClasses: [NSURL.self],
       options: [.urlReadingFileURLsOnly: true]) as? [URL] ?? []
-    return urls.lazy.compactMap { NSImage(contentsOf: $0) }.first
+    let imageURLs = urls.filter { UTType(filenameExtension: $0.pathExtension)?.conforms(to: .image) == true }
+    if !urls.isEmpty, imageURLs.isEmpty { return nil }
+    if let image = imageURLs.lazy.compactMap({ NSImage(contentsOf: $0) }).first { return image }
+    if let image = NSImage(pasteboard: pasteboard), image.isValid { return image }
+    return nil
   }
 
   @discardableResult
   func showClipboardImage(from pasteboard: NSPasteboard = .general) -> UUID? {
     guard let image = Self.clipboardImage(from: pasteboard) else {
-      NSSound.beep()
+      SoundManager.beep()
+      AppToastManager.shared.show(message: L10n.Actions.pinClipboardNoImage, style: .info)
       return nil
     }
     return show(image: image, sourceScreenRect: PinClipboardGeometry.sourceRect(from: pasteboard))
@@ -112,7 +127,10 @@ private final class QuickAccessPinWindowController {
 
   init(id: UUID, url: URL?, image: NSImage, thumbnail: NSImage, sourceScreenRect: CGRect?) {
     self.id = id
-    let sourceScreenRect = QuickAccessPinWindowSizing.validSourceRect(sourceScreenRect)
+    // A stored position from a display that is gone is dropped: center like an external image.
+    let sourceScreenRect = QuickAccessPinWindowSizing.validSourceRect(sourceScreenRect).flatMap { rect in
+      NSScreen.screens.contains { $0.frame.intersects(rect) } ? rect : nil
+    }
     sourceSize = sourceScreenRect?.size
     let screen = ScreenUtility.activeScreen()
     let mode: QuickAccessPinZoomMode = .windowFollowsImage
@@ -190,16 +208,22 @@ private final class QuickAccessPinWindowController {
   }
 
   private func copyAndClose() {
-    // Copy the full-resolution image retained by this pin, including edits.
+    // Copy the full-resolution image retained by this pin, including edits, in the same
+    // format as an F1 copy. The current frame goes with it so F2 puts it back here.
     // It remains available even when the source file has moved or disappeared.
-    let pasteboard = NSPasteboard.general
-    pasteboard.clearContents()
-    guard pasteboard.writeObjects([state.image]) else {
-      NSSound.beep()
-      return
-    }
-    PinClipboardGeometry.write(window.frame, to: pasteboard)
+    ClipboardHelper.copyImageInBackground(state.image, sourceScreenRect: window.frame)
     handleUserClose()
+  }
+
+  func keepOnScreen() {
+    let frame = QuickAccessPinWindowSizing.frameKeptOnScreen(window.frame, screens: Self.screenGeometry)
+    guard frame != window.frame else { return }
+    window.setFrameOrigin(frame.origin)
+    window.updateMousePassthrough()
+  }
+
+  private static var screenGeometry: [(frame: CGRect, visibleFrame: CGRect)] {
+    NSScreen.screens.map { ($0.frame, $0.visibleFrame) }
   }
 
   private func handleUserClose() {
@@ -249,9 +273,9 @@ private final class QuickAccessPinWindowController {
       to: size,
       preservingAnchorFraction: fraction
     )
-    let screen = window.screen ?? ScreenUtility.activeScreen()
-    let visibleFrame = QuickAccessPinWindowSizing.repositionAfterZoom(frame, within: screen.visibleFrame)
-    window.setFrame(visibleFrame, display: true, animate: animated)
+    // Zoom stays anchored at the pointer like a free drag; only a pin pushed off every display comes back.
+    let keptFrame = QuickAccessPinWindowSizing.frameKeptOnScreen(frame, screens: Self.screenGeometry)
+    window.setFrame(keptFrame, display: true, animate: animated)
     window.contentView?.frame = NSRect(origin: .zero, size: size)
     window.updateMousePassthrough()
   }

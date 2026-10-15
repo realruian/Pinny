@@ -90,7 +90,7 @@ enum PreferencesTab: String, CaseIterable, Identifiable, Hashable {
 
   /// The sidebar's running order in 4 unlabelled groups separated by natural whitespace (Ruru & macOS System Settings style).
   /// Pinny keeps the sidebar to the capture → annotate → pin flow. Menu bar customization,
-  /// history and cloud upload stay reachable only through deep links.
+  /// history and cloud upload are hidden; deep links to them are ignored as well.
   static let groups: [[PreferencesTab]] = [
     [.general],
     [.capture, .annotate, .quickAccess],

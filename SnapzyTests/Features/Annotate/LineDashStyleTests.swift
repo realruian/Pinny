@@ -23,8 +23,8 @@ final class LineDashStyleTests: XCTestCase {
   }
 
   func testDashedScalesWithStrokeWidth() {
-    XCTAssertEqual(LineDashStyle.dashed.dashLengths(for: 4), [12, 8])
-    XCTAssertEqual(LineDashStyle.dashed.dashLengths(for: 10), [30, 20])
+    XCTAssertEqual(LineDashStyle.dashed.dashLengths(for: 4), [12, 12])
+    XCTAssertEqual(LineDashStyle.dashed.dashLengths(for: 10), [30, 30])
   }
 
   func testDottedUsesZeroLengthSegmentsForRoundCapDots() {
@@ -34,7 +34,7 @@ final class LineDashStyleTests: XCTestCase {
   }
 
   func testDashLengthsClampMinimumStrokeWidth() {
-    XCTAssertEqual(LineDashStyle.dashed.dashLengths(for: 0), [3, 2])
+    XCTAssertEqual(LineDashStyle.dashed.dashLengths(for: 0), [3, 3])
   }
 
   func testPersistedPropertiesWithoutLineStyleDecodeToSolid() throws {

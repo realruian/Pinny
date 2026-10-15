@@ -18,6 +18,19 @@ final class QuickAccessPinInteractionTests: XCTestCase {
     XCTAssertEqual(pasteboard.changeCount, changeCount)
   }
 
+  func testClipboardImageIgnoresIconOfCopiedNonImageFile() throws {
+    let pasteboard = NSPasteboard.withUniqueName()
+    defer { pasteboard.releaseGlobally() }
+    let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".txt")
+    defer { try? FileManager.default.removeItem(at: url) }
+    try "text".write(to: url, atomically: true, encoding: .utf8)
+    let icon = try XCTUnwrap(TestImageFactory.solidColor(width: 32, height: 32, red: 1, green: 2, blue: 3))
+    XCTAssertTrue(pasteboard.writeObjects([url as NSURL]))
+    pasteboard.addTypes([.tiff], owner: nil)
+    pasteboard.setData(NSBitmapImageRep(cgImage: icon).tiffRepresentation, forType: .tiff)
+    XCTAssertNil(QuickAccessPinWindowManager.clipboardImage(from: pasteboard))
+  }
+
   func testClipboardImageReadsCopiedImageFileAndRejectsPlainText() throws {
     let pasteboard = NSPasteboard.withUniqueName()
     defer { pasteboard.releaseGlobally() }
@@ -119,7 +132,7 @@ final class QuickAccessPinInteractionTests: XCTestCase {
     XCTAssertEqual(frame, CGRect(x: 100, y: 205, width: 1000, height: 250))
   }
 
-  func testDoubleClickThenClipboardPinRestoresMovedAndResizedFrameAndOriginalPixels() throws {
+  func testDoubleClickThenClipboardPinRestoresMovedAndResizedFrameAndOriginalPixels() async throws {
     let cg = try XCTUnwrap(TestImageFactory.solidColor(width: 800, height: 600, red: 30, green: 90, blue: 150))
     let image = NSImage(cgImage: cg, size: CGSize(width: 400, height: 300))
     let manager = QuickAccessPinWindowManager.shared
@@ -133,6 +146,7 @@ final class QuickAccessPinInteractionTests: XCTestCase {
       modifierFlags: [], timestamp: 0, windowNumber: pin.windowNumber, context: nil,
       eventNumber: 0, clickCount: 2, pressure: 1)))
     XCTAssertFalse(pin.isVisible)
+    await ClipboardHelper.waitForPendingImageCopy()
     XCTAssertEqual(PinClipboardGeometry.sourceRect(from: .general), changedFrame)
     let pixels = try XCTUnwrap(AnnotateExporter.bestCGImage(from: XCTUnwrap(NSImage(pasteboard: .general))))
     XCTAssertEqual(pixels.width, 800)
@@ -176,9 +190,20 @@ final class QuickAccessPinInteractionTests: XCTestCase {
       visibleSize: CGSize(width: 1200, height: 800)), 800.0 / 350, accuracy: 0.0001)
     XCTAssertEqual(QuickAccessPinWindowSizing.maximumZoom(baseSize: CGSize(width: 2000, height: 1400),
       visibleSize: CGSize(width: 1200, height: 800)), 1)
-    let frame = CGRect(x: -100, y: 600, width: 1000, height: 700)
-    let constrained = QuickAccessPinWindowSizing.repositionAfterZoom(frame, within: CGRect(x: 0, y: 0, width: 1200, height: 800))
-    XCTAssertEqual(constrained, CGRect(x: 0, y: 100, width: 1000, height: 700))
+  }
+
+  func testZoomedOrMovedPinStaysPutUnlessCompletelyOffEveryDisplay() {
+    let screens = [
+      (frame: CGRect(x: 0, y: 0, width: 1200, height: 800), visibleFrame: CGRect(x: 0, y: 0, width: 1200, height: 775)),
+      (frame: CGRect(x: 0, y: 800, width: 1920, height: 1080), visibleFrame: CGRect(x: 0, y: 800, width: 1920, height: 1055)),
+    ]
+    // Partly off-screen, over the menu bar or spanning both displays: untouched.
+    for frame in [CGRect(x: -100, y: 600, width: 1000, height: 700), CGRect(x: 100, y: 780, width: 300, height: 40)] {
+      XCTAssertEqual(QuickAccessPinWindowSizing.frameKeptOnScreen(frame, screens: screens), frame)
+    }
+    // Completely off every display: moved onto the nearest visible area, same size.
+    XCTAssertEqual(QuickAccessPinWindowSizing.frameKeptOnScreen(CGRect(x: 2500, y: 100, width: 200, height: 100), screens: screens),
+                   CGRect(x: 1720, y: 800, width: 200, height: 100))
   }
 
   func testQueuedDragUsesEventPositionWithoutGlobalMouseButtonState() throws {

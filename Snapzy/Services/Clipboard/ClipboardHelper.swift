@@ -22,7 +22,8 @@ private nonisolated let logger = Logger(subsystem: "Snapzy", category: "Clipboar
 /// (Telegram, Slack, Chrome, etc.) use image data, without treating the same
 /// screenshot as separate clipboard items.
 /// Temp files must NOT be deleted immediately — the receiving app needs them at paste time.
-/// Orphaned temp files are cleaned up on next launch by `TempCaptureManager.cleanupOrphanedFiles()`.
+/// Rendered-copy temp files are deleted once a newer copy has replaced them on the pasteboard;
+/// leftovers are cleaned up on next launch by `TempCaptureManager.cleanupOrphanedFiles()`.
 enum ClipboardHelper {
   // MARK: - File-based copy
 
@@ -127,7 +128,7 @@ enum ClipboardHelper {
       to: pasteboard,
       fileURL: url,
       image: image,
-      tiffData: image?.tiffRepresentation,
+      tiffData: tiffRepresentationIfReasonable(image),
       encodedData: encodedData,
       encodedType: encodedType
     )
@@ -169,7 +170,7 @@ enum ClipboardHelper {
 
     // Heavy work off-main
     let image = NSImage(contentsOf: url)
-    let tiffData = image?.tiffRepresentation
+    let tiffData = tiffRepresentationIfReasonable(image)
     let encodedData = try? Data(contentsOf: url)
     let encodedType = pasteboardImageType(for: url.pathExtension)
 
@@ -253,21 +254,26 @@ enum ClipboardHelper {
 
     let pasteboard = NSPasteboard.general
     pasteboard.clearContents()
-    writeSingleImageItem(
+    let didWrite = writeSingleImageItem(
       to: pasteboard,
       fileURL: tempURL,
       image: image,
-      tiffData: image.tiffRepresentation,
+      tiffData: tiffRepresentationIfReasonable(image),
       encodedData: data,
       encodedType: pasteboardImageType(for: ext),
       sourceScreenRect: sourceScreenRect
     )
+    if didWrite { removeStaleClipboardTempFiles(keeping: tempURL) }
 
     logger.info("Clipboard: copied rendered image as \(ext) via temp file")
   }
 
   /// Latest copy started by `copyImageInBackground`; F2 waits on it so it pins the new image.
   private static var pendingBackgroundCopy: Task<Void, Never>?
+  /// Increments for every background copy; only the copy holding the latest token may write.
+  private static var backgroundCopyToken = 0
+  /// Clipboard temp files this process wrote; older ones are deleted once the pasteboard moves on.
+  private static var writtenClipboardTempFiles: [URL] = []
 
   /// Same clipboard result as `copyImage(_:format:sourceScreenRect:)`, but the PNG/TIFF encoding
   /// and temp-file write run off the main actor, so the overlay can close and the pin appear
@@ -284,6 +290,8 @@ enum ClipboardHelper {
     let tempDir = TempCaptureManager.shared.tempCaptureDirectory
     let tempURL = tempDir.appendingPathComponent("Pinny_clipboard_\(UUID().uuidString).\(ext)")
     let startChangeCount = NSPasteboard.general.changeCount
+    backgroundCopyToken += 1
+    let token = backgroundCopyToken
     DiagnosticLogger.shared.log(.info, .clipboard, "Copy rendered image (background)", context: ["format": resolvedFormat.rawValue])
 
     pendingBackgroundCopy = Task { @MainActor in
@@ -296,14 +304,15 @@ enum ClipboardHelper {
         } catch {
           return nil
         }
+        guard isReasonableTIFFPixelCount(width: cgImage.width, height: cgImage.height) else { return (data, nil) }
         let rep = NSBitmapImageRep(cgImage: cgImage)
         rep.size = imageSize
         return (data, rep.tiffRepresentation)
       }.value
 
       let pasteboard = NSPasteboard.general
-      guard pasteboard.changeCount == startChangeCount else {
-        // Something newer (another copy, or the user in another app) owns the clipboard now.
+      guard token == backgroundCopyToken, pasteboard.changeCount == startChangeCount else {
+        // A newer copy superseded this one, or the user copied something in another app.
         try? FileManager.default.removeItem(at: tempURL)
         return
       }
@@ -312,7 +321,7 @@ enum ClipboardHelper {
         return
       }
       pasteboard.clearContents()
-      writeSingleImageItem(
+      let didWrite = writeSingleImageItem(
         to: pasteboard,
         fileURL: tempURL,
         image: image,
@@ -321,6 +330,7 @@ enum ClipboardHelper {
         encodedType: pasteboardImageType(for: ext),
         sourceScreenRect: sourceScreenRect
       )
+      if didWrite { removeStaleClipboardTempFiles(keeping: tempURL) }
       CaptureTiming.mark("background clipboard write finished")
       logger.info("Clipboard: copied rendered image as \(ext) via temp file (background)")
     }
@@ -333,6 +343,34 @@ enum ClipboardHelper {
 
   // MARK: - Helpers
 
+  /// Above this many pixels TIFF (uncompressed, ~4 bytes per pixel) is skipped;
+  /// the encoded image data and file URL on the same item are enough for receivers.
+  private nonisolated static let maxTIFFPixelCount = 16_000_000
+
+  private nonisolated static func isReasonableTIFFPixelCount(width: Int, height: Int) -> Bool {
+    width * height <= maxTIFFPixelCount
+  }
+
+  private nonisolated static func tiffRepresentationIfReasonable(_ image: NSImage?) -> Data? {
+    guard let image else { return nil }
+    let largestRep = image.representations.max { $0.pixelsWide * $0.pixelsHigh < $1.pixelsWide * $1.pixelsHigh }
+    let width = largestRep.map(\.pixelsWide).flatMap { $0 > 0 ? $0 : nil } ?? Int(image.size.width)
+    let height = largestRep.map(\.pixelsHigh).flatMap { $0 > 0 ? $0 : nil } ?? Int(image.size.height)
+    guard isReasonableTIFFPixelCount(width: width, height: height) else { return nil }
+    return image.tiffRepresentation
+  }
+
+  /// Deletes clipboard temp files written earlier in this process that the pasteboard no longer references.
+  private static func removeStaleClipboardTempFiles(keeping current: URL) {
+    writtenClipboardTempFiles = writtenClipboardTempFiles.filter { url in
+      guard !isReferencedByGeneralPasteboard(url) else { return true }
+      try? FileManager.default.removeItem(at: url)
+      return false
+    }
+    writtenClipboardTempFiles.append(current)
+  }
+
+  @discardableResult
   private static func writeSingleImageItem(
     to pasteboard: NSPasteboard,
     fileURL: URL,
@@ -341,7 +379,7 @@ enum ClipboardHelper {
     encodedData: Data?,
     encodedType: NSPasteboard.PasteboardType?,
     sourceScreenRect: CGRect? = nil
-  ) {
+  ) -> Bool {
     // Use writeObjects with NSURL to ensure macOS grants a sandbox extension
     // to the receiving app. NSPasteboardItem.setString(url, forType: .fileURL)
     // does NOT grant sandbox extensions — this was the root cause of Area
@@ -355,7 +393,7 @@ enum ClipboardHelper {
     if let encodedType {
       extraTypes.append(encodedType)
     }
-    if image != nil {
+    if tiffData != nil {
       extraTypes.append(.tiff)
     }
 
@@ -374,7 +412,8 @@ enum ClipboardHelper {
       }
     }
 
-    if didWriteURL, didWriteRepresentations {
+    let didWrite = didWriteURL && didWriteRepresentations
+    if didWrite {
       PinClipboardGeometry.write(sourceScreenRect, to: pasteboard)
       PasteboardReferenceTracker.record(urls: [fileURL], changeCount: pasteboard.changeCount)
     } else {
@@ -397,6 +436,7 @@ enum ClipboardHelper {
         ]
       )
     }
+    return didWrite
   }
 
   private static func addFileURLFallbackRepresentations(

@@ -634,6 +634,7 @@ nonisolated enum L10n {
 
   enum Actions {
     static let pinClipboard = string("action.pin-clipboard", defaultValue: "Pin clipboard image", comment: "Global clipboard image pin action")
+    static let pinClipboardNoImage = string("action.pin-clipboard-no-image", defaultValue: "No image on the clipboard", comment: "Pinny: Toast when the paste-pin shortcut finds no image on the clipboard")
     static let captureArea = string(
       "action.capture-area",
       defaultValue: "Capture Area",
@@ -2961,6 +2962,7 @@ nonisolated enum L10n {
       format("scrolling-capture.pinny-captured-height", defaultValue: "Captured %d px", comment: "Pinny: long screenshot preview header. %d is the stitched height in pixels.", pixels)
     }
     static let lostDetail = string("scrolling-capture.pinny-lost-detail", defaultValue: "Scroll back a little to where it last matched and it continues from there", comment: "Pinny: how to resume a long screenshot after it lost its place")
+    static let saveFailedCopied = string("scrolling-capture.pinny-save-failed-copied", defaultValue: "Couldn't save the long screenshot, so it was copied to the clipboard", comment: "Pinny: toast when saving a finished long screenshot fails and the image is copied instead")
   }
 
   /// Pinny: recording from the F1 toolbar (prep bar, recording bar, in-place playback).
@@ -5917,6 +5919,11 @@ nonisolated enum L10n {
       "annotate.pinny-return-key",
       defaultValue: "Return",
       comment: "Pinny: name of the Return key in a button hover label, e.g. Copy (Return / ⌘C)"
+    )
+    static let pinnyMoreOptions = string(
+      "annotate.pinny-more-options",
+      defaultValue: "More",
+      comment: "Pinny: secondary bar button that opens the less common options of the active tool"
     )
     static let pinnyLineTool = string(
       "annotate.pinny-line-tool",

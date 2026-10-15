@@ -104,13 +104,11 @@ final class GIFConverter {
       "expectedFrames": "\(totalFrames)",
     ])
 
-    var frameTimes: [NSValue] = []
-    for i in 0..<totalFrames {
-      let time = CMTime(
+    let frameTimes = (0..<totalFrames).map { i in
+      CMTime(
         seconds: Double(i) / Double(options.fps),
         preferredTimescale: 9600  // High timescale for sub-frame precision
       )
-      frameTimes.append(NSValue(time: time))
     }
 
     // Setup image generator with quality-focused settings
@@ -160,69 +158,56 @@ final class GIFConverter {
       ]
     ]
 
-    // Extract frames — collect with index to preserve ordering
-    let orderedFrames = try await withCheckedThrowingContinuation {
-      (continuation: CheckedContinuation<[CGImage], Error>) in
-
-      // Use indexed storage to maintain temporal order
-      var frameMap: [Int: CGImage] = [:]
-      var completedCount = 0
-      let expectedCount = frameTimes.count
-
-      generator.generateCGImagesAsynchronously(forTimes: frameTimes) {
-        requestedTime, image, actualTime, result, error in
-
-        completedCount += 1
-
-        if let image = image {
-          // Map frame to its index by matching requested time
-          let requestedSeconds = CMTimeGetSeconds(requestedTime)
-          let frameIndex = Int(round(requestedSeconds * Double(options.fps)))
-          frameMap[frameIndex] = image
+    // Stream frames into the destination in temporal order as they are generated, so a long
+    // recording is never held in memory as decoded frames. Only frames that arrive ahead of
+    // a slower one wait in `pending`; a failed frame is recorded as nil and skipped.
+    var pending: [Int: CGImage?] = [:]
+    var nextIndex = 0
+    var addedFrames = 0
+    var completedCount = 0
+    func addReadyFrames() {
+      while let frame = pending.removeValue(forKey: nextIndex) {
+        if let frame {
+          CGImageDestinationAddImage(destination, frame, frameProperties as CFDictionary)
+          addedFrames += 1
         }
-
-        // Report progress on main thread
-        let progress = Double(completedCount) / Double(expectedCount)
-        Task { @MainActor in
-          onProgress(progress * 0.85)  // Reserve 15% for GIF assembly
-        }
-
-        if completedCount >= expectedCount {
-          // Reconstruct frames in correct temporal order
-          let sorted = (0..<expectedCount).compactMap { frameMap[$0] }
-          if sorted.isEmpty {
-            DiagnosticLogger.shared.log(.error, .recording, "GIF conversion generated no frames", context: [
-              "file": videoURL.lastPathComponent,
-              "expectedFrames": "\(expectedCount)",
-            ])
-            continuation.resume(throwing: GIFConversionError.noFrames)
-          } else {
-            continuation.resume(returning: sorted)
-          }
-        }
+        nextIndex += 1
       }
     }
-    if orderedFrames.count < totalFrames {
-      DiagnosticLogger.shared.log(.warning, .recording, "GIF conversion generated fewer frames than expected", context: [
-        "expectedFrames": "\(totalFrames)",
-        "generatedFrames": "\(orderedFrames.count)",
-      ])
+    for await result in generator.images(for: frameTimes) {
+      completedCount += 1
+      let frameIndex = Int((CMTimeGetSeconds(result.requestedTime) * Double(options.fps)).rounded())
+      pending.updateValue(try? result.image, forKey: frameIndex)
+      addReadyFrames()
+      onProgress(Double(completedCount) / Double(totalFrames) * 0.95)
+    }
+    for index in pending.keys.sorted() {
+      if let frame = pending[index] ?? nil {
+        CGImageDestinationAddImage(destination, frame, frameProperties as CFDictionary)
+        addedFrames += 1
+      }
     }
 
-    // Add all frames to GIF destination
-    for (idx, frame) in orderedFrames.enumerated() {
-      CGImageDestinationAddImage(destination, frame, frameProperties as CFDictionary)
-
-      // Progress for assembly phase (85% → 100%)
-      let assemblyProgress = 0.85 + (Double(idx) / Double(orderedFrames.count)) * 0.15
-      onProgress(assemblyProgress)
+    guard addedFrames > 0 else {
+      DiagnosticLogger.shared.log(.error, .recording, "GIF conversion generated no frames", context: [
+        "file": videoURL.lastPathComponent,
+        "expectedFrames": "\(totalFrames)",
+      ])
+      try? FileManager.default.removeItem(at: gifURL)
+      throw GIFConversionError.noFrames
+    }
+    if addedFrames < totalFrames {
+      DiagnosticLogger.shared.log(.warning, .recording, "GIF conversion generated fewer frames than expected", context: [
+        "expectedFrames": "\(totalFrames)",
+        "generatedFrames": "\(addedFrames)",
+      ])
     }
 
     // Finalize GIF
     guard CGImageDestinationFinalize(destination) else {
       DiagnosticLogger.shared.log(.error, .recording, "GIF conversion finalization failed", context: [
         "file": gifURL.lastPathComponent,
-        "frames": "\(orderedFrames.count)",
+        "frames": "\(addedFrames)",
       ])
       throw GIFConversionError.finalizationFailed
     }
@@ -233,7 +218,7 @@ final class GIFConverter {
     let fileSizeMB = String(format: "%.1f", Double(fileSize) / 1_048_576.0)
     DiagnosticLogger.shared.log(.info, .recording, "GIF conversion completed", context: [
       "file": gifURL.lastPathComponent,
-      "frames": "\(orderedFrames.count)",
+      "frames": "\(addedFrames)",
       "fileSizeMB": fileSizeMB,
     ])
 

@@ -235,4 +235,10 @@ final class LongScreenshotGeometryTests: XCTestCase {
     XCTAssertEqual(ScrollingCaptureTrim.rows(height: 1000, top: 0, bottom: 0), 0..<1000)
     XCTAssertEqual(ScrollingCaptureTrim.rows(height: 1000, top: 0.6, bottom: 0.6).count, 1)
   }
+
+  func testTopCutKeptAfterCropStaysTheSameRowsAsTheImageGrows() {
+    XCTAssertEqual(ScrollingCaptureTrim.rows(height: 1000, topRows: 100), 100..<1000)
+    XCTAssertEqual(ScrollingCaptureTrim.rows(height: 3000, topRows: 100), 100..<3000)
+    XCTAssertEqual(ScrollingCaptureTrim.rows(height: 50, topRows: 100), 49..<50)
+  }
 }

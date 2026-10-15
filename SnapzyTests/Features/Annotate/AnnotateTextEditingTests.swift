@@ -199,7 +199,7 @@ final class AnnotateTextEditingTests: XCTestCase {
     XCTAssertEqual(updated.bounds.width, 180, accuracy: 0.5)
   }
 
-  func testTextPresentationKeepsTextColorAndRetainsBackgroundChoice() throws {
+  func testLabelTakesTextColorAsBackgroundAndRetainsIt() throws {
     let state = makeAnnotateState()
     let annotation = AnnotationItem(
       type: .text("Label"),
@@ -213,13 +213,13 @@ final class AnnotateTextEditingTests: XCTestCase {
     state.setTextPresentation(.label)
     var updated = try XCTUnwrap(state.annotations.first)
     XCTAssertEqual(updated.properties.textPresentation, .label)
-    XCTAssertEqual(updated.properties.strokeColor, .green)
-    XCTAssertEqual(updated.properties.fillColor, .black)
+    XCTAssertEqual(updated.properties.fillColor, .green)
+    XCTAssertEqual(updated.properties.strokeColor, .black)
 
     state.setTextPresentation(.plain)
     updated = try XCTUnwrap(state.annotations.first)
     XCTAssertEqual(updated.properties.textPresentation, .plain)
-    XCTAssertEqual(updated.properties.fillColor, .black)
+    XCTAssertEqual(updated.properties.fillColor, .green)
   }
 
   func testBackgroundFillPromotesPlainTextToLabelPresentation() throws {
@@ -360,8 +360,9 @@ final class AnnotateTextEditingTests: XCTestCase {
 
     let updated = try XCTUnwrap(state.annotations.first)
     let updatedTail = try XCTUnwrap(updated.properties.calloutTailTarget)
-    XCTAssertEqual(updatedTail.x, movedTail.x + 30, accuracy: 0.5)
-    XCTAssertEqual(updatedTail.y, movedTail.y + 15, accuracy: 0.5)
+    // Switching to a callout refits the box around the text, so measure from where it ended up.
+    XCTAssertEqual(updatedTail.x, movedTail.x + 50 - initial.bounds.minX, accuracy: 0.5)
+    XCTAssertEqual(updatedTail.y, movedTail.y + 35 - initial.bounds.minY, accuracy: 0.5)
   }
 
   func testBubbleWidthAndInsetsGrowWithFontAndPresentation() {
