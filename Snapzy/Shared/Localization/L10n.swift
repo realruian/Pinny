@@ -5879,6 +5879,21 @@ nonisolated enum L10n {
   }
 
   enum AnnotateUI {
+    static let pinnyShapeTool = string(
+      "annotate.pinny-shape-tool",
+      defaultValue: "Shape",
+      comment: "Pinny: inline capture toolbar button and properties bar group for rectangle, filled rectangle and oval"
+    )
+    static let pinnyReturnKey = string(
+      "annotate.pinny-return-key",
+      defaultValue: "Return",
+      comment: "Pinny: name of the Return key in a button hover label, e.g. Copy (Return / ⌘C)"
+    )
+    static let pinnyLineTool = string(
+      "annotate.pinny-line-tool",
+      defaultValue: "Line",
+      comment: "Pinny: inline capture properties bar group that switches between arrow and line"
+    )
     static let cloudNotConfiguredTitle = string(
       "annotate.cloud-not-configured-title",
       defaultValue: "Cloud Not Configured",
@@ -8255,6 +8270,9 @@ nonisolated enum L10n {
   }
 
   enum Annotate {
+    static let pinnyFullScreenChip = string("annotate.pinny-chip-full-screen", defaultValue: "Full screen", comment: "Pinny: capture overlay chip that selects the whole display (⌘A)")
+    static let pinnyLastRegionChip = string("annotate.pinny-chip-last-region", defaultValue: "Last region", comment: "Pinny: capture overlay chip that reuses the last captured region (R)")
+    static let pinnyWholeWindowChip = string("annotate.pinny-chip-whole-window", defaultValue: "Whole window", comment: "Pinny: capture overlay hint that Tab selects the window under the pointer")
     static let previousRegion = string("annotate.previous-region", defaultValue: "Last region (R)", comment: "Reuse the most recently captured region in the unified screenshot overlay")
     static let selectDisplay = string("annotate.select-display", defaultValue: "Select this display (⌘A)", comment: "Select entire display in the unified screenshot overlay")
     static let elementHierarchyHint = string(

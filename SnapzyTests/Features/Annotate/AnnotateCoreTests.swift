@@ -459,12 +459,49 @@ final class AnnotateCoreTests: XCTestCase {
     let tools = AnnotateToolVisibility.visibleInlineToolGroups(userDefaults: defaults).flatMap { $0 }
     XCTAssertFalse(tools.contains(.watermark))
     XCTAssertTrue(tools.contains(.selection), "The selection tool cannot be hidden")
-    XCTAssertEqual(tools.count, AnnotationToolType.inlineAnnotateTools.count - 1)
+    // Minus the hidden watermark, the filled rectangle and oval behind the shape button, and
+    // the line behind the arrow button.
+    XCTAssertEqual(tools.count, AnnotationToolType.inlineAnnotateTools.count - 4)
     XCTAssertEqual(AnnotateToolPreference.initialTool(userDefaults: defaults), .selection)
 
     AnnotateToolVisibility.setVisible(true, for: .watermark, userDefaults: defaults)
     XCTAssertTrue(AnnotateToolVisibility.isVisible(.watermark, userDefaults: defaults))
     XCTAssertEqual(AnnotateToolPreference.initialTool(userDefaults: defaults), .watermark)
+  }
+
+  func testToolFamiliesShareOneInlineToolbarButton() {
+    let defaults = UserDefaultsFactory.make()
+    let tools = AnnotateToolVisibility.visibleInlineToolGroups(userDefaults: defaults).flatMap { $0 }
+    XCTAssertTrue(tools.contains(.rectangle))
+    XCTAssertFalse(tools.contains(.filledRectangle))
+    XCTAssertFalse(tools.contains(.oval))
+    XCTAssertTrue(tools.contains(.arrow))
+    XCTAssertFalse(tools.contains(.line))
+    XCTAssertEqual(AnnotateToolVisibility.visibleInlineFamily(of: .oval, userDefaults: defaults),
+                   [.rectangle, .filledRectangle, .oval])
+    XCTAssertEqual(AnnotateToolVisibility.visibleInlineFamily(of: .arrow, userDefaults: defaults),
+                   [.arrow, .line])
+    XCTAssertEqual(AnnotateToolVisibility.visibleInlineFamily(of: .text, userDefaults: defaults), [])
+
+    // With the first tool hidden, the button stands for the next visible one.
+    AnnotateToolVisibility.setVisible(false, for: .rectangle, userDefaults: defaults)
+    AnnotateToolVisibility.setVisible(false, for: .arrow, userDefaults: defaults)
+    let remaining = AnnotateToolVisibility.visibleInlineToolGroups(userDefaults: defaults).flatMap { $0 }
+    XCTAssertTrue(remaining.contains(.filledRectangle))
+    XCTAssertFalse(remaining.contains(.oval))
+    XCTAssertTrue(remaining.contains(.line))
+  }
+
+  func testInlineFamilyButtonFollowsTheLastTool() {
+    let state = makeAnnotateState()
+    XCTAssertEqual(state.inlineFamilyChoice(for: .oval), .rectangle)
+    XCTAssertEqual(state.inlineFamilyChoice(for: .line), .arrow)
+    state.selectedTool = .oval
+    state.selectedTool = .line
+    state.selectedTool = .text
+    XCTAssertEqual(state.inlineFamilyChoice(for: .rectangle), .oval, "Other tools keep the last shape")
+    XCTAssertEqual(state.inlineFamilyChoice(for: .arrow), .line)
+    XCTAssertEqual(state.inlineFamilyChoice(for: .text), .text)
   }
 
   func testInlineToolbarGlyphAssetsExist() {

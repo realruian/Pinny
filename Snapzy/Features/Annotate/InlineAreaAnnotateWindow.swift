@@ -248,6 +248,7 @@ private struct InlineAreaAnnotateRootView: View {
   @State private var resizePreviewRect: CGRect?
   @State private var activeResizeHandle: InlineAreaResizeHandle?
   @State private var cursorIndicatorPoint: CGPoint?
+  @State private var hoverTip: InlineAreaHoverTip?
   /// Viewport point where a gesture began on a hovered window, while it's still ambiguous
   /// whether this will resolve as a click (select the window) or a drag (manual region
   /// selection) — mirrors plain area screenshot's `pendingWindowDetectionStartPoint`.
@@ -313,17 +314,22 @@ private struct InlineAreaAnnotateRootView: View {
 
         if session.phase == .selecting {
           VStack {
-            HStack {
-              Button(L10n.Annotate.selectDisplay) { session.selectDisplayUnderPointer() }
-                .buttonStyle(.borderedProminent)
-              if session.hasRegionHistory {
-                Button(L10n.Annotate.previousRegion) { _ = session.recallRegion(older: true) }
-                  .buttonStyle(.borderedProminent)
+            // Last region comes last: it only shows once there is a region to reuse, so the
+            // others never move. Same gap from the left and the top edge, below the menu bar.
+            let chipMargin = max(48, display.controlInsets.top + 12)
+            HStack(spacing: 8) {
+              InlineAreaKeyChip(title: L10n.Annotate.pinnyFullScreenChip, key: "⌘A") {
+                session.selectDisplayUnderPointer()
               }
-              Text(L10n.Annotate.elementHierarchyHint)
-                .foregroundStyle(.white)
-                .padding(8).background(.black.opacity(0.75), in: Capsule())
-            }.padding(.top, 48)
+              InlineAreaKeyChip(title: L10n.Annotate.pinnyWholeWindowChip, key: "Tab")
+              if session.hasRegionHistory {
+                InlineAreaKeyChip(title: L10n.Annotate.pinnyLastRegionChip, key: "R") {
+                  _ = session.recallRegion(older: true)
+                }
+              }
+            }
+            .padding(.top, chipMargin)
+            .padding(.leading, chipMargin)
             Spacer()
           }.zIndex(20)
           InlineAreaMagnifierOverlay(
@@ -351,6 +357,19 @@ private struct InlineAreaAnnotateRootView: View {
           if let selectingPointerPoint {
             InlineAreaSystemCrosshairProxy(point: selectingPointerPoint)
           }
+        }
+
+        if let hoverTip {
+          InlineAreaHoverTipLabel(tip: hoverTip, bounds: geometry.size)
+            .zIndex(30)
+            .allowsHitTesting(false)
+        }
+      }
+      .environment(\.inlineAreaHoverTip) { tip, text in
+        if let tip {
+          hoverTip = tip
+        } else if hoverTip?.text == text {
+          hoverTip = nil
         }
       }
       .coordinateSpace(name: InlineAreaCoordinateSpace.root)
@@ -746,7 +765,6 @@ private struct InlineAreaAnnotateRootView: View {
   private func selectionBorder(rect: CGRect) -> some View {
     Rectangle()
       .strokeBorder(Color.white, lineWidth: InlineAreaResizeHandleChrome.borderWidth)
-      .shadow(color: .black.opacity(0.45), radius: 2)
       .frame(width: rect.width, height: rect.height)
       .position(x: rect.midX, y: rect.midY)
   }
@@ -1614,7 +1632,8 @@ struct InlineAreaControlDeck: View {
         HStack(spacing: 0) {
           ForEach(Array(AnnotateToolVisibility.visibleInlineToolGroups().enumerated()), id: \.offset) { index, tools in
             if index > 0 { InlineAreaDivider() }
-            InlineAreaToolGroup(tools: tools, selectedTool: session.state.selectedTool) { tool in
+            InlineAreaToolGroup(tools: tools, selectedTool: session.state.selectedTool,
+                                familyChoice: session.state.inlineFamilyChoice(for:)) { tool in
               session.actionMessage = nil
               session.state.activateTool(tool)
             }
@@ -1652,8 +1671,173 @@ struct InlineAreaControlDeck: View {
     }
     .padding(.horizontal, InlineAreaToolbarMetrics.horizontalPadding)
     .frame(width: maxWidth, height: InlineAreaLayout.toolbarHeight)
+    .environment(\.inlineAreaHoverTipAbove, true)
     .accessibilityElement(children: .contain)
     .accessibilityIdentifier("inline.captureToolbar")
+  }
+}
+
+/// Pinny: hover labels for the capture overlay. Native `.help` tooltips never appear on this
+/// full-screen non-activating panel, and the toolbar clips its content, so each control
+/// reports its frame and the root view draws the label above everything.
+struct InlineAreaHoverTip: Equatable {
+  let text: String
+  let frame: CGRect
+  /// Main toolbar labels go above it and properties bar labels below, so neither covers the
+  /// other row; either flips when the screen edge is too close.
+  var prefersAbove = false
+}
+
+private struct InlineAreaHoverTipKey: EnvironmentKey {
+  static let defaultValue: ((InlineAreaHoverTip?, String) -> Void)? = nil
+}
+
+private struct InlineAreaHoverTipAboveKey: EnvironmentKey {
+  static let defaultValue = false
+}
+
+extension EnvironmentValues {
+  /// Shows a hover label, or hides the one with this text (nil); nil outside the overlay.
+  var inlineAreaHoverTip: ((InlineAreaHoverTip?, String) -> Void)? {
+    get { self[InlineAreaHoverTipKey.self] }
+    set { self[InlineAreaHoverTipKey.self] = newValue }
+  }
+
+  var inlineAreaHoverTipAbove: Bool {
+    get { self[InlineAreaHoverTipAboveKey.self] }
+    set { self[InlineAreaHoverTipAboveKey.self] = newValue }
+  }
+}
+
+private struct InlineAreaHelpModifier: ViewModifier {
+  let text: String
+  @Environment(\.inlineAreaHoverTip) private var report
+  @Environment(\.inlineAreaHoverTipAbove) private var prefersAbove
+  @State private var frame: CGRect = .zero
+  @State private var pending: Task<Void, Never>?
+
+  func body(content: Content) -> some View {
+    if let report {
+      content
+        .background(GeometryReader { proxy in
+          let current = proxy.frame(in: .named(InlineAreaCoordinateSpace.root))
+          Color.clear
+            .onAppear { frame = current }
+            .onChange(of: current) { newValue in frame = newValue }
+        })
+        .onHover { hovering in
+          pending?.cancel()
+          guard hovering else {
+            report(nil, text)
+            return
+          }
+          pending = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 450_000_000)
+            guard !Task.isCancelled else { return }
+            report(InlineAreaHoverTip(text: text, frame: frame, prefersAbove: prefersAbove), text)
+          }
+        }
+        .onDisappear {
+          pending?.cancel()
+          report(nil, text)
+        }
+    } else {
+      content.help(text)
+    }
+  }
+}
+
+extension View {
+  /// Hover label for a capture overlay control; a native tooltip anywhere else.
+  func inlineAreaHelp(_ text: String) -> some View {
+    modifier(InlineAreaHelpModifier(text: text))
+  }
+}
+
+/// Next to the control on its preferred side, or the other side when the screen edge is too
+/// close.
+private struct InlineAreaHoverTipLabel: View {
+  let tip: InlineAreaHoverTip
+  let bounds: CGSize
+
+  var body: some View {
+    Text(tip.text)
+      .font(.system(size: 12, weight: .medium))
+      .foregroundColor(.white)
+      .lineLimit(1)
+      .fixedSize()
+      .padding(.horizontal, 8)
+      .padding(.vertical, 4)
+      .background(
+        RoundedRectangle(cornerRadius: 6, style: .continuous).fill(Color.black.opacity(0.82))
+      )
+      .overlay(
+        RoundedRectangle(cornerRadius: 6, style: .continuous)
+          .stroke(Color.white.opacity(0.12), lineWidth: 1)
+      )
+      .alignmentGuide(.leading) { $0[HorizontalAlignment.center] - clampedCenterX($0.width) }
+      .alignmentGuide(.top) { dimension in
+        let above = tip.frame.minY - 6 - dimension.height
+        let below = tip.frame.maxY + 6
+        let fitsAbove = above >= 4
+        let fitsBelow = below + dimension.height <= bounds.height - 4
+        let y = tip.prefersAbove ? (fitsAbove ? above : below) : (fitsBelow ? below : above)
+        return -y
+      }
+  }
+
+  private func clampedCenterX(_ width: CGFloat) -> CGFloat {
+    min(max(tip.frame.midX, width / 2 + 4), bounds.width - width / 2 - 4)
+  }
+}
+
+/// Pinny: a selection shortcut on the capture overlay: a label and its key, all in one style.
+/// The key cap sits the same distance from the top, bottom and right edges, with a concentric
+/// corner radius.
+private struct InlineAreaKeyChip: View {
+  let title: String
+  let key: String
+  var action: (() -> Void)?
+
+  private static let inset: CGFloat = 4
+  private static let keyRadius: CGFloat = 5
+  @State private var isHovering = false
+
+  var body: some View {
+    let chip = HStack(spacing: 6) {
+      Text(title)
+        .font(.system(size: 12, weight: .medium))
+        .foregroundColor(.white)
+      Text(key)
+        .font(.system(size: 11, weight: .medium))
+        .foregroundColor(Color.white.opacity(0.9))
+        .padding(.horizontal, 6)
+        .frame(height: 20)
+        .background(
+          RoundedRectangle(cornerRadius: Self.keyRadius, style: .continuous)
+            .fill(Color.white.opacity(0.16))
+        )
+    }
+    .padding(.leading, 10)
+    .padding(.trailing, Self.inset)
+    .padding(.vertical, Self.inset)
+    .background(
+      RoundedRectangle(cornerRadius: Self.keyRadius + Self.inset, style: .continuous)
+        .fill(Color.black.opacity(isHovering && action != nil ? 0.84 : 0.72))
+    )
+    .overlay(
+      RoundedRectangle(cornerRadius: Self.keyRadius + Self.inset, style: .continuous)
+        .stroke(Color.white.opacity(0.12), lineWidth: 1)
+    )
+    .fixedSize()
+
+    if let action {
+      Button(action: action) { chip }
+        .buttonStyle(.plain)
+        .onHover { isHovering = $0 }
+    } else {
+      chip
+    }
   }
 }
 
@@ -1692,13 +1876,25 @@ struct InlineAreaGlyph: View {
 private struct InlineAreaToolGroup: View {
   let tools: [AnnotationToolType]
   let selectedTool: AnnotationToolType
+  let familyChoice: (AnnotationToolType) -> AnnotationToolType
   let action: (AnnotationToolType) -> Void
 
   var body: some View {
     HStack(spacing: InlineAreaToolbarMetrics.itemSpacing) {
       ForEach(tools, id: \.self) { tool in
-        InlineAreaToolButton(tool: tool, selectedTool: selectedTool) {
-          action(tool)
+        if AnnotationToolType.inlineFamily(of: tool) != nil {
+          // One button per family: it shows and draws the family's current tool.
+          let family = AnnotateToolVisibility.visibleInlineFamily(of: tool)
+          let choice = familyChoice(tool)
+          let shown = family.contains(selectedTool) ? selectedTool : (family.contains(choice) ? choice : tool)
+          InlineAreaToolButton(tool: shown, selectedTool: selectedTool,
+                               isSelectedOverride: family.contains(selectedTool)) {
+            action(shown)
+          }
+        } else {
+          InlineAreaToolButton(tool: tool, selectedTool: selectedTool) {
+            action(tool)
+          }
         }
       }
     }
@@ -1708,6 +1904,7 @@ private struct InlineAreaToolGroup: View {
 private struct InlineAreaToolButton: View {
   let tool: AnnotationToolType
   let selectedTool: AnnotationToolType
+  var isSelectedOverride: Bool?
   let action: () -> Void
 
   @State private var isHovering = false
@@ -1721,7 +1918,7 @@ private struct InlineAreaToolButton: View {
         .contentShape(RoundedRectangle(cornerRadius: InlineAreaChrome.controlCornerRadius, style: .continuous))
     }
     .buttonStyle(InlineAreaToolbarButtonStyle())
-    .help(tool.displayName)
+    .inlineAreaHelp(tool.displayName)
     .accessibilityLabel(tool.displayName)
     .onHover { isHovering = $0 }
     .animation(InlineAreaToolbarMetrics.hoverAnimation, value: isHovering)
@@ -1729,7 +1926,7 @@ private struct InlineAreaToolButton: View {
   }
 
   private var isSelected: Bool {
-    selectedTool == tool
+    isSelectedOverride ?? (selectedTool == tool)
   }
 
   private var buttonBackground: some View {
@@ -1757,7 +1954,7 @@ private struct InlineAreaMoveHandle: View {
         .fill(isHovering ? Color.primary.opacity(0.10) : Color.clear)
     )
     .contentShape(RoundedRectangle(cornerRadius: InlineAreaChrome.controlCornerRadius, style: .continuous))
-    .help(L10n.AnnotateUI.moveSelection)
+    .inlineAreaHelp(L10n.AnnotateUI.moveSelection)
     .onHover { isHovering = $0 }
     .animation(InlineAreaToolbarMetrics.hoverAnimation, value: isHovering)
   }
@@ -1785,7 +1982,7 @@ struct InlineAreaIconButton: View {
     .buttonStyle(InlineAreaToolbarButtonStyle())
     .disabled(!isEnabled)
     .opacity(isEnabled ? 1 : 0.42)
-    .help(tooltip)
+    .inlineAreaHelp(tooltip)
     .accessibilityLabel(tooltip)
     .onHover { isHovering = $0 }
     .animation(InlineAreaToolbarMetrics.hoverAnimation, value: isHovering)
@@ -1820,6 +2017,13 @@ private struct InlineAreaPropertiesBar: View {
   private let fillColors: [Color] = [.clear, .red, .orange, .yellow, .green, .blue, .purple, .white, .black]
   private let textBackgroundColors: [Color] = [.clear, .white, .black, .yellow, .blue]
 
+  /// The active family's tools while drawing with a family button; hidden when editing a
+  /// selected item.
+  private var familyOptions: [AnnotationToolType] {
+    guard state.quickPropertiesTool == state.selectedTool else { return [] }
+    return AnnotateToolVisibility.visibleInlineFamily(of: state.selectedTool)
+  }
+
   private var strokeColorsForActiveTool: [Color] {
     state.quickPropertiesTool == .spotlight ? [.clear] + strokeColors : strokeColors
   }
@@ -1829,6 +2033,19 @@ private struct InlineAreaPropertiesBar: View {
       ScrollView(.horizontal, showsIndicators: false) {
         HStack(spacing: 8) {
           contextPill
+
+          if familyOptions.count > 1 {
+            InlineAreaSegmentedPicker(
+              title: familyOptions.contains(.arrow) ? L10n.AnnotateUI.pinnyLineTool : L10n.AnnotateUI.pinnyShapeTool,
+              items: familyOptions,
+              selection: Binding(
+                get: { state.selectedTool },
+                set: { state.activateTool($0) }
+              ),
+              icon: { $0.rawValue },
+              tooltip: \.displayName
+            )
+          }
 
           if state.quickPropertiesSupportsStrokeColor {
             InlineAreaColorControl(
@@ -1874,7 +2091,7 @@ private struct InlineAreaPropertiesBar: View {
           if state.quickPropertiesSupportsBlurType {
             InlineAreaSegmentedPicker(
               title: L10n.AnnotateUI.blurType,
-              items: BlurType.allCases,
+              items: BlurType.pinnyChoices,
               selection: state.quickBlurTypeBinding,
               icon: { "blur-\($0.rawValue)" },
               tooltip: \.displayName
@@ -2077,7 +2294,7 @@ private struct InlineAreaColorControl: View {
           )
         }
         .buttonStyle(.plain)
-        .help(title)
+        .inlineAreaHelp(title)
         .popover(isPresented: $showsPopover, arrowEdge: popoverEdge) {
           InlineAreaColorPopover(
             title: title,
@@ -2101,7 +2318,7 @@ private struct InlineAreaColorControl: View {
             .frame(width: 20, height: InlineAreaChrome.propertyControlHeight)
           }
           .buttonStyle(.plain)
-          .help(L10n.Common.favorite)
+          .inlineAreaHelp(L10n.Common.favorite)
           .annotateColorDraggable(color, sourceFavoriteRole: role)
         }
       }
@@ -2191,7 +2408,7 @@ private struct InlineAreaColorPopover: View {
             AnnotateAddColorSwatch(size: 22)
           }
           .buttonStyle(.plain)
-          .help(L10n.Common.custom)
+          .inlineAreaHelp(L10n.Common.custom)
           .accessibilityLabel(L10n.Common.custom)
         }
       }
@@ -2287,7 +2504,7 @@ private struct InlineAreaColorPopover: View {
             AnnotateAddColorSwatch(size: 22)
           }
           .buttonStyle(.plain)
-          .help(L10n.Common.custom)
+          .inlineAreaHelp(L10n.Common.custom)
           .accessibilityLabel(L10n.Common.custom)
         }
       }
@@ -2317,7 +2534,7 @@ private struct InlineAreaColorPopover: View {
       selectedColor = draftCustomColor
     }
     .frame(width: 24, height: 24)
-    .help(L10n.Common.custom)
+    .inlineAreaHelp(L10n.Common.custom)
   }
 
   private var draftCustomColorButton: some View {
@@ -2331,7 +2548,7 @@ private struct InlineAreaColorPopover: View {
       selectedColor = draftCustomColor
     }
     .frame(width: 24, height: 24)
-    .help(L10n.Common.custom)
+    .inlineAreaHelp(L10n.Common.custom)
   }
 
   private var colorPickerPanel: some View {
@@ -2589,7 +2806,7 @@ private struct InlineAreaPaletteColorButton: View {
       )
       .contentShape(Circle())
       .onTapGesture(perform: onSelect)
-      .help(title)
+      .inlineAreaHelp(title)
       .annotateColorDraggable(color, sourceFavoriteRole: sourceFavoriteRole)
 
       if let overlayAction {
@@ -2604,7 +2821,7 @@ private struct InlineAreaPaletteColorButton: View {
         }
         .buttonStyle(.plain)
         .offset(x: 5, y: -5)
-        .help(overlayHelp)
+        .inlineAreaHelp(overlayHelp)
       }
 
       if isDropTargeted {
@@ -2644,7 +2861,7 @@ private struct InlineAreaFavoriteEmptyDropTarget: View {
     .foregroundColor(isTargeted ? .accentColor : .secondary)
     .frame(maxWidth: .infinity, minHeight: 38, alignment: .leading)
     .contentShape(Rectangle())
-    .help(L10n.Common.custom)
+    .inlineAreaHelp(L10n.Common.custom)
     .accessibilityLabel(L10n.Common.custom)
     .onTapGesture(perform: onTap)
     .accessibilityAddTraits(.isButton)
@@ -2676,7 +2893,7 @@ private struct InlineAreaFavoriteDropSlot: View {
           )
       )
       .frame(width: 24, height: 24)
-      .help(L10n.Common.custom)
+      .inlineAreaHelp(L10n.Common.custom)
       .contentShape(Circle())
       .onTapGesture(perform: onTap)
       .accessibilityLabel(L10n.Common.custom)
@@ -2743,7 +2960,7 @@ private struct InlineAreaSegmentedPicker<Item: Identifiable & Equatable>: View {
               )
           }
           .buttonStyle(.plain)
-          .help(item[keyPath: tooltip])
+          .inlineAreaHelp(item[keyPath: tooltip])
         }
       }
     }
@@ -2772,7 +2989,7 @@ private struct InlineAreaArrowBendControl: View {
           )
       }
       .buttonStyle(.plain)
-      .help("\(L10n.AnnotateUI.flipArrowBend): \(bendDirection.displayName)")
+      .inlineAreaHelp("\(L10n.AnnotateUI.flipArrowBend): \(bendDirection.displayName)")
       .accessibilityLabel(L10n.AnnotateUI.flipArrowBend)
     }
   }
@@ -2801,7 +3018,7 @@ private struct InlineAreaLineStylePicker: View {
               )
           }
           .buttonStyle(.plain)
-          .help(style.displayName)
+          .inlineAreaHelp(style.displayName)
         }
       }
     }
@@ -2891,8 +3108,8 @@ private struct InlineAreaCaptureActions: View {
         session.startScrollingCapture()
       }
       InlineAreaIconButton(icon: "copy",
-        tooltip: L10n.Common.withShortcut(L10n.AnnotateUI.copyToClipboard, "Enter / ⌘C"),
-        isEnabled: !session.isFinishing, isProminent: true) {
+        tooltip: L10n.Common.withShortcut(L10n.AnnotateUI.copyToClipboard, "\(L10n.AnnotateUI.pinnyReturnKey) / ⌘C"),
+        isEnabled: !session.isFinishing) {
         session.copyCurrentImage()
       }
       InlineAreaIconButton(icon: "pin", tooltip: L10n.PreferencesQuickAccess.pinToScreenAction,

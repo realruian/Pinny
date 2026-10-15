@@ -6246,6 +6246,108 @@
         }
       }
     },
+    "annotate.pinny-chip-full-screen": {
+      "comment": "Pinny: capture overlay chip that selects the whole display (⌘A)",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Full screen"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全屏"
+          }
+        }
+      }
+    },
+    "annotate.pinny-chip-last-region": {
+      "comment": "Pinny: capture overlay chip that reuses the last captured region (R)",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last region"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上次区域"
+          }
+        }
+      }
+    },
+    "annotate.pinny-chip-whole-window": {
+      "comment": "Pinny: capture overlay hint that Tab selects the window under the pointer",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Whole window"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "整个窗口"
+          }
+        }
+      }
+    },
+    "annotate.pinny-line-tool": {
+      "comment": "Pinny: inline capture properties bar group that switches between arrow and line",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Line"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "线条"
+          }
+        }
+      }
+    },
+    "annotate.pinny-return-key": {
+      "comment": "Pinny: name of the Return key in a button hover label, e.g. Copy (Return / ⌘C)",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Return"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "回车"
+          }
+        }
+      }
+    },
+    "annotate.pinny-shape-tool": {
+      "comment": "Pinny: inline capture toolbar button and properties bar group for rectangle, filled rectangle and oval",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shape"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "形状"
+          }
+        }
+      }
+    },
     "annotate.pixelated": {
       "extractionState": "stale",
       "localizations": {

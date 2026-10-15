@@ -236,7 +236,18 @@ final class AnnotateState: ObservableObject {
         prepareTextLineProfileIfNeeded()
       }
       syncActiveToolProperties()
+      if let family = AnnotationToolType.inlineFamily(of: selectedTool), let first = family.first {
+        inlineFamilyChoices[first] = selectedTool
+      }
     }
+  }
+  /// Pinny: per inline tool family (keyed by its first tool), the tool used last in this
+  /// session; a family button draws it. Untouched families start at their first tool.
+  @Published private(set) var inlineFamilyChoices: [AnnotationToolType: AnnotationToolType] = [:]
+
+  func inlineFamilyChoice(for tool: AnnotationToolType) -> AnnotationToolType {
+    guard let first = AnnotationToolType.inlineFamily(of: tool)?.first else { return tool }
+    return inlineFamilyChoices[first] ?? first
   }
   var onToolActivated: ((AnnotationToolType) -> Void)?
   @Published var strokeWidth: CGFloat = 3

@@ -24,6 +24,10 @@ nonisolated enum BlurType: String, CaseIterable, Identifiable, Equatable {
     rawValue
   }
 
+  /// Pinny: the capture toolbar offers only mosaic and blur; the other styles still render
+  /// in saved annotations.
+  static let pinnyChoices: [BlurType] = [.pixelated, .gaussian]
+
   var displayName: String {
     switch self {
     case .pixelated: L10n.AnnotateUI.pixelated

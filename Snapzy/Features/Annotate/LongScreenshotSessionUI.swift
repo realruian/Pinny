@@ -237,8 +237,8 @@ private struct LongScreenshotToolbarView: View {
       InlineAreaDivider()
       HStack(spacing: InlineAreaToolbarMetrics.itemSpacing) {
         InlineAreaIconButton(icon: "copy",
-          tooltip: L10n.Common.withShortcut(L10n.AnnotateUI.copyToClipboard, "Enter / ⌘C"),
-          isProminent: true, action: actions.copy)
+          tooltip: L10n.Common.withShortcut(L10n.AnnotateUI.copyToClipboard, "\(L10n.AnnotateUI.pinnyReturnKey) / ⌘C"),
+          action: actions.copy)
         InlineAreaIconButton(icon: "pin", tooltip: L10n.PreferencesQuickAccess.pinToScreenAction,
                              action: actions.pin)
         InlineAreaIconButton(icon: "save", tooltip: L10n.Common.withShortcut(L10n.Common.save, "⌘S"),

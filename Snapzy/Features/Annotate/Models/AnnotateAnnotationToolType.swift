@@ -41,6 +41,16 @@ nonisolated enum AnnotationToolType: String, CaseIterable, Identifiable {
     .rectangle, .filledRectangle, .oval, .arrow, .line
   ]
 
+  /// Pinny: tools that share one inline toolbar button, switched in the properties bar. The
+  /// first tool of each family is the default.
+  static let inlineToolFamilies: [[AnnotationToolType]] = [
+    [.rectangle, .filledRectangle, .oval],
+    [.arrow, .line],
+  ]
+
+  static func inlineFamily(of tool: AnnotationToolType) -> [AnnotationToolType]? {
+    inlineToolFamilies.first { $0.contains(tool) }
+  }
   static let inlineToolGroups: [[AnnotationToolType]] = [
     [.selection],
     drawableTools.filter { inlineShapeToolSet.contains($0) },
@@ -196,6 +206,22 @@ enum AnnotateToolVisibility {
     let hidden = hiddenTools(userDefaults: userDefaults)
     return AnnotationToolType.inlineToolGroups
       .map { $0.filter { !hidden.contains($0) } }
+      // A family's button stands in for its visible tools, at the first one's place.
+      .map { group in
+        var seen: Set<Int> = []
+        return group.filter { tool in
+          guard let index = AnnotationToolType.inlineToolFamilies.firstIndex(where: { $0.contains(tool) })
+          else { return true }
+          return seen.insert(index).inserted
+        }
+      }
       .filter { !$0.isEmpty }
+  }
+
+  /// Visible tools that the family button of `tool` switches between.
+  static func visibleInlineFamily(of tool: AnnotationToolType,
+                                  userDefaults: UserDefaults = .standard) -> [AnnotationToolType] {
+    let hidden = hiddenTools(userDefaults: userDefaults)
+    return (AnnotationToolType.inlineFamily(of: tool) ?? []).filter { !hidden.contains($0) }
   }
 }

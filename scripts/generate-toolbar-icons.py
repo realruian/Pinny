@@ -28,7 +28,7 @@ ICONS = {
     'rectangle': ('RectangleHorizontal', 'fixed'),
     'filledRectangle': ('RectangleHorizontal', 'filled'),
     'oval': ('Circle', 'fixed'),
-    'arrow': ('ArrowUpRight01', 'swap'),
+    'arrow': ('ArrowUpRight03', 'swap'),
     'line': ('Slash', 'swap'),
     'text': ('Text', 'swap'),
     'highlighter': ('Highlighter', 'swap'),
