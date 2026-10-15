@@ -25,6 +25,9 @@ final class PinnyRecordingController: ObservableObject {
   private var frameWindow: PinnyRecordingFrameWindow?
   private var barWindow: PinnyRecordingBarWindow?
   private var playback: PinnyRecordingPlayback?
+  /// Re-record keeps the previous recording hidden until the new one starts, so Esc on the
+  /// prep bar can bring it back.
+  private var parkedPlayback: (playback: PinnyRecordingPlayback, selection: CGRect)?
   private var onRecordingEnded: (() -> Void)?
   private var rerecordHandler: ((CGRect) -> Void)?
   private var saveDirectoryProvider: (() -> URL?)?
@@ -49,6 +52,9 @@ final class PinnyRecordingController: ObservableObject {
       onRecordingEnded()
       return
     }
+    // A new recording replaces the one parked by re-record.
+    parkedPlayback?.playback.close(discardUnexported: true, reactivatePreviousApp: false)
+    parkedPlayback = nil
     phase = .starting
     selection = rect.integral
     self.onRecordingEnded = onRecordingEnded
@@ -246,10 +252,25 @@ final class PinnyRecordingController: ObservableObject {
     phase = .idle
   }
 
+  /// Hides the playback and opens the prep bar on the same area. The recording is only
+  /// dropped once the new one starts; leaving the prep bar brings it back.
   private func rerecord() {
-    let rect = selection
-    closePlayback(discardUnexported: true)
-    rerecordHandler?(rect)
+    guard let current = playback else { return }
+    current.suspend()
+    parkedPlayback = (current, selection)
+    playback = nil
+    phase = .idle
+    rerecordHandler?(selection)
+  }
+
+  /// The re-record prep bar was left without recording: show the previous recording again.
+  func restoreParkedPlayback() {
+    guard phase == .idle, let parked = parkedPlayback else { return }
+    parkedPlayback = nil
+    selection = parked.selection
+    playback = parked.playback
+    phase = .playback
+    parked.playback.resume()
   }
 }
 
@@ -282,9 +303,13 @@ private final class PinnyRecordingFrameWindow: NSPanel {
   override var canBecomeMain: Bool { false }
 }
 
-/// Non-activating, so the recorded app keeps the keyboard; accepts the first click.
+/// Non-activating, so the recorded app keeps the keyboard; accepts the first click. Hover
+/// labels come from `PinnyHoverTipPanel`: a native tooltip never shows on this panel.
 final class PinnyRecordingBarWindow: NSPanel {
   private let selection: CGRect
+  private let tipPanel = PinnyHoverTipPanel()
+  /// The bar sits below the selection, so its labels go below it, away from the content.
+  private var isBelowSelection = true
 
   init<Content: View>(selection: CGRect, content: Content) {
     self.selection = selection
@@ -298,7 +323,10 @@ final class PinnyRecordingBarWindow: NSPanel {
     sharingType = LongScreenshotChrome.sharingType
     hidesOnDeactivate = false
     collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary]
-    contentView = PinnyRecordingFirstClickHostingView(rootView: content)
+    let root = content
+      .coordinateSpace(name: InlineAreaCoordinateSpace.root)
+      .environment(\.inlineAreaHoverTip) { [weak self] tip, text in self?.showTip(tip, text: text) }
+    contentView = PinnyRecordingFirstClickHostingView(rootView: AnyView(root))
     layoutToSelection()
   }
 
@@ -315,12 +343,97 @@ final class PinnyRecordingBarWindow: NSPanel {
     // under a selection that ends just above the Dock.
     var bounds = screen.frame
     bounds.size.height = screen.visibleFrame.maxY - bounds.minY
-    setFrame(LongScreenshotToolbarGeometry.frame(size: size, selection: padded, visibleFrame: bounds),
-             display: true)
+    let frame = LongScreenshotToolbarGeometry.frame(size: size, selection: padded, visibleFrame: bounds)
+    isBelowSelection = frame.midY < selection.midY
+    setFrame(frame, display: true)
+  }
+
+  /// `tip.frame` is in the content's top-left coordinates.
+  private func showTip(_ tip: InlineAreaHoverTip?, text: String) {
+    guard let tip, isVisible else {
+      tipPanel.hide(text: text)
+      return
+    }
+    let anchor = CGRect(x: frame.minX + tip.frame.minX, y: frame.maxY - tip.frame.maxY,
+                        width: tip.frame.width, height: tip.frame.height)
+    tipPanel.show(text: text, anchor: anchor, below: isBelowSelection)
+  }
+
+  override func orderOut(_ sender: Any?) {
+    tipPanel.orderOut(nil)
+    super.orderOut(sender)
+  }
+
+  override func close() {
+    tipPanel.close()
+    super.close()
   }
 
   override var canBecomeKey: Bool { false }
   override var canBecomeMain: Bool { false }
+}
+
+/// The dark hover label of the F1 toolbar, as its own click-through panel.
+final class PinnyHoverTipPanel: NSPanel {
+  private var currentText: String?
+
+  init() {
+    super.init(contentRect: .zero, styleMask: [.borderless, .nonactivatingPanel],
+               backing: .buffered, defer: true)
+    isOpaque = false
+    backgroundColor = .clear
+    hasShadow = false
+    ignoresMouseEvents = true
+    level = .popUpMenu
+    sharingType = LongScreenshotChrome.sharingType
+    hidesOnDeactivate = false
+    isReleasedWhenClosed = false
+    collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
+  }
+
+  /// Next to `anchor` (screen rect) on the preferred side, the other side when it does not fit.
+  func show(text: String, anchor: CGRect, below: Bool) {
+    currentText = text
+    let view = NSHostingView(rootView: PinnyHoverTipLabel(text: text))
+    contentView = view
+    let size = view.fittingSize
+    let screen = NSScreen.screens.first { $0.frame.intersects(anchor) } ?? NSScreen.main
+    let bounds = screen?.frame ?? anchor.insetBy(dx: -500, dy: -500)
+    let gap: CGFloat = 6
+    let belowY = anchor.minY - gap - size.height
+    let aboveY = anchor.maxY + gap
+    let fitsBelow = belowY >= bounds.minY + 4
+    let fitsAbove = aboveY + size.height <= bounds.maxY - 4
+    let y = below ? (fitsBelow ? belowY : aboveY) : (fitsAbove ? aboveY : belowY)
+    let x = min(max(anchor.midX - size.width / 2, bounds.minX + 4), bounds.maxX - 4 - size.width)
+    setFrame(CGRect(x: x.rounded(), y: y.rounded(), width: size.width, height: size.height), display: true)
+    orderFrontRegardless()
+  }
+
+  func hide(text: String) {
+    guard currentText == text else { return }
+    currentText = nil
+    orderOut(nil)
+  }
+
+  override var canBecomeKey: Bool { false }
+  override var canBecomeMain: Bool { false }
+}
+
+private struct PinnyHoverTipLabel: View {
+  let text: String
+
+  var body: some View {
+    Text(text)
+      .font(.system(size: 12, weight: .medium))
+      .foregroundColor(.white)
+      .lineLimit(1)
+      .fixedSize()
+      .padding(.horizontal, 8)
+      .padding(.vertical, 4)
+      .background(RoundedRectangle(cornerRadius: 6, style: .continuous).fill(Color.black.opacity(0.82)))
+      .overlay(RoundedRectangle(cornerRadius: 6, style: .continuous).stroke(Color.white.opacity(0.12), lineWidth: 1))
+  }
 }
 
 final class PinnyRecordingFirstClickHostingView<Content: View>: NSHostingView<Content> {
@@ -405,7 +518,21 @@ private final class PinnyRecordingPlayback {
     player.play()
   }
 
-  func close(discardUnexported: Bool) {
+  /// Re-record: out of sight while the prep bar is up, files kept.
+  func suspend() {
+    player.pause()
+    videoWindow?.orderOut(nil)
+    barWindow?.orderOut(nil)
+  }
+
+  func resume() {
+    NSApp.activate(ignoringOtherApps: true)
+    videoWindow?.makeKeyAndOrderFront(nil)
+    barWindow?.orderFrontRegardless()
+    if model.isPlaying { player.play() }
+  }
+
+  func close(discardUnexported: Bool, reactivatePreviousApp: Bool = true) {
     if let timeObserver { player.removeTimeObserver(timeObserver) }
     timeObserver = nil
     player.pause()
@@ -422,7 +549,7 @@ private final class PinnyRecordingPlayback {
         try? RecordingMetadataStore.delete(for: url)
       }
     }
-    previousApp?.activate(options: [])
+    if reactivatePreviousApp { previousApp?.activate(options: []) }
     previousApp = nil
   }
 

@@ -7961,6 +7961,23 @@
           }
         }
       }
+    },
+    "recording-toolbar.pinny-back-to-recording": {
+      "comment": "Pinny: Prep bar close button after Record Again; it returns to the previous recording",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back to the previous recording"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "返回刚才的录像"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

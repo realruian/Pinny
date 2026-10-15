@@ -2987,6 +2987,7 @@ nonisolated enum L10n {
     }
     static let discardTitle = string("recording-toolbar.pinny-discard-title", defaultValue: "Discard this recording?", comment: "Pinny: Title of the confirmation when closing an unsaved recording")
     static let discardMessage = string("recording-toolbar.pinny-discard-message", defaultValue: "It hasn't been saved or copied and will be deleted.", comment: "Pinny: Message of the confirmation when closing an unsaved recording")
+    static let backToRecording = string("recording-toolbar.pinny-back-to-recording", defaultValue: "Back to the previous recording", comment: "Pinny: Prep bar close button after Record Again; it returns to the previous recording")
     static let discard = string("recording-toolbar.pinny-discard", defaultValue: "Discard", comment: "Pinny: Button that discards an unsaved recording")
   }
 

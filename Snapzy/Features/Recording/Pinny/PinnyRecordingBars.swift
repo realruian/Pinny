@@ -107,7 +107,11 @@ struct PinnyRecordingPrepBar: View {
       PinnyRecordingStartButton { session.startRecording() }
         .frame(width: Self.startButtonWidth)
       InlineAreaDivider()
-      InlineAreaIconButton(icon: "cancel", tooltip: L10n.Common.withShortcut(L10n.Common.close, "Esc")) {
+      InlineAreaIconButton(
+        icon: "cancel",
+        tooltip: L10n.Common.withShortcut(
+          session.recordingPrepReturnsToPlayback ? L10n.PinnyRecording.backToRecording : L10n.Common.close, "Esc")
+      ) {
         session.endRecordingPrep()
       }
     }
@@ -201,7 +205,7 @@ private struct PinnyRecordingStopButton: View {
         .contentShape(RoundedRectangle(cornerRadius: InlineAreaChrome.controlCornerRadius, style: .continuous))
     }
     .buttonStyle(InlineAreaToolbarButtonStyle())
-    .help(L10n.Common.withShortcut(L10n.PinnyRecording.stop, "F1"))
+    .inlineAreaHelp(L10n.Common.withShortcut(L10n.PinnyRecording.stop, "F1"))
     .accessibilityLabel(L10n.PinnyRecording.stop)
     .onHover { isHovering = $0 }
   }
@@ -299,6 +303,7 @@ private struct PinnyRecordingProgress: View {
       })
     }
     .padding(.horizontal, 6)
+    .inlineAreaHelp(L10n.PinnyRecording.progress)
     .accessibilityLabel(L10n.PinnyRecording.progress)
   }
 }
@@ -328,7 +333,7 @@ private struct PinnyRecordingFormatPicker: View {
     }
     .padding(2)
     .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(InlineAreaChrome.itemBackground))
-    .help(L10n.PinnyRecording.formatHint)
+    .inlineAreaHelp(L10n.PinnyRecording.formatHint)
   }
 }
 

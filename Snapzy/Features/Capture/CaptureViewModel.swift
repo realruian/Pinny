@@ -733,8 +733,13 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
   private func startInlineAreaAnnotateCapture(recordingPrepRect: CGRect? = nil) {
     // Pinny: F1 while recording stops the recording.
     if PinnyRecordingController.shared.stopIfRecording() { return }
+    // Pinny: a re-record that ends without recording brings back the recording it replaced.
+    let restoreParkedRecording = {
+      if recordingPrepRect != nil { PinnyRecordingController.shared.restoreParkedPlayback() }
+    }
     if isAreaSelectionActive {
       DiagnosticLogger.shared.log(.debug, .capture, "captureAreaAnnotate blocked: already active")
+      restoreParkedRecording()
       return
     }
 
@@ -760,6 +765,7 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
     DispatchQueue.main.asyncAfter(deadline: .now() + snapshotDelay) { [weak self] in
       guard let self else {
         hiddenWindowSession.restore()
+        restoreParkedRecording()
         return
       }
 
@@ -795,6 +801,7 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
           self.isAreaSelectionActive = false
           self.lastCaptureResult = .failure(error)
           hiddenWindowSession.restore()
+          restoreParkedRecording()
           DiagnosticLogger.shared.log(
             .error,
             .capture,
@@ -806,6 +813,7 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
           self.isAreaSelectionActive = false
           self.lastCaptureResult = .failure(.captureFailed(error.localizedDescription))
           hiddenWindowSession.restore()
+          restoreParkedRecording()
           DiagnosticLogger.shared.log(
             .error,
             .capture,
@@ -826,6 +834,7 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
           self.isAreaSelectionActive = false
           self.lastCaptureResult = .failure(.noDisplayFound)
           hiddenWindowSession.restore()
+          restoreParkedRecording()
           frozenSession.invalidate()
           return
         }
@@ -849,6 +858,7 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
         ) { [weak self] result in
           guard let self else {
             hiddenWindowSession.restore()
+            restoreParkedRecording()
             return
           }
           isAreaSelectionActive = false
@@ -867,6 +877,7 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
             return
           }
           hiddenWindowSession.restore()
+          restoreParkedRecording()
           if case .failure(let error) = result {
             DiagnosticLogger.shared.log(.info, .capture, "Inline area annotate ended", context: [
               "result": error.localizedDescription,

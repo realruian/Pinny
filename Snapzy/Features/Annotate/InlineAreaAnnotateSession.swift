@@ -170,6 +170,9 @@ final class InlineAreaAnnotateSession: ObservableObject {
   /// Pinny: the toolbar shows the recording prep bar (sound, microphone, start). The selection
   /// can still be moved and resized; Return starts, Esc goes back to the capture toolbar.
   @Published private(set) var isRecordingPrep = false
+  /// Opened by re-record: leaving the prep bar ends the overlay so the previous recording
+  /// shows again, instead of going back to the capture toolbar.
+  @Published private(set) var recordingPrepReturnsToPlayback = false
   @Published var actionMessage: String?
   /// The window currently under the cursor while "automatically detect window under cursor"
   /// is on (see `autoDetectWindowUnderCursor`) — mirrors plain area screenshot's
@@ -757,9 +760,16 @@ final class InlineAreaAnnotateSession: ObservableObject {
   func beginRecordingPrep(screenRect: CGRect) {
     beginAnnotating(with: Self.localRect(for: screenRect, in: desktopFrame))
     beginRecordingPrep()
+    recordingPrepReturnsToPlayback = isRecordingPrep
+    // Without a selection there is no prep bar to leave; go straight back to the recording.
+    if !isRecordingPrep { cancel() }
   }
 
   func endRecordingPrep() {
+    if recordingPrepReturnsToPlayback {
+      cancel()
+      return
+    }
     isRecordingPrep = false
   }
 

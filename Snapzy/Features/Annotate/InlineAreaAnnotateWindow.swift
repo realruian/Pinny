@@ -849,7 +849,7 @@ private struct InlineAreaAnnotateRootView: View {
   }
 }
 
-private enum InlineAreaCoordinateSpace {
+enum InlineAreaCoordinateSpace {
   static let root = "inline-area-annotate-root"
 }
 
