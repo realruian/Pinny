@@ -704,7 +704,12 @@ private struct InlineAreaAnnotateRootView: View {
           movingStartRect = nil
         }
         cursorIndicatorPoint = nil
-        InlineAreaNativeCursor.restoreOpenHand()
+        // Pinny: dragging moves the selection without Space; only the Space move keeps the hand.
+        if session.isMoveModifierActive {
+          InlineAreaNativeCursor.restoreOpenHand()
+        } else {
+          InlineAreaNativeCursor.restoreArrow()
+        }
       }
   }
 
