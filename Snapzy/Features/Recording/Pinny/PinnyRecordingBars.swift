@@ -178,7 +178,7 @@ struct PinnyRecordingLiveBar: View {
         Circle()
           .fill(recorder.isPaused ? Color.secondary : Color(nsColor: .systemRed))
           .frame(width: 8, height: 8)
-        Text(recorder.formattedDuration)
+        Text(PinnyRecordingPlaybackBar.time(Double(recorder.elapsedSeconds)))
           .font(.system(size: 12, weight: .semibold).monospacedDigit())
           .foregroundColor(recorder.isPaused ? InlineAreaChrome.secondaryText : InlineAreaChrome.primaryText)
           .fixedSize()
@@ -264,17 +264,18 @@ struct PinnyRecordingPlaybackBar: View {
       HStack(spacing: InlineAreaToolbarMetrics.itemSpacing) {
         InlineAreaIconButton(icon: "rec-redo", tooltip: L10n.PinnyRecording.rerecord,
                              isEnabled: !model.isBusy, action: actions.rerecord)
-        InlineAreaIconButton(
-          icon: "copy",
-          tooltip: L10n.Common.withShortcut(L10n.AnnotateUI.copyToClipboard, "\(L10n.AnnotateUI.pinnyReturnKey) / ⌘C"),
-          isEnabled: !model.isBusy, action: actions.copy)
-        InlineAreaIconButton(icon: "save", tooltip: L10n.Common.withShortcut(L10n.Common.save, "⌘S"),
-                             isEnabled: !model.isBusy, action: actions.save)
+        busyOr(.copy) {
+          InlineAreaIconButton(
+            icon: "copy",
+            tooltip: L10n.Common.withShortcut(L10n.AnnotateUI.copyToClipboard, "\(L10n.AnnotateUI.pinnyReturnKey) / ⌘C"),
+            isEnabled: !model.isBusy, action: actions.copy)
+        }
+        busyOr(.save) {
+          InlineAreaIconButton(icon: "save", tooltip: L10n.Common.withShortcut(L10n.Common.save, "⌘S"),
+                               isEnabled: !model.isBusy, action: actions.save)
+        }
         InlineAreaIconButton(icon: "cancel", tooltip: L10n.Common.withShortcut(L10n.Common.close, "Esc"),
                              action: actions.close)
-      }
-      .overlay {
-        if model.isBusy { ProgressView().controlSize(.small).allowsHitTesting(false) }
       }
     }
     .padding(.horizontal, InlineAreaToolbarMetrics.horizontalPadding)
@@ -284,6 +285,20 @@ struct PinnyRecordingPlaybackBar: View {
     .fixedSize()
   }
 
+  /// The pressed button turns into the spinner while its GIF conversion or save runs.
+  @ViewBuilder
+  private func busyOr<Content: View>(_ action: PinnyRecordingPlaybackModel.Action,
+                                    @ViewBuilder button: () -> Content) -> some View {
+    if model.busyAction == action {
+      ProgressView()
+        .controlSize(.small)
+        .frame(width: InlineAreaChrome.controlSize, height: InlineAreaChrome.controlSize)
+    } else {
+      button()
+    }
+  }
+
+  /// Minutes and seconds, minutes unpadded: 0:12, 1:05. The recording bar uses it too.
   static func time(_ seconds: Double) -> String {
     let total = max(0, Int(seconds.rounded(.down)))
     return String(format: "%d:%02d", total / 60, total % 60)
@@ -356,6 +371,8 @@ final class PinnyRecordingPlaybackModel: ObservableObject {
   @Published var currentTime: Double = 0
   @Published var duration: Double = 0
   @Published var format: PinnyRecordingOutputFormat = .mp4
-  /// GIF conversion or saving in progress.
-  @Published var isBusy = false
+  enum Action { case copy, save }
+  /// The copy or save whose GIF conversion or file copy is running.
+  @Published var busyAction: Action?
+  var isBusy: Bool { busyAction != nil }
 }

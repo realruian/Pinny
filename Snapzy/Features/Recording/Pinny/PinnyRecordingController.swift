@@ -338,8 +338,6 @@ private final class PinnyRecordingFrameWindow: NSPanel {
 final class PinnyRecordingBarWindow: NSPanel {
   private let selection: CGRect
   private let tipPanel = PinnyHoverTipPanel()
-  /// The bar sits below the selection, so its labels go below it, away from the content.
-  private var isBelowSelection = true
 
   init<Content: View>(selection: CGRect, content: Content) {
     self.selection = selection
@@ -366,17 +364,17 @@ final class PinnyRecordingBarWindow: NSPanel {
     guard let contentView else { return }
     contentView.layoutSubtreeIfNeeded()
     let size = contentView.fittingSize
-    // The 12 pt shadow margin inside the content sits in the selection gap.
-    let padded = selection.insetBy(dx: 0, dy: -PinnyRecordingFrameWindow.lineWidth + 12)
+    // The 12 pt shadow margin inside the content sits in the selection gap, so the bar keeps
+    // the prep bar's distance from the selection (the red frame sits inside that gap).
+    let padded = selection.insetBy(dx: 0, dy: 12)
     let screen = NSScreen.screens.first { $0.frame.intersects(selection) } ?? NSScreen.main
     guard let screen else { return }
     // Like the F1 toolbar: only the menu bar is off limits, the Dock is not, so the bar stays
     // under a selection that ends just above the Dock.
     var bounds = screen.frame
     bounds.size.height = screen.visibleFrame.maxY - bounds.minY
-    let frame = LongScreenshotToolbarGeometry.frame(size: size, selection: padded, visibleFrame: bounds)
-    isBelowSelection = frame.midY < selection.midY
-    setFrame(frame, display: true)
+    setFrame(LongScreenshotToolbarGeometry.frame(size: size, selection: padded, visibleFrame: bounds),
+             display: true)
   }
 
   /// `tip.frame` is in the content's top-left coordinates.
@@ -387,7 +385,8 @@ final class PinnyRecordingBarWindow: NSPanel {
     }
     let anchor = CGRect(x: frame.minX + tip.frame.minX, y: frame.maxY - tip.frame.maxY,
                         width: tip.frame.width, height: tip.frame.height)
-    tipPanel.show(text: text, anchor: anchor, below: isBelowSelection)
+    // Above the bar like the F1 toolbar's labels; below only when the screen top is too close.
+    tipPanel.show(text: text, anchor: anchor, below: false)
   }
 
   override func orderOut(_ sender: Any?) {
@@ -615,15 +614,16 @@ private final class PinnyRecordingPlayback {
     model.currentTime = fraction * model.duration
   }
 
-  /// The file for the chosen format, converting to GIF the first time it is needed.
-  private func outputURL() async -> URL? {
+  /// The file for the chosen format, converting to GIF the first time it is needed (the
+  /// pressed button shows the progress meanwhile).
+  private func outputURL(for action: PinnyRecordingPlaybackModel.Action) async -> URL? {
     switch model.format {
     case .mp4:
       return videoURL
     case .gif:
       if let gifURL, FileManager.default.fileExists(atPath: gifURL.path) { return gifURL }
-      model.isBusy = true
-      defer { model.isBusy = false }
+      model.busyAction = action
+      defer { model.busyAction = nil }
       do {
         let url = try await GIFConverter.convert(videoURL: videoURL, onProgress: { _ in })
         gifURL = url
@@ -641,7 +641,7 @@ private final class PinnyRecordingPlayback {
     isExporting = true
     Task {
       defer { isExporting = false }
-      guard let url = await outputURL() else { return }
+      guard let url = await outputURL(for: .copy) else { return }
       ClipboardHelper.copyMediaFile(from: url)
       SoundManager.play("Pop")
       wasCopied = true
@@ -655,9 +655,9 @@ private final class PinnyRecordingPlayback {
     isExporting = true
     Task {
       defer { isExporting = false }
-      guard let url = await outputURL() else { return }
-      model.isBusy = true
-      defer { model.isBusy = false }
+      guard let url = await outputURL(for: .save) else { return }
+      model.busyAction = .save
+      defer { model.busyAction = nil }
       let access = SandboxFileAccessManager.shared.beginAccessingURL(directory)
       defer { access.stop() }
       do {
