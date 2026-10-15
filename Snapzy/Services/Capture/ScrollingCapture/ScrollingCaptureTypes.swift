@@ -117,6 +117,8 @@ enum ScrollingCaptureSelectionGuidanceKind {
   case savingCurrentResult
   case lockingCurrentCapture
   case savingLongScreenshot
+  /// Pinny: the frame could not be placed; scrolling back to stitched content resumes.
+  case scrollBackToResume
 
   var guidance: ScrollingCaptureSelectionGuidance {
     switch self {
@@ -233,6 +235,12 @@ enum ScrollingCaptureSelectionGuidanceKind {
         title: L10n.ScrollingCapture.guidanceLockingCurrentCapture,
         detail: L10n.ScrollingCapture.guidanceSnapzySealingStitchedResult,
         tone: .progress
+      )
+    case .scrollBackToResume:
+      return ScrollingCaptureSelectionGuidance(
+        title: L10n.PinnyLongScreenshot.lostTitle,
+        detail: L10n.PinnyLongScreenshot.lostDetail,
+        tone: .warning
       )
     case .savingLongScreenshot:
       return ScrollingCaptureSelectionGuidance(
@@ -388,7 +396,7 @@ enum ScrollingCaptureAutoScrollPolicy {
         return .finishCapture
       }
       return .retryStep
-    case .initialized, .appended:
+    case .initialized, .appended, .trimmed:
       return .keepScrolling
     }
   }
@@ -426,6 +434,24 @@ final class ScrollingCaptureSessionModel: ObservableObject {
   @Published var stitchedPixelHeight = 0
   @Published var isAutoScrolling = false
   @Published var isAutoScrollStopping = false
+  /// Pinny's F1 entry is manual-scroll only, so its HUD hides the Auto Scroll button.
+  var allowsAutoScroll = true
+  @Published var stitchedPixelWidth = 0
+  /// Height of one captured frame in pixels: the part of the stitched image currently in view.
+  var viewportPixelHeight = 0
+  /// Pinny: crop mode pauses stitching and shows top/bottom handles on the preview.
+  @Published var isTrimming = false
+  /// Fractions of the stitched height removed from the top and bottom on output.
+  @Published var trimTop: CGFloat = 0
+  @Published var trimBottom: CGFloat = 0
+
+  /// Pinny: the last frame could not be placed; the toolbar asks to scroll back.
+  var isLost: Bool { guidanceKind == .scrollBackToResume }
+
+  /// Pixel rows kept after trimming, as a range of the stitched image.
+  func trimmedRows(forHeight height: Int) -> Range<Int> {
+    ScrollingCaptureTrim.rows(height: height, top: trimTop, bottom: trimBottom)
+  }
 
   init(selectedRect: CGRect) {
     self.selectedRect = selectedRect
@@ -496,5 +522,40 @@ final class ScrollingCaptureSessionModel: ObservableObject {
 
   var selectionGuidance: ScrollingCaptureSelectionGuidance {
     guidanceKind.guidance
+  }
+}
+
+nonisolated enum ScrollingCaptureTrim {
+  /// Rows kept when `top` and `bottom` fractions are cut; never fewer than one row.
+  static func rows(height: Int, top: CGFloat, bottom: CGFloat) -> Range<Int> {
+    guard height > 0 else { return 0..<0 }
+    let start = min(height - 1, max(0, Int((CGFloat(height) * top).rounded())))
+    let end = max(start + 1, min(height, height - Int((CGFloat(height) * bottom).rounded())))
+    return start..<end
+  }
+
+  static func crop(_ image: CGImage, top: CGFloat, bottom: CGFloat) -> CGImage {
+    let rows = rows(height: image.height, top: top, bottom: bottom)
+    guard rows.count < image.height else { return image }
+    return image.cropping(to: CGRect(x: 0, y: rows.lowerBound, width: image.width, height: rows.count)) ?? image
+  }
+}
+
+/// What the Pinny toolbar asked for when it ended the session.
+enum ScrollingCaptureOutput {
+  case copy, pin, save
+}
+
+/// A finished long screenshot handed back to the caller instead of being saved.
+struct ScrollingCaptureResult {
+  var output: ScrollingCaptureOutput = .copy
+  let image: CGImage
+  /// Pixels per point of `image`.
+  let scaleFactor: CGFloat
+  /// The captured region, in AppKit global screen coordinates.
+  let selectedRect: CGRect
+
+  var pointSize: CGSize {
+    CGSize(width: CGFloat(image.width) / scaleFactor, height: CGFloat(image.height) / scaleFactor)
   }
 }

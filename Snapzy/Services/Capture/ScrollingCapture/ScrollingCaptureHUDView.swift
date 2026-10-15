@@ -44,19 +44,21 @@ struct ScrollingCaptureHUDView: View {
           .buttonStyle(.liquidGlass(emphasis: .secondary, capsule: true))
           .disabled(!model.canCancelSession)
 
-        Button(action: onToggleAutoScroll) {
-          Label(
-            model.isAutoScrolling ? L10n.ScrollingCapture.stopAutoScroll : L10n.ScrollingCapture.autoScroll,
-            systemImage: model.isAutoScrolling ? "stop.fill" : "play.fill"
-          )
-          .lineLimit(1)
-          .fixedSize(horizontal: true, vertical: false)
+        if model.allowsAutoScroll {
+          Button(action: onToggleAutoScroll) {
+            Label(
+              model.isAutoScrolling ? L10n.ScrollingCapture.stopAutoScroll : L10n.ScrollingCapture.autoScroll,
+              systemImage: model.isAutoScrolling ? "stop.fill" : "play.fill"
+            )
+            .lineLimit(1)
+            .fixedSize(horizontal: true, vertical: false)
+          }
+          .buttonStyle(.liquidGlass(
+            emphasis: model.isAutoScrolling ? .primary : .secondary,
+            capsule: true
+          ))
+          .disabled(!model.canToggleAutoScroll)
         }
-        .buttonStyle(.liquidGlass(
-          emphasis: model.isAutoScrolling ? .primary : .secondary,
-          capsule: true
-        ))
-        .disabled(!model.canToggleAutoScroll)
 
         Button(L10n.Common.done, action: onDone)
           .buttonStyle(.liquidGlass(emphasis: .primary, capsule: true))

@@ -20619,6 +20619,108 @@
         }
       }
     },
+    "scrolling-capture.pinny-captured-height": {
+      "comment": "Pinny: long screenshot preview header. %d is the stitched height in pixels.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Captured %d px"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已截 %d px"
+          }
+        }
+      }
+    },
+    "scrolling-capture.pinny-crop": {
+      "comment": "Pinny: long screenshot toolbar button that trims the top and bottom of the stitched image",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crop top and bottom"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上下裁剪"
+          }
+        }
+      }
+    },
+    "scrolling-capture.pinny-long-screenshot": {
+      "comment": "Pinny: F1 toolbar button that starts a long (scrolling) screenshot of the selection",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Long Screenshot"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "长截图"
+          }
+        }
+      }
+    },
+    "scrolling-capture.pinny-lost-detail": {
+      "comment": "Pinny: how to resume a long screenshot after it lost its place",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scroll back a little to where it last matched and it continues from there"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "往回滑一点，回到上次接上的位置就会继续"
+          }
+        }
+      }
+    },
+    "scrolling-capture.pinny-lost-title": {
+      "comment": "Pinny: long screenshot lost its place because the page moved too far between frames",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scrolled too fast"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "滑太快了"
+          }
+        }
+      }
+    },
+    "scrolling-capture.pinny-lost-toolbar-hint": {
+      "comment": "Pinny: long screenshot toolbar label when the frame could not be placed",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Too fast, scroll back a little"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "滑太快了，往回滑一点"
+          }
+        }
+      }
+    },
     "scrolling-capture.preview-finishing-saving-capture": {
       "extractionState": "stale",
       "localizations": {

@@ -248,7 +248,7 @@ final class ScrollingCaptureAutoScrollController {
         if update.likelyReachedBoundary {
           boundaryConfirmationCount += 1
         }
-      case .initialized, .appended, .reachedHeightLimit:
+      case .initialized, .appended, .trimmed, .reachedHeightLimit:
         consecutiveNoMovementCount = 0
         consecutiveFailureCount = 0
       case .ignoredAlignmentFailed:

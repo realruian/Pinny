@@ -15,9 +15,21 @@ nonisolated enum ScrollingCaptureMergeDirection {
   case appendFromTop
 }
 
+/// Whether a frame may be matched against the opposite of the merge direction, which means
+/// the user scrolled back: the stitched tail below the current viewport is trimmed.
+nonisolated enum ScrollingCaptureRetreatHint {
+  case never
+  /// Direction unknown (mixed batch or final seal): try forward first, then retreat.
+  case allowed
+  /// The scroll batch went against the locked direction: try retreat first.
+  case preferred
+}
+
 nonisolated enum ScrollingCaptureStitchOutcome {
   case initialized
   case appended(deltaY: Int)
+  /// The viewport moved back by `deltaY` rows; that many rows were removed from the tail.
+  case trimmed(deltaY: Int)
   case ignoredNoMovement
   case ignoredAlignmentFailed
   case reachedHeightLimit
@@ -283,6 +295,96 @@ nonisolated final class ScrollingCaptureStitcher: @unchecked Sendable {
     let rowCount: Int
   }
 
+  /// Per-row luma samples: cheap enough to search one frame across several frame heights.
+  private struct RowSignatures {
+    static let columnCount = 48
+    /// Best average luma difference allowed, and how much better than any other offset it must be.
+    static let maximumScore = 3.0
+    static let minimumMargin = 4.0
+
+    let columns: Int
+    private(set) var rows = 0
+    private(set) var values: [UInt8] = []
+
+    private init(columns: Int) {
+      self.columns = columns
+    }
+
+    static func empty(columns: Int) -> RowSignatures {
+      RowSignatures(columns: columns)
+    }
+
+    init(raster: RasterImage, startRow: Int, rowCount: Int, xStart: Int, xEnd: Int) {
+      columns = Self.columnCount
+      let width = max(columns, xEnd - xStart)
+      values.reserveCapacity(rowCount * columns)
+      raster.pixels.withUnsafeBufferPointer { pixels in
+        for row in startRow..<(startRow + rowCount) {
+          let base = row * raster.bytesPerRow
+          for column in 0..<columns {
+            let x0 = xStart + column * width / columns
+            let x1 = min(xEnd, xStart + (column + 1) * width / columns)
+            var sum = 0
+            var count = 0
+            var x = x0
+            while x < x1 {
+              let index = base + x * 4
+              sum += Int(pixels[index]) * 299 + Int(pixels[index + 1]) * 587 + Int(pixels[index + 2]) * 114
+              count += 1
+              x += 2
+            }
+            values.append(UInt8(sum / max(1, count) / 1_000))
+          }
+        }
+      }
+      rows = rowCount
+    }
+
+    mutating func append(_ other: RowSignatures) {
+      values.append(contentsOf: other.values)
+      rows += other.rows
+    }
+
+    /// Row offset in `tail` where `frame` lines up, or nil when no offset is clearly best.
+    static func locate(_ frame: RowSignatures, in tail: RowSignatures, minimumOverlap: Int) -> Int? {
+      let maximumOffset = tail.rows - minimumOverlap
+      guard maximumOffset >= 0, frame.rows >= minimumOverlap, frame.columns == tail.columns else {
+        return nil
+      }
+      let columns = frame.columns
+      func score(_ offset: Int, rowStride: Int) -> Double {
+        let overlap = min(frame.rows, tail.rows - offset)
+        return frame.values.withUnsafeBufferPointer { lhs in
+          tail.values.withUnsafeBufferPointer { rhs in
+            var total = 0
+            var count = 0
+            var row = 0
+            while row < overlap {
+              let a = row * columns
+              let b = (offset + row) * columns
+              for column in 0..<columns {
+                total += abs(Int(lhs[a + column]) - Int(rhs[b + column]))
+              }
+              count += columns
+              row += rowStride
+            }
+            return Double(total) / Double(max(1, count))
+          }
+        }
+      }
+
+      // Every offset (fine text shifted by two rows already differs), sampling every 4th row;
+      // then the best few offsets again with every row.
+      let coarse = (0...maximumOffset).map { ($0, score($0, rowStride: 4)) }
+      guard let coarseBest = coarse.min(by: { $0.1 < $1.1 }) else { return nil }
+      let refined = (max(0, coarseBest.0 - 2)...min(maximumOffset, coarseBest.0 + 2))
+        .map { ($0, score($0, rowStride: 1)) }
+      guard let best = refined.min(by: { $0.1 < $1.1 }), best.1 <= maximumScore else { return nil }
+      let runnerUp = coarse.filter { abs($0.0 - best.0) > 24 }.map(\.1).min() ?? .greatestFiniteMagnitude
+      return runnerUp - best.1 >= minimumMargin ? best.0 : nil
+    }
+  }
+
   private struct Match {
     let direction: ScrollingCaptureMergeDirection
     let deltaY: Int
@@ -325,6 +427,10 @@ nonisolated final class ScrollingCaptureStitcher: @unchecked Sendable {
   private var cachedMergedImage: CGImage?
   private var lastMatch: Match?
   private var matchNotFoundCount = 0
+  /// A scroll-back smaller than this (a trackpad's end-of-swipe bounce) is ignored.
+  static let minimumRetreatPixels = 24
+  /// How far back, in frame heights, a lost or scrolled-back frame is searched for.
+  static let relocateSearchViewports = 3
 
   private(set) var acceptedFrameCount = 0
 
@@ -369,12 +475,137 @@ nonisolated final class ScrollingCaptureStitcher: @unchecked Sendable {
     )
   }
 
+  /// - Parameters:
+  ///   - retreat: whether the frame may sit above the stitched bottom (scrolled back, or a
+  ///     fast scroll lost track); such frames are located in the stitched tail instead.
+  ///   - minimumMatchConfidence: forward matches below this are rejected instead of stitched.
   func append(
     _ image: CGImage,
     maxOutputHeight: Int,
     expectedSignedDeltaPixels: Int? = nil,
     renderMergedImage: Bool = true,
-    allowsSettledPartialStep: Bool = false
+    allowsSettledPartialStep: Bool = false,
+    retreat: ScrollingCaptureRetreatHint = .never,
+    minimumMatchConfidence: Double = 0
+  ) -> ScrollingCaptureStitchUpdate? {
+    let canRelocate = retreat != .never && mergeDirection == .appendFromBottom && lastRaster != nil
+    if canRelocate, retreat == .preferred {
+      if let expected = expectedSignedDeltaPixels, abs(expected) < Self.minimumRetreatPixels {
+        return currentUpdate(outcome: .ignoredNoMovement, includeMergedImage: renderMergedImage)
+      }
+      if let update = relocateUpdate(image, maxOutputHeight: maxOutputHeight,
+                                     renderMergedImage: renderMergedImage) {
+        return update
+      }
+      // A batch that only scrolled back cannot reveal new rows below; matching it forward
+      // could mistake repeating content for a large forward jump.
+      if let lastRaster, let raster = RasterImage(cgImage: image),
+         contentDifference(previous: lastRaster, current: raster, headerHeight: headerHeight,
+                           footerHeight: footerHeight, leadingStaticWidth: leadingStaticWidth,
+                           trailingStaticWidth: trailingStaticWidth) < 8.5 {
+        return currentUpdate(outcome: .ignoredNoMovement, includeMergedImage: renderMergedImage)
+      }
+      matchNotFoundCount += 1
+      return currentUpdate(outcome: .ignoredAlignmentFailed, includeMergedImage: renderMergedImage)
+    }
+    let forward = appendForward(
+      image,
+      maxOutputHeight: maxOutputHeight,
+      expectedSignedDeltaPixels: expectedSignedDeltaPixels,
+      renderMergedImage: renderMergedImage,
+      allowsSettledPartialStep: allowsSettledPartialStep,
+      minimumMatchConfidence: minimumMatchConfidence
+    )
+    if canRelocate, retreat == .allowed, case .ignoredAlignmentFailed? = forward?.outcome,
+       let update = relocateUpdate(image, maxOutputHeight: maxOutputHeight,
+                                   renderMergedImage: renderMergedImage) {
+      return update
+    }
+    return forward
+  }
+
+  /// Finds the frame's content inside the last few frame heights of the stitched image and
+  /// makes it the new bottom: rows below it are trimmed (scrolled back), rows past the old
+  /// bottom are appended. Nil when the frame cannot be placed unambiguously.
+  private func relocateUpdate(
+    _ image: CGImage,
+    maxOutputHeight: Int,
+    renderMergedImage: Bool
+  ) -> ScrollingCaptureStitchUpdate? {
+    guard let raster = RasterImage(cgImage: image), let lastRaster,
+          raster.width == lastRaster.width, raster.height == lastRaster.height,
+          let (xStart, xEnd) = matchingColumnBounds(
+            width: raster.width, leadingStaticWidth: leadingStaticWidth,
+            trailingStaticWidth: trailingStaticWidth) else { return nil }
+    let contentHeight = raster.height - headerHeight - footerHeight
+    let outputHeight = outputHeight
+    let tailHeight = min(outputHeight, contentHeight * Self.relocateSearchViewports)
+    guard contentHeight > 48, tailHeight > 0 else { return nil }
+
+    let frameRows = RowSignatures(raster: raster, startRow: headerHeight, rowCount: contentHeight,
+                                  xStart: xStart, xEnd: xEnd)
+    var tailRows = RowSignatures.empty(columns: frameRows.columns)
+    var remaining = tailHeight
+    var tailSlices: [ContentSlice] = []
+    for slice in contentSlices.reversed() where remaining > 0 {
+      let take = min(slice.rowCount, remaining)
+      tailSlices.append(ContentSlice(raster: slice.raster, startRow: slice.startRow + slice.rowCount - take,
+                                     rowCount: take))
+      remaining -= take
+    }
+    for slice in tailSlices.reversed() {
+      tailRows.append(RowSignatures(raster: slice.raster, startRow: slice.startRow,
+                                    rowCount: slice.rowCount, xStart: xStart, xEnd: xEnd))
+    }
+
+    let minimumOverlap = max(96, contentHeight * 3 / 10)
+    guard let offset = RowSignatures.locate(frameRows, in: tailRows, minimumOverlap: minimumOverlap)
+    else { return nil }
+
+    let newBottom = outputHeight - tailHeight + offset + contentHeight
+    guard newBottom <= maxOutputHeight else {
+      return currentUpdate(outcome: .reachedHeightLimit, includeMergedImage: renderMergedImage)
+    }
+    truncate(toRows: outputHeight - tailHeight + offset)
+    contentSlices.append(ContentSlice(raster: raster, startRow: headerHeight, rowCount: contentHeight))
+    self.lastRaster = raster
+    matchNotFoundCount = 0
+    cachedMergedImage = nil
+
+    let outcome: ScrollingCaptureStitchOutcome
+    if newBottom < outputHeight {
+      outcome = .trimmed(deltaY: outputHeight - newBottom)
+    } else if newBottom > outputHeight {
+      acceptedFrameCount += 1
+      outcome = .appended(deltaY: newBottom - outputHeight)
+    } else {
+      outcome = .ignoredNoMovement
+    }
+    return currentUpdate(outcome: outcome, includeMergedImage: renderMergedImage)
+  }
+
+  /// Drops stitched rows from the bottom so `rows` remain.
+  private func truncate(toRows rows: Int) {
+    var excess = outputHeight - max(0, rows)
+    while excess > 0, let last = contentSlices.last {
+      contentSlices.removeLast()
+      if last.rowCount > excess {
+        contentSlices.append(ContentSlice(
+          raster: last.raster, startRow: last.startRow, rowCount: last.rowCount - excess))
+        excess = 0
+      } else {
+        excess -= last.rowCount
+      }
+    }
+  }
+
+  private func appendForward(
+    _ image: CGImage,
+    maxOutputHeight: Int,
+    expectedSignedDeltaPixels: Int?,
+    renderMergedImage: Bool,
+    allowsSettledPartialStep: Bool,
+    minimumMatchConfidence: Double
   ) -> ScrollingCaptureStitchUpdate? {
     guard let lastRaster, let baseRaster else { return start(with: image) }
     guard let raster = RasterImage(cgImage: image) else { return nil }
@@ -563,6 +794,22 @@ nonisolated final class ScrollingCaptureStitcher: @unchecked Sendable {
           totalScore: nil,
           appendDeltaY: nil,
           visionAgreementCount: visionAlignmentEstimate?.agreementCount ?? 0
+        )
+      )
+    }
+
+    // Stitching a guess duplicates or skips content; a rejected frame is located again later.
+    if matcherConfidence(for: match) < minimumMatchConfidence {
+      matchNotFoundCount += 1
+      return currentUpdate(
+        outcome: .ignoredAlignmentFailed,
+        includeMergedImage: renderMergedImage,
+        alignmentDebug: makeAlignmentDebugInfo(
+          for: match,
+          path: .alignmentFailed,
+          usedVisionEstimate: visionAlignmentEstimate != nil,
+          visionAlignmentEstimate: visionAlignmentEstimate,
+          appendDeltaY: match.deltaY
         )
       )
     }
@@ -759,7 +1006,7 @@ nonisolated final class ScrollingCaptureStitcher: @unchecked Sendable {
 
   private func defaultSafety(for outcome: ScrollingCaptureStitchOutcome) -> ScrollingCaptureStitchSafety {
     switch outcome {
-    case .initialized, .appended, .ignoredNoMovement, .reachedHeightLimit:
+    case .initialized, .appended, .trimmed, .ignoredNoMovement, .reachedHeightLimit:
       return .confirmed
     case .ignoredAlignmentFailed:
       return .unsafe(reason: "alignment-failed")
@@ -900,7 +1147,8 @@ nonisolated final class ScrollingCaptureStitcher: @unchecked Sendable {
     trailingStaticWidth: Int,
     expectedSignedDeltaPixels: Int?,
     visionAlignmentEstimate: VisionAlignmentEstimate?,
-    searchMode: MatchSearchMode
+    searchMode: MatchSearchMode,
+    directions directionsOverride: [ScrollingCaptureMergeDirection]? = nil
   ) -> Match? {
     let contentHeight = previous.height - headerHeight - footerHeight
     let expectedDeltaPixels = expectedSignedDeltaPixels.map(abs)
@@ -912,7 +1160,9 @@ nonisolated final class ScrollingCaptureStitcher: @unchecked Sendable {
     ) else { return nil }
 
     let directions: [ScrollingCaptureMergeDirection]
-    if mergeDirection == .unresolved {
+    if let directionsOverride {
+      directions = directionsOverride
+    } else if mergeDirection == .unresolved {
       directions = [.appendFromBottom]
     } else {
       directions = [mergeDirection]

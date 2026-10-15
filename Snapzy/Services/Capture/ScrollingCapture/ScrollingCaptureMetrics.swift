@@ -181,6 +181,8 @@ nonisolated struct ScrollingCaptureSessionMetrics {
         appendedDeltaTotalPixels += appendDeltaY
         appendedDeltaMaxPixels = max(appendedDeltaMaxPixels, appendDeltaY)
       }
+    case .trimmed:
+      currentAlignmentFailureStreak = 0
     case .ignoredNoMovement:
       ignoredNoMovementCount += 1
     case .ignoredAlignmentFailed:

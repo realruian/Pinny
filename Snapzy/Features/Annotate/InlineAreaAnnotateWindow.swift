@@ -1285,7 +1285,7 @@ enum InlineAreaToolbarMetrics {
     return groups.reduce(0) { $0 + groupWidth($1.count) } + CGFloat(groups.count - 1) * dividerWidth
   }
   static var idealWidth: CGFloat {
-    horizontalPadding * 2 + toolsWidth + groupWidth(2) + groupWidth(4) + dividerWidth * 2
+    horizontalPadding * 2 + toolsWidth + groupWidth(2) + groupWidth(5) + dividerWidth * 2
   }
 }
 
@@ -1480,7 +1480,7 @@ enum InlineAreaControlGeometry {
   }
 }
 
-private enum InlineAreaChrome {
+enum InlineAreaChrome {
   static let cornerRadius: CGFloat = InlineAreaToolbarMetrics.toolbarCornerRadius
   static let controlCornerRadius: CGFloat = InlineAreaToolbarMetrics.buttonCornerRadius
   static let controlSize: CGFloat = InlineAreaToolbarMetrics.iconButtonSize
@@ -1500,7 +1500,7 @@ private enum InlineAreaChrome {
   static let toolbarHoverBackground = Color.primary.opacity(0.10)
 }
 
-private struct InlineAreaPanelBorder: View {
+struct InlineAreaPanelBorder: View {
   @Environment(\.colorScheme) var colorScheme
 
   var body: some View {
@@ -1512,7 +1512,7 @@ private struct InlineAreaPanelBorder: View {
   }
 }
 
-private struct InlineAreaPanelBackgroundTint: View {
+struct InlineAreaPanelBackgroundTint: View {
   @Environment(\.colorScheme) var colorScheme
 
   var body: some View {
@@ -1524,7 +1524,7 @@ private struct InlineAreaPanelBackgroundTint: View {
   }
 }
 
-private extension View {
+extension View {
   func inlineAreaPanelChrome() -> some View {
     background(InlineAreaPanelBackgroundTint().allowsHitTesting(false))
       .background(InlineAreaHudMaterialBackground(cornerRadius: InlineAreaChrome.cornerRadius).allowsHitTesting(false))
@@ -1535,7 +1535,7 @@ private extension View {
   }
 }
 
-private struct InlineAreaHudMaterialBackground: NSViewRepresentable {
+struct InlineAreaHudMaterialBackground: NSViewRepresentable {
   let cornerRadius: CGFloat
 
   func makeNSView(context _: Context) -> NSVisualEffectView {
@@ -1657,7 +1657,7 @@ struct InlineAreaControlDeck: View {
   }
 }
 
-private struct InlineAreaToolbarButtonStyle: ButtonStyle {
+struct InlineAreaToolbarButtonStyle: ButtonStyle {
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
   @Environment(\.isEnabled) private var isEnabled
 
@@ -1670,7 +1670,7 @@ private struct InlineAreaToolbarButtonStyle: ButtonStyle {
 }
 
 /// Hugeicons Pro asset `CaptureTool-<name>`; selected items use the solid `-fill` variant when one exists.
-private struct InlineAreaGlyph: View {
+struct InlineAreaGlyph: View {
   let name: String
   var isSelected = false
   let size: CGFloat
@@ -1763,7 +1763,7 @@ private struct InlineAreaMoveHandle: View {
   }
 }
 
-private struct InlineAreaIconButton: View {
+struct InlineAreaIconButton: View {
   let icon: String
   let tooltip: String
   var isEnabled: Bool = true
@@ -1801,7 +1801,7 @@ private struct InlineAreaIconButton: View {
   }
 }
 
-private struct InlineAreaDivider: View {
+struct InlineAreaDivider: View {
   var body: some View {
     Rectangle()
       .fill(InlineAreaChrome.divider)
@@ -2886,6 +2886,10 @@ private struct InlineAreaCaptureActions: View {
 
   var body: some View {
     HStack(spacing: InlineAreaToolbarMetrics.itemSpacing) {
+      InlineAreaIconButton(icon: "scrolling", tooltip: L10n.PinnyLongScreenshot.title,
+                          isEnabled: !session.isFinishing) {
+        session.startScrollingCapture()
+      }
       InlineAreaIconButton(icon: "copy",
         tooltip: L10n.Common.withShortcut(L10n.AnnotateUI.copyToClipboard, "Enter / ⌘C"),
         isEnabled: !session.isFinishing, isProminent: true) {

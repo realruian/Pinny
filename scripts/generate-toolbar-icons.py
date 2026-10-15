@@ -38,6 +38,8 @@ ICONS = {
     'watermark': ('Copyright', 'swap'),
     'pencil': ('PencilEdit01', 'swap'),
     # Main toolbar actions
+    'scrolling': ('CarouselVertical', 'fixed'),
+    'crop': ('Crop', 'swap'),
     'undo': ('Undo03', 'fixed'),
     'redo': ('Redo03', 'fixed'),
     'copy': ('Copy01', 'fixed'),

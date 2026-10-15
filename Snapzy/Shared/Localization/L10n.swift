@@ -2951,6 +2951,18 @@ nonisolated enum L10n {
     )
   }
 
+  /// Pinny: long screenshot started from the F1 toolbar.
+  enum PinnyLongScreenshot {
+    static let title = string("scrolling-capture.pinny-long-screenshot", defaultValue: "Long Screenshot", comment: "Pinny: F1 toolbar button that starts a long (scrolling) screenshot of the selection")
+    static let lostTitle = string("scrolling-capture.pinny-lost-title", defaultValue: "Scrolled too fast", comment: "Pinny: long screenshot lost its place because the page moved too far between frames")
+    static let lostToolbarHint = string("scrolling-capture.pinny-lost-toolbar-hint", defaultValue: "Too fast, scroll back a little", comment: "Pinny: long screenshot toolbar label when the frame could not be placed")
+    static let crop = string("scrolling-capture.pinny-crop", defaultValue: "Crop top and bottom", comment: "Pinny: long screenshot toolbar button that trims the top and bottom of the stitched image")
+    static func capturedHeight(_ pixels: Int) -> String {
+      format("scrolling-capture.pinny-captured-height", defaultValue: "Captured %d px", comment: "Pinny: long screenshot preview header. %d is the stitched height in pixels.", pixels)
+    }
+    static let lostDetail = string("scrolling-capture.pinny-lost-detail", defaultValue: "Scroll back a little to where it last matched and it continues from there", comment: "Pinny: how to resume a long screenshot after it lost its place")
+  }
+
   /// Pinny: keys available inside the F1 capture overlay and on pinned images.
   enum PinnyKeyReference {
     static let selectingSection = string("preferences-shortcuts.pinny-selecting-section", defaultValue: "While choosing an area", comment: "Pinny capture key reference")

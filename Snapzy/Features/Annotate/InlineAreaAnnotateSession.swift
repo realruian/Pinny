@@ -27,6 +27,8 @@ enum InlineCaptureOutcome {
   case saved(URL)
   case copied
   case pinned
+  /// The selection (AppKit global screen rect) handed to a live long screenshot.
+  case scrollingCapture(CGRect)
   case failure(CaptureError)
 }
 
@@ -655,6 +657,12 @@ final class InlineAreaAnnotateSession: ObservableObject {
     isFinishing = false
   }
 
+  /// Closes the frozen overlay and hands the selection to a live long screenshot.
+  func startScrollingCapture() {
+    guard phase == .annotating, !didComplete, !isFinishing, let selectionRect else { return }
+    complete(.scrollingCapture(screenRect(for: selectionRect)))
+  }
+
   func copyCurrentImage() {
     CaptureTiming.begin("copy action")
     guard phase == .annotating, !didComplete, !isFinishing,
@@ -835,7 +843,7 @@ final class InlineAreaAnnotateSession: ObservableObject {
     guard !didComplete else { return }
     didComplete = true
     switch result {
-    case .saved, .copied, .pinned:
+    case .saved, .copied, .pinned, .scrollingCapture:
       if let selectionRect { InlineAreaRegionHistory.record(screenRect(for: selectionRect)) }
     case .failure:
       break

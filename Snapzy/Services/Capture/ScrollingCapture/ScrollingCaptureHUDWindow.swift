@@ -39,7 +39,7 @@ final class ScrollingCaptureHUDWindow: NSPanel {
     hidesOnDeactivate = false
     collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary]
     appearance = ThemeManager.shared.nsAppearance
-    contentView = NSHostingView(rootView: ScrollingCaptureHUDView(
+    contentView = FirstClickHostingView(rootView: ScrollingCaptureHUDView(
       model: model,
       onStart: onStart,
       onDone: onDone,
@@ -47,7 +47,11 @@ final class ScrollingCaptureHUDWindow: NSPanel {
       onToggleAutoScroll: onToggleAutoScroll
     ))
 
-    modelObservation = model.objectWillChange.sink { [weak self] _ in
+    // Only the phase changes the buttons. The model also publishes live preview frames many
+    // times a second; re-laying out the panel on each of them could swallow a click on Done.
+    modelObservation = model.$phase.removeDuplicates().map { _ in () }
+      .merge(with: model.$isAutoScrolling.removeDuplicates().map { _ in () })
+      .sink { [weak self] _ in
       DispatchQueue.main.async {
         self?.refreshContentSize()
       }
@@ -90,4 +94,10 @@ final class ScrollingCaptureHUDWindow: NSPanel {
 
   override var canBecomeKey: Bool { false }
   override var canBecomeMain: Bool { false }
+}
+
+/// While the user scrolls another app, Pinny is not active; without this the first click on
+/// the non-activating HUD only activates the app and Done needs a second click.
+private final class FirstClickHostingView<Content: View>: NSHostingView<Content> {
+  override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
 }

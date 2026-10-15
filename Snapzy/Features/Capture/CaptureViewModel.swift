@@ -848,6 +848,11 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
           case .saved(let url): lastCaptureResult = .success(url)
           case .failure(let error): lastCaptureResult = .failure(error)
           case .copied, .pinned: lastCaptureResult = nil
+          case .scrollingCapture(let rect):
+            lastCaptureResult = nil
+            // Own windows stay hidden until the long screenshot ends.
+            startLongScreenshot(rect: rect, context: captureContext) { hiddenWindowSession.restore() }
+            return
           }
           hiddenWindowSession.restore()
           if case .failure(let error) = result {
@@ -1863,6 +1868,38 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
     if clearFailures {
       lazyAreaSnapshotFailedDisplayIDs.removeAll()
     }
+  }
+
+  /// Pinny: live long screenshot of an F1 selection. Manual scrolling only; the toolbar under
+  /// the selection copies, pins or saves the stitched image directly.
+  private func startLongScreenshot(
+    rect: CGRect,
+    context: CaptureContext,
+    onEnded: @escaping @MainActor () -> Void
+  ) {
+    let format = resolvedFormat
+    ScrollingCaptureCoordinator.shared.beginSession(
+      rect: rect,
+      saveDirectory: saveDirectory,
+      format: format,
+      prefetchedContentTask: nil,
+      startsImmediately: true,
+      allowsAutoScroll: false,
+      framePaced: true,
+      inlineToolbar: true,
+      onFinished: { [weak self] result in
+        LongScreenshotOutput.perform(
+          result,
+          format: format,
+          context: context,
+          saveDirectoryProvider: { [weak self] in
+            self?.fileAccessManager.ensureExportDirectoryForOperation(
+              promptMessage: L10n.Recording.chooseSaveLocationMessage)
+          }
+        )
+      },
+      onSessionEnded: onEnded
+    )
   }
 
   func captureScrolling() {
