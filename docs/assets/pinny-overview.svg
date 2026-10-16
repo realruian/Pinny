@@ -1,0 +1,215 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 560" width="980" height="560" fill="none">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="980" y2="560" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1E2436"/>
+      <stop offset="52%" stop-color="#2A2644"/>
+      <stop offset="100%" stop-color="#191D2B"/>
+    </linearGradient>
+    <radialGradient id="glow1" cx="25%" cy="25%" r="55%">
+      <stop offset="0%" stop-color="#5E7CE2" stop-opacity="0.32"/>
+      <stop offset="100%" stop-color="#5E7CE2" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="78%" cy="68%" r="50%">
+      <stop offset="0%" stop-color="#A569BD" stop-opacity="0.28"/>
+      <stop offset="100%" stop-color="#A569BD" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="glassBar" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FAFBFD" stop-opacity="0.94"/>
+      <stop offset="100%" stop-color="#ECEEF3" stop-opacity="0.89"/>
+    </linearGradient>
+    <filter id="barShadow" x="-8%" y="-20%" width="116%" height="156%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.26"/>
+      <feDropShadow dx="0" dy="1" stdDeviation="1" flood-color="#000000" flood-opacity="0.12"/>
+    </filter>
+    <filter id="cardShadow" x="-6%" y="-10%" width="112%" height="128%">
+      <feDropShadow dx="0" dy="10" stdDeviation="16" flood-color="#000000" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <!-- Canvas background -->
+  <rect width="980" height="560" rx="20" fill="url(#bgGrad)"/>
+  <rect width="980" height="560" rx="20" fill="url(#glow1)"/>
+  <rect width="980" height="560" rx="20" fill="url(#glow2)"/>
+  <rect x="0.75" y="0.75" width="978.5" height="558.5" rx="19.25" stroke="#FFFFFF" stroke-opacity="0.12" stroke-width="1.5"/>
+
+  <!-- 1. Top-Left Dark Key Chips (Option A: 32pt concentric capsules) -->
+  <g transform="translate(32, 24)">
+    <!-- 全屏 ⌘A -->
+    <rect x="0" y="0" width="98" height="32" rx="16" fill="#141416" fill-opacity="0.82" stroke="#FFFFFF" stroke-opacity="0.12"/>
+    <text x="14" y="20.5" fill="#FFFFFF" font-family="-apple-system, 'PingFang SC', sans-serif" font-size="13" font-weight="500">全屏</text>
+    <rect x="50" y="5" width="43" height="22" rx="11" fill="#FFFFFF" fill-opacity="0.16"/>
+    <text x="71.5" y="20" text-anchor="middle" fill="#FFFFFF" font-family="-apple-system, 'SF Pro Text', sans-serif" font-size="12" font-weight="600">⌘A</text>
+
+    <!-- 整个窗口 Tab -->
+    <g transform="translate(106, 0)">
+      <rect x="0" y="0" width="128" height="32" rx="16" fill="#141416" fill-opacity="0.82" stroke="#FFFFFF" stroke-opacity="0.12"/>
+      <text x="14" y="20.5" fill="#FFFFFF" font-family="-apple-system, 'PingFang SC', sans-serif" font-size="13" font-weight="500">整个窗口</text>
+      <rect x="76" y="5" width="47" height="22" rx="11" fill="#FFFFFF" fill-opacity="0.16"/>
+      <text x="99.5" y="20" text-anchor="middle" fill="#FFFFFF" font-family="-apple-system, 'SF Pro Text', sans-serif" font-size="12" font-weight="600">Tab</text>
+    </g>
+
+    <!-- 上次区域 R -->
+    <g transform="translate(242, 0)">
+      <rect x="0" y="0" width="112" height="32" rx="16" fill="#141416" fill-opacity="0.82" stroke="#FFFFFF" stroke-opacity="0.12"/>
+      <text x="14" y="20.5" fill="#FFFFFF" font-family="-apple-system, 'PingFang SC', sans-serif" font-size="13" font-weight="500">上次区域</text>
+      <rect x="76" y="5" width="31" height="22" rx="11" fill="#FFFFFF" fill-opacity="0.16"/>
+      <text x="91.5" y="20" text-anchor="middle" fill="#FFFFFF" font-family="-apple-system, 'SF Pro Text', sans-serif" font-size="12" font-weight="600">R</text>
+    </g>
+
+    <!-- Right-side section tag -->
+    <text x="916" y="20.5" text-anchor="end" fill="#FFFFFF" fill-opacity="0.55" font-family="-apple-system, 'PingFang SC', sans-serif" font-size="12" font-weight="500">F1 原位截图 · 双胶囊 Liquid Glass 工具栏 · 长截图 · 原位录屏</text>
+  </g>
+
+  <!-- 2. Simulated Selection Frame + Inline Annotations -->
+  <g transform="translate(32, 72)" filter="url(#cardShadow)">
+    <rect x="0" y="0" width="916" height="196" fill="#1E2230"/>
+    <!-- Simulated app window content inside selection -->
+    <rect x="20" y="20" width="210" height="156" rx="10" fill="#272C3F"/>
+    <rect x="36" y="38" width="92" height="10" rx="5" fill="#8E98B8" fill-opacity="0.45"/>
+    <rect x="36" y="60" width="156" height="8" rx="4" fill="#8E98B8" fill-opacity="0.25"/>
+    <rect x="36" y="78" width="134" height="8" rx="4" fill="#8E98B8" fill-opacity="0.25"/>
+    <rect x="36" y="104" width="178" height="54" rx="8" fill="#323952"/>
+
+    <rect x="248" y="20" width="648" height="156" rx="10" fill="#272C3F"/>
+    <rect x="272" y="38" width="180" height="12" rx="6" fill="#E2E8F0" fill-opacity="0.8"/>
+    <rect x="272" y="64" width="380" height="8" rx="4" fill="#94A3B8" fill-opacity="0.35"/>
+    <rect x="272" y="82" width="320" height="8" rx="4" fill="#94A3B8" fill-opacity="0.35"/>
+
+    <!-- Annotation 1: Square-cornered red rectangle (default radius 0) -->
+    <rect x="262" y="28" width="212" height="68" stroke="#FF3B30" stroke-width="3"/>
+
+    <!-- Annotation 2: Arrow pointing to rectangle -->
+    <line x1="548" y1="112" x2="486" y2="72" stroke="#FF3B30" stroke-width="3.2" stroke-linecap="round"/>
+    <path d="M482 69 L500 72 L491 85 Z" fill="#FF3B30"/>
+
+    <!-- Annotation 3: Auto-contrasted filled label text (background = text color, white text, radius 6) -->
+    <rect x="556" y="98" width="192" height="34" rx="6" fill="#FF3B30"/>
+    <text x="652" y="120" text-anchor="middle" fill="#FFFFFF" font-family="'PingFang SC', -apple-system, sans-serif" font-size="14" font-weight="600">直接拖边缘即可移动标注</text>
+
+    <!-- Annotation 4: Counter circle badge -->
+    <circle cx="262" cy="28" r="13" fill="#FF3B30" stroke="#FFFFFF" stroke-width="2"/>
+    <text x="262" y="33" text-anchor="middle" fill="#FFFFFF" font-family="-apple-system, 'SF Pro Text', sans-serif" font-size="13" font-weight="700">1</text>
+
+    <!-- White selection border + L-handles -->
+    <rect x="0.75" y="0.75" width="914.5" height="194.5" stroke="#FFFFFF" stroke-width="1.5"/>
+    <path d="M0 16 V0 H16 M900 0 H916 V16 M0 180 V196 H16 M900 196 H916 V180" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="square"/>
+  </g>
+  <!-- 3. F1 Main Toolbar (48pt Capsule) -->
+  <g transform="translate(32, 280)" filter="url(#barShadow)">
+    <rect x="0" y="0" width="745" height="48" rx="24" fill="url(#glassBar)" stroke="#FFFFFF" stroke-opacity="0.65" stroke-width="1"/>
+    <circle cx="24" cy="24" r="18" fill="#000000" fill-opacity="0.12"/>
+    <g transform="translate(14, 14) scale(0.833333)" opacity="1.0"><path d="M17.4424 9.05302C18.0924 9.63724 18.6219 10.1131 18.9916 10.5169C19.3548 10.9135 19.6885 11.3677 19.7401 11.9188C19.7963 12.5179 19.6102 13.1153 19.2226 13.5757C18.8653 14.0001 18.331 14.1808 17.8076 14.2968C17.2746 14.415 16.5697 14.5001 15.7051 14.6046C15.3109 14.6522 15.0279 14.6873 14.8536 14.7257C14.6458 14.7619 14.6396 14.9628 14.6626 15.0587C14.7134 15.2318 14.8042 15.4601 14.9528 15.8306L16.4434 19.5468C16.5222 19.7432 16.5946 19.9237 16.6452 20.0794C16.6996 20.2468 16.7464 20.436 16.745 20.6483C16.7419 21.1113 16.5554 21.555 16.2251 21.8806C16.0735 22.0301 15.9048 22.1282 15.7469 22.2054C15.6002 22.2771 15.4207 22.3501 15.226 22.4293C15.0313 22.5086 14.8116 22.598 14.6566 22.6491C14.4899 22.704 14.3002 22.7517 14.087 22.7503C13.6223 22.7471 13.1793 22.5572 12.856 22.2245C12.7078 22.072 12.6108 21.9026 12.5345 21.7442C12.4635 21.5968 12.3911 21.4163 12.3123 21.22L12.3123 21.22L10.8216 17.5036C10.673 17.1331 10.5808 16.9055 10.4981 16.7454C10.4039 16.5417 10.2204 16.5928 10.1404 16.6438C9.9883 16.7382 9.76049 16.9111 9.44419 17.1526C8.75002 17.6825 8.18442 18.1143 7.71972 18.4022C7.26425 18.6843 6.75455 18.929 6.20237 18.8735C5.60302 18.8132 5.0546 18.512 4.68055 18.0402C4.33692 17.6067 4.2641 17.0467 4.25185 16.5086C4.23935 15.9598 4.292 15.2474 4.35668 14.372L4.92865 6.54146C5.01354 5.26256 5.08522 4.18258 5.28485 3.37107C5.4958 2.51356 5.8954 1.76945 6.76534 1.41543C7.63686 1.06076 8.44077 1.31715 9.18611 1.78778C9.89016 2.23234 10.6871 2.95954 11.6296 3.81962L17.4423 9.05299L17.4424 9.05302Z" fill="#1d1d1f"/></g>
+    <g transform="translate(52, 14) scale(0.833333)" opacity="0.86"><path d="M1.99219 12C1.99219 9.19974 1.99219 7.79961 2.53715 6.73005C3.01652 5.78924 3.78142 5.02433 4.72223 4.54497C5.79179 4 7.19192 4 9.99219 4H13.9922C16.7924 4 18.1926 4 19.2621 4.54497C20.203 5.02433 20.9679 5.78924 21.4472 6.73005C21.9922 7.79961 21.9922 9.19974 21.9922 12C21.9922 14.8003 21.9922 16.2004 21.4472 17.27C20.9679 18.2108 20.203 18.9757 19.2621 19.455C18.1926 20 16.7925 20 13.9922 20H9.99219C7.19192 20 5.79179 20 4.72223 19.455C3.78142 18.9757 3.01652 18.2108 2.53715 17.27C1.99219 16.2004 1.99219 14.8003 1.99219 12Z" stroke="#1d1d1f" stroke-linejoin="round" stroke-width="1.8"/></g>
+    <g transform="translate(90, 14) scale(0.833333)" opacity="0.86"><path d="M16.5 7.5L6 18" stroke="#1d1d1f" stroke-linecap="round" stroke-width="1.8"/><path d="M8 6.18791C8 6.18791 16.0479 5.50949 17.2692 6.73079C18.4906 7.95209 17.812 16 17.812 16" stroke="#1d1d1f" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/></g>
+    <g transform="translate(128, 14) scale(0.833333)" opacity="0.86"><path d="M15.2141 5.98239L16.6158 4.58063C17.39 3.80646 18.6452 3.80646 19.4194 4.58063C20.1935 5.3548 20.1935 6.60998 19.4194 7.38415L18.0176 8.78591M15.2141 5.98239L6.98023 14.2163C5.93493 15.2616 5.41226 15.7842 5.05637 16.4211C4.70047 17.058 4.3424 18.5619 4 20C5.43809 19.6576 6.94199 19.2995 7.57889 18.9436C8.21579 18.5877 8.73844 18.0651 9.78375 17.0198L18.0176 8.78591M15.2141 5.98239L18.0176 8.78591" stroke="#1d1d1f" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/><path d="M11 20H17" stroke="#1d1d1f" stroke-linecap="round" stroke-width="1.8"/></g>
+    <g transform="translate(166, 14) scale(0.833333)" opacity="0.86"><path d="M6.6777 16.2071L8.79289 18.3223M6.6777 16.2071L2.5 20.5H6.5L8.79289 18.3223M6.6777 16.2071C6.28717 15.8166 6.29534 15.1872 6.63537 14.752C7.42742 13.7383 7.71531 12.8216 7.79924 12.1382C7.89158 11.3863 8.07366 10.5734 8.60933 10.0377L9.50122 9.14828M8.79289 18.3223C9.18342 18.7128 9.81278 18.7047 10.248 18.3646C11.2617 17.5726 12.1784 17.2847 12.8618 17.2008C13.6137 17.1084 14.4266 16.9263 14.9623 16.3907L15.8517 15.4988M15.8517 15.4988L9.50122 9.14828M15.8517 15.4988C16.2422 15.8893 16.8754 15.8893 17.2659 15.4988L21.5 11.2647M9.50122 9.14828C9.1107 8.75776 9.1107 8.12459 9.50122 7.73407L13.7353 3.5" stroke="#1d1d1f" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/></g>
+    <g transform="translate(204, 14) scale(0.833333)" opacity="0.86"><path d="M15 21.001H9" stroke="#1d1d1f" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/><path d="M12 3.00001V21.0008M12 3.00001C13.3874 3.00001 15.1695 3.03055 16.5884 3.17649C17.1885 3.2382 17.4886 3.26906 17.7541 3.37791C18.3066 3.60429 18.7518 4.10063 18.9194 4.67681C19 4.95382 19 5.26992 19 5.90215M12 3.00001C10.6126 3.00001 8.83047 3.03055 7.41161 3.17649C6.8115 3.2382 6.51144 3.26906 6.24586 3.37791C5.69344 3.60429 5.24816 4.10063 5.08057 4.67681C5 4.95382 5 5.26992 5 5.90215" stroke="#1d1d1f" stroke-linecap="round" stroke-width="1.8"/></g>
+    <g transform="translate(242, 14) scale(0.833333)" opacity="0.86"><path d="M9.00034 3.50019V20.5311M15.0003 3.03125V20.5311M20.5 15L3.5 15M20.5 9L3.5 9.00004" stroke="#1d1d1f" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/><path d="M4.31802 19.682C5.63604 21 7.75736 21 12 21C16.2426 21 18.364 21 19.682 19.682C21 18.364 21 16.2426 21 12C21 7.75736 21 5.63604 19.682 4.31802C18.364 3 16.2426 3 12 3C7.75736 3 5.63604 3 4.31802 4.31802C3 5.63604 3 7.75736 3 12C3 16.2426 3 18.364 4.31802 19.682Z" stroke="#1d1d1f" stroke-linejoin="round" stroke-width="1.8"/></g>
+    <g transform="translate(280, 14) scale(0.833333)" opacity="0.86"><path d="M8 2V9" stroke="#1d1d1f" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/><path d="M8 14L13 9L8.88388 4.88388C8.31794 4.31794 7.55036 4 6.75 4C5.94964 4 5.18206 4.31794 4.61612 4.88388L3.88388 5.61612C3.31794 6.18206 3 6.94964 3 7.75C3 8.55036 3.31794 9.31794 3.88388 9.88388L8 14Z" stroke="#1d1d1f" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/><path d="M13 9L8 14L8.7623 17.0492C8.902 17.608 9.40407 18 9.98006 18C10.313 18 10.6322 17.8678 10.8677 17.6323L16.6323 11.8677C16.8678 11.6322 17 11.313 17 10.9801C17 10.4041 16.608 9.902 16.0492 9.7623L13 9Z" stroke="#1d1d1f" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/><path d="M18 19L20 21M19 15H21M14 20V22" stroke="#1d1d1f" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/></g>
+    <g transform="translate(318, 14) scale(0.833333)" opacity="0.86"><path d="M10.5 8.5L12.5 7V17" stroke="#1d1d1f" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/><path d="M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="#1d1d1f" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/></g>
+    <g transform="translate(356, 14) scale(0.833333)" opacity="0.86"><path d="M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="#1d1d1f" stroke-width="1.8"/><path d="M15 14C15 15.1046 14.1046 16 13 16H12C11.0681 16 10.6022 16 10.2346 15.8478C9.74458 15.6448 9.35523 15.2554 9.15224 14.7654C9 14.3978 9 13.9319 9 13V11C9 10.0681 9 9.60218 9.15224 9.23463C9.35523 8.74458 9.74458 8.35523 10.2346 8.15224C10.6022 8 11.0681 8 12 8H13C14.1046 8 15 8.89543 15 10" stroke="#1d1d1f" stroke-linecap="round" stroke-width="1.8"/></g>
+    <rect x="393" y="13" width="1" height="22" fill="#000000" fill-opacity="0.15"/>
+    <g transform="translate(411, 14) scale(0.833333)" opacity="0.38"><path d="M3 8H15C18.3137 8 21 10.6863 21 14C21 17.3137 18.3137 20 15 20H11" stroke="#1d1d1f" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/><path d="M7 4L5.8462 4.87652C3.94873 6.31801 3 7.03875 3 8C3 8.96125 3.94873 9.68199 5.8462 11.1235L7 12" stroke="#1d1d1f" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/></g>
+    <g transform="translate(449, 14) scale(0.833333)" opacity="0.38"><path d="M21 8H9C5.68629 8 3 10.6863 3 14C3 17.3137 5.68629 20 9 20H13" stroke="#1d1d1f" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/><path d="M17 4L18.1538 4.87652C20.0513 6.31801 21 7.03875 21 8C21 8.96125 20.0513 9.68199 18.1538 11.1235L17 12" stroke="#1d1d1f" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/></g>
+    <rect x="486" y="13" width="1" height="22" fill="#000000" fill-opacity="0.15"/>
+    <g transform="translate(504, 14) scale(0.833333)" opacity="0.88"><path d="M16 7C18.357 7 19.5355 7 20.2678 7.73223C21 8.46447 21 9.64298 21 12C21 14.357 21 15.5355 20.2678 16.2678C19.5355 17 18.357 17 16 17H8C5.64298 17 4.46447 17 3.73223 16.2678C3 15.5355 3 14.357 3 12C3 9.64298 3 8.46447 3.73223 7.73223C4.46447 7 5.64298 7 8 7L16 7Z" stroke="#1d1d1f" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/><path d="M17 2C16.8955 2.54697 16.7107 2.94952 16.3838 3.26777C15.6316 4 14.4211 4 12 4C9.5789 4 8.36835 4 7.61621 3.26777C7.28931 2.94952 7.10449 2.54697 7 2" stroke="#1d1d1f" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/><path d="M17 22C16.8955 21.453 16.7107 21.0505 16.3838 20.7322C15.6316 20 14.4211 20 12 20C9.5789 20 8.36835 20 7.61621 20.7322C7.28931 21.0505 7.10449 21.453 7 22" stroke="#1d1d1f" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/></g>
+    <g transform="translate(542, 14) scale(0.833333)" opacity="0.88"><path d="M2 11C2 7.70017 2 6.05025 3.02513 5.02513C4.05025 4 5.70017 4 9 4H10C13.2998 4 14.9497 4 15.9749 5.02513C17 6.05025 17 7.70017 17 11V13C17 16.2998 17 17.9497 15.9749 18.9749C14.9497 20 13.2998 20 10 20H9C5.70017 20 4.05025 20 3.02513 18.9749C2 17.9497 2 16.2998 2 13V11Z" stroke="#1d1d1f" stroke-width="1.8"/><path d="M17 8.90585L17.1259 8.80196C19.2417 7.05623 20.2996 6.18336 21.1498 6.60482C22 7.02628 22 8.42355 22 11.2181V12.7819C22 15.5765 22 16.9737 21.1498 17.3952C20.2996 17.8166 19.2417 16.9438 17.1259 15.198L17 15.0941" stroke="#1d1d1f" stroke-linecap="round" stroke-width="1.8"/><circle cx="11.5" cy="9.5" r="1.5" stroke="#1d1d1f" stroke-width="1.8"/></g>
+    <rect x="579" y="13" width="1" height="22" fill="#000000" fill-opacity="0.15"/>
+    <g transform="translate(597, 14) scale(0.833333)" opacity="0.88"><path d="M7.5 14.5C7.5 11.2002 7.5 9.55025 8.52513 8.52513C9.55025 7.5 11.2002 7.5 14.5 7.5C17.7998 7.5 19.4497 7.5 20.4749 8.52513C21.5 9.55025 21.5 11.2002 21.5 14.5C21.5 17.7998 21.5 19.4497 20.4749 20.4749C19.4497 21.5 17.7998 21.5 14.5 21.5C11.2002 21.5 9.55025 21.5 8.52513 20.4749C7.5 19.4497 7.5 17.7998 7.5 14.5Z" stroke="#1d1d1f" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/><path d="M7.5 16.5C6.10355 16.5 5.40533 16.5 4.84402 16.3036C3.83866 15.9518 3.0482 15.1613 2.69641 14.156C2.5 13.5947 2.5 12.8964 2.5 11.5V9.5C2.5 6.20017 2.5 4.55025 3.52513 3.52513C4.55025 2.5 6.20017 2.5 9.5 2.5H11.5C12.8964 2.5 13.5947 2.5 14.156 2.69641C15.1613 3.0482 15.9518 3.83866 16.3036 4.84402C16.5 5.40533 16.5 6.10355 16.5 7.5" stroke="#1d1d1f" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/></g>
+    <g transform="translate(635, 14) scale(0.833333)" opacity="0.88"><path d="M3 21L8 16" stroke="#1d1d1f" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/><path d="M13.2585 18.8714C9.51516 18.0215 5.97844 14.4848 5.12853 10.7415C4.99399 10.1489 4.92672 9.85266 5.12161 9.37197C5.3165 8.89129 5.55457 8.74255 6.03071 8.44509C7.10705 7.77265 8.27254 7.55888 9.48209 7.66586C11.1793 7.81598 12.0279 7.89104 12.4512 7.67048C12.8746 7.44991 13.1622 6.93417 13.7376 5.90269L14.4664 4.59604C14.9465 3.73528 15.1866 3.3049 15.7513 3.10202C16.316 2.89913 16.6558 3.02199 17.3355 3.26771C18.9249 3.84236 20.1576 5.07505 20.7323 6.66449C20.978 7.34417 21.1009 7.68401 20.898 8.2487C20.6951 8.8134 20.2647 9.05346 19.4039 9.53358L18.0672 10.2792C17.0376 10.8534 16.5229 11.1406 16.3024 11.568C16.0819 11.9955 16.162 12.8256 16.3221 14.4859C16.4399 15.7068 16.2369 16.88 15.5555 17.9697C15.2577 18.4458 15.1088 18.6839 14.6283 18.8786C14.1477 19.0733 13.8513 19.006 13.2585 18.8714Z" stroke="#1d1d1f" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/></g>
+    <g transform="translate(673, 14) scale(0.833333)" opacity="0.88"><path d="M16.9504 12.1817C17.1981 12.814 16.5076 13.5726 15.1267 15.0899C13.6702 16.6902 12.9201 17.4904 12 17.5C11.0799 17.4904 10.3298 16.6902 8.87331 15.0899C7.49239 13.5726 6.80193 12.814 7.04964 12.1817C7.05868 12.1586 7.06851 12.1359 7.0791 12.1135C7.34928 11.542 8.24477 11.5029 10 11.5002V4.99998C10 4.53501 10 4.30253 10.0511 4.11179C10.1898 3.59414 10.5941 3.1898 11.1118 3.05111C11.3025 3 11.535 3 12 3C12.4649 3 12.6974 3 12.8882 3.05111C13.4058 3.1898 13.8102 3.59414 13.9489 4.11179C14 4.30253 14 4.53501 14 4.99998V11.5002C15.7552 11.5029 16.6507 11.542 16.9209 12.1135C16.9315 12.1359 16.9413 12.1586 16.9504 12.1817Z" stroke="#1d1d1f" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/><path d="M5.00006 21H19.0001" stroke="#1d1d1f" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/></g>
+    <g transform="translate(711, 14) scale(0.833333)" opacity="0.88"><path d="M18 6L6.00081 17.9992M17.9992 18L6 6.00085" stroke="#1d1d1f" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/></g>
+  </g>
+
+  <!-- 4. Secondary Properties Bar (40pt Capsule, 8pt gap below Main Toolbar) -->
+  <g transform="translate(32, 336)" filter="url(#barShadow)">
+    <rect x="0" y="0" width="554" height="40" rx="20" fill="url(#glassBar)" stroke="#FFFFFF" stroke-opacity="0.65" stroke-width="1"/>
+    <!-- Context pill: 矩形 -->
+    <rect x="6" y="6" width="64" height="28" rx="14" fill="#000000" fill-opacity="0.06"/>
+    <g transform="translate(15, 13) scale(0.583333)"><path d="M1.99219 12C1.99219 9.19974 1.99219 7.79961 2.53715 6.73005C3.01652 5.78924 3.78142 5.02433 4.72223 4.54497C5.79179 4 7.19192 4 9.99219 4H13.9922C16.7924 4 18.1926 4 19.2621 4.54497C20.203 5.02433 20.9679 5.78924 21.4472 6.73005C21.9922 7.79961 21.9922 9.19974 21.9922 12C21.9922 14.8003 21.9922 16.2004 21.4472 17.27C20.9679 18.2108 20.203 18.9757 19.2621 19.455C18.1926 20 16.7925 20 13.9922 20H9.99219C7.19192 20 5.79179 20 4.72223 19.455C3.78142 18.9757 3.01652 18.2108 2.53715 17.27C1.99219 16.2004 1.99219 14.8003 1.99219 12Z" stroke="#1d1d1f" stroke-linejoin="round" stroke-width="1.8"/></g>
+    <text x="34" y="24.5" fill="#1D1D1F" font-family="-apple-system, 'PingFang SC', sans-serif" font-size="12" font-weight="600">矩形</text>
+
+    <rect x="79" y="12" width="1" height="16" fill="#000000" fill-opacity="0.15"/>
+
+    <!-- 形状切换 -->
+    <text x="89" y="24" fill="#6E6E73" font-family="-apple-system, 'PingFang SC', sans-serif" font-size="11" font-weight="600">形状</text>
+    <circle cx="133" cy="20" r="14" fill="#000000" fill-opacity="0.12"/>
+    <g transform="translate(125, 12) scale(0.666667)"><path d="M1.99219 12C1.99219 9.19974 1.99219 7.79961 2.53715 6.73005C3.01652 5.78924 3.78142 5.02433 4.72223 4.54497C5.79179 4 7.19192 4 9.99219 4H13.9922C16.7924 4 18.1926 4 19.2621 4.54497C20.203 5.02433 20.9679 5.78924 21.4472 6.73005C21.9922 7.79961 21.9922 9.19974 21.9922 12C21.9922 14.8003 21.9922 16.2004 21.4472 17.27C20.9679 18.2108 20.203 18.9757 19.2621 19.455C18.1926 20 16.7925 20 13.9922 20H9.99219C7.19192 20 5.79179 20 4.72223 19.455C3.78142 18.9757 3.01652 18.2108 2.53715 17.27C1.99219 16.2004 1.99219 14.8003 1.99219 12Z" stroke="#1d1d1f" stroke-linejoin="round" stroke-width="1.8"/></g>
+    <g transform="translate(155, 12) scale(0.666667)"><path d="M1.99219 12C1.99219 9.19974 1.99219 7.79961 2.53715 6.73005C3.01652 5.78924 3.78142 5.02433 4.72223 4.54497C5.79179 4 7.19192 4 9.99219 4H13.9922C16.7924 4 18.1926 4 19.2621 4.54497C20.203 5.02433 20.9679 5.78924 21.4472 6.73005C21.9922 7.79961 21.9922 9.19974 21.9922 12C21.9922 14.8003 21.9922 16.2004 21.4472 17.27C20.9679 18.2108 20.203 18.9757 19.2621 19.455C18.1926 20 16.7925 20 13.9922 20H9.99219C7.19192 20 5.79179 20 4.72223 19.455C3.78142 18.9757 3.01652 18.2108 2.53715 17.27C1.99219 16.2004 1.99219 14.8003 1.99219 12Z" stroke="#6e6e73" stroke-linejoin="round" stroke-width="1.8" fill="#6e6e73"/></g>
+    <g transform="translate(185, 12) scale(0.666667)"><circle cx="12" cy="12" r="10" stroke="#6e6e73" stroke-linejoin="round" stroke-width="1.8"/></g>
+
+    <rect x="214" y="12" width="1" height="16" fill="#000000" fill-opacity="0.15"/>
+
+    <!-- 颜色 -->
+    <text x="224" y="24" fill="#6E6E73" font-family="-apple-system, 'PingFang SC', sans-serif" font-size="11" font-weight="600">颜色</text>
+    <rect x="254" y="6" width="46" height="28" rx="14" fill="#000000" fill-opacity="0.06"/>
+    <circle cx="270" cy="20" r="9" fill="#FF3B30"/>
+    <path d="M285 18 L289 22 L293 18" stroke="#6E6E73" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="316" cy="20" r="9" fill="#FF9F0A"/>
+    <circle cx="342" cy="20" r="9" fill="#30D158"/>
+    <circle cx="368" cy="20" r="9" fill="#0A84FF"/>
+
+    <rect x="389" y="12" width="1" height="16" fill="#000000" fill-opacity="0.15"/>
+
+    <!-- 粗细 -->
+    <text x="399" y="24" fill="#6E6E73" font-family="-apple-system, 'PingFang SC', sans-serif" font-size="11" font-weight="600">粗细</text>
+    <g transform="translate(427, 13) scale(0.583333)"><path d="M2.99609 12H8.99609" stroke="#6e6e73" stroke-linecap="round" stroke-width="1.8"/><path d="M14.9961 12H20.9961" stroke="#6e6e73" stroke-linecap="round" stroke-width="1.8"/><path d="M2.99609 5H5.49609" stroke="#6e6e73" stroke-linecap="round" stroke-width="1.8"/><path d="M10.7461 5H13.2461" stroke="#6e6e73" stroke-linecap="round" stroke-width="1.8"/><path d="M18.4961 5H20.9961" stroke="#6e6e73" stroke-linecap="round" stroke-width="1.8"/><path d="M2.99609 19H20.9961" stroke="#6e6e73" stroke-linecap="round" stroke-width="1.8"/></g>
+    <rect x="446" y="18" width="52" height="4" rx="2" fill="#000000" fill-opacity="0.14"/>
+    <rect x="446" y="18" width="20" height="4" rx="2" fill="#0A7CFF"/>
+    <circle cx="466" cy="20" r="6" fill="#FFFFFF" stroke="#000000" stroke-opacity="0.25"/>
+    <text x="506" y="24" fill="#6E6E73" font-family="-apple-system, 'SF Pro Text', sans-serif" font-size="11" font-weight="600">4</text>
+
+    <!-- Pinned More button (圆角等二级参数统一收纳在「更多」) -->
+    <rect x="518" y="12" width="1" height="16" fill="#000000" fill-opacity="0.15"/>
+    <g transform="translate(526, 12) scale(0.666667)"><path d="M6.00449 12.5V12M18.0045 12.5V12M12.0045 12.5V12M7.00449 12.5C7.00449 11.9477 6.55677 11.5 6.00449 11.5C5.4522 11.5 5.00449 11.9477 5.00449 12.5C5.00449 13.0523 5.4522 13.5 6.00449 13.5C6.55677 13.5 7.00449 13.0523 7.00449 12.5ZM19.0045 12.5C19.0045 11.9477 18.5568 11.5 18.0045 11.5C17.4522 11.5 17.0045 11.9477 17.0045 12.5C17.0045 13.0523 17.4522 13.5 18.0045 13.5C18.5568 13.5 19.0045 13.0523 19.0045 12.5ZM13.0045 12.5C13.0045 11.9477 12.5568 11.5 12.0045 11.5C11.4522 11.5 11.0045 11.9477 11.0045 12.5C11.0045 13.0523 11.4522 13.5 12.0045 13.5C12.5568 13.5 13.0045 13.0523 13.0045 12.5Z" stroke="#1d1d1f" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/></g>
+  </g>
+
+  <!-- 5. Bottom Left: Long Screenshot Resident Bar -->
+  <text x="32" y="424" fill="#FFFFFF" fill-opacity="0.7" font-family="-apple-system, 'PingFang SC', sans-serif" font-size="12" font-weight="600">滚动长截图常驻栏（逐帧拼接 · 回滚裁尾 · 固定元素去重）</text>
+  <g transform="translate(32, 436)" filter="url(#barShadow)">
+    <rect x="0" y="0" width="336" height="48" rx="24" fill="url(#glassBar)" stroke="#FFFFFF" stroke-opacity="0.65" stroke-width="1"/>
+    <text x="58" y="28.5" text-anchor="middle" fill="#6E6E73" font-family="-apple-system, 'SF Pro Text', sans-serif" font-size="12" font-weight="600">1,420 × 5,310</text>
+    <rect x="115" y="13" width="1" height="22" fill="#000000" fill-opacity="0.15"/>
+    <!-- Crop button -->
+    <g transform="translate(133, 14) scale(0.833333)" opacity="0.88"><path d="M4 2V4M22 20H20M16.5 20H10C7.17157 20 5.75736 20 4.87868 19.1213C4 18.2426 4 16.8284 4 14V7.5" stroke="#1d1d1f" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/><path d="M20 22L20 12C20 8.22877 20 6.34315 18.8284 5.17158C17.6569 4 15.7712 4 12 4L2 4" stroke="#1d1d1f" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/></g>
+    <rect x="170" y="13" width="1" height="22" fill="#000000" fill-opacity="0.15"/>
+    <!-- Copy / Pin / Save / Close -->
+    <g transform="translate(188, 14) scale(0.833333)" opacity="0.88"><path d="M7.5 14.5C7.5 11.2002 7.5 9.55025 8.52513 8.52513C9.55025 7.5 11.2002 7.5 14.5 7.5C17.7998 7.5 19.4497 7.5 20.4749 8.52513C21.5 9.55025 21.5 11.2002 21.5 14.5C21.5 17.7998 21.5 19.4497 20.4749 20.4749C19.4497 21.5 17.7998 21.5 14.5 21.5C11.2002 21.5 9.55025 21.5 8.52513 20.4749C7.5 19.4497 7.5 17.7998 7.5 14.5Z" stroke="#1d1d1f" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/><path d="M7.5 16.5C6.10355 16.5 5.40533 16.5 4.84402 16.3036C3.83866 15.9518 3.0482 15.1613 2.69641 14.156C2.5 13.5947 2.5 12.8964 2.5 11.5V9.5C2.5 6.20017 2.5 4.55025 3.52513 3.52513C4.55025 2.5 6.20017 2.5 9.5 2.5H11.5C12.8964 2.5 13.5947 2.5 14.156 2.69641C15.1613 3.0482 15.9518 3.83866 16.3036 4.84402C16.5 5.40533 16.5 6.10355 16.5 7.5" stroke="#1d1d1f" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/></g>
+    <g transform="translate(226, 14) scale(0.833333)" opacity="0.88"><path d="M3 21L8 16" stroke="#1d1d1f" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/><path d="M13.2585 18.8714C9.51516 18.0215 5.97844 14.4848 5.12853 10.7415C4.99399 10.1489 4.92672 9.85266 5.12161 9.37197C5.3165 8.89129 5.55457 8.74255 6.03071 8.44509C7.10705 7.77265 8.27254 7.55888 9.48209 7.66586C11.1793 7.81598 12.0279 7.89104 12.4512 7.67048C12.8746 7.44991 13.1622 6.93417 13.7376 5.90269L14.4664 4.59604C14.9465 3.73528 15.1866 3.3049 15.7513 3.10202C16.316 2.89913 16.6558 3.02199 17.3355 3.26771C18.9249 3.84236 20.1576 5.07505 20.7323 6.66449C20.978 7.34417 21.1009 7.68401 20.898 8.2487C20.6951 8.8134 20.2647 9.05346 19.4039 9.53358L18.0672 10.2792C17.0376 10.8534 16.5229 11.1406 16.3024 11.568C16.0819 11.9955 16.162 12.8256 16.3221 14.4859C16.4399 15.7068 16.2369 16.88 15.5555 17.9697C15.2577 18.4458 15.1088 18.6839 14.6283 18.8786C14.1477 19.0733 13.8513 19.006 13.2585 18.8714Z" stroke="#1d1d1f" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/></g>
+    <g transform="translate(264, 14) scale(0.833333)" opacity="0.88"><path d="M16.9504 12.1817C17.1981 12.814 16.5076 13.5726 15.1267 15.0899C13.6702 16.6902 12.9201 17.4904 12 17.5C11.0799 17.4904 10.3298 16.6902 8.87331 15.0899C7.49239 13.5726 6.80193 12.814 7.04964 12.1817C7.05868 12.1586 7.06851 12.1359 7.0791 12.1135C7.34928 11.542 8.24477 11.5029 10 11.5002V4.99998C10 4.53501 10 4.30253 10.0511 4.11179C10.1898 3.59414 10.5941 3.1898 11.1118 3.05111C11.3025 3 11.535 3 12 3C12.4649 3 12.6974 3 12.8882 3.05111C13.4058 3.1898 13.8102 3.59414 13.9489 4.11179C14 4.30253 14 4.53501 14 4.99998V11.5002C15.7552 11.5029 16.6507 11.542 16.9209 12.1135C16.9315 12.1359 16.9413 12.1586 16.9504 12.1817Z" stroke="#1d1d1f" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/><path d="M5.00006 21H19.0001" stroke="#1d1d1f" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/></g>
+    <g transform="translate(302, 14) scale(0.833333)" opacity="0.88"><path d="M18 6L6.00081 17.9992M17.9992 18L6 6.00085" stroke="#1d1d1f" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/></g>
+  </g>
+
+  <!-- 6. Bottom Right: In-Place Recording Playback Bar -->
+  <text x="443" y="424" fill="#FFFFFF" fill-opacity="0.7" font-family="-apple-system, 'PingFang SC', sans-serif" font-size="12" font-weight="600">录屏原位回放栏（循环播放 · MP4/GIF 按需转换 · 重录可返回）</text>
+  <g transform="translate(443, 436)" filter="url(#barShadow)">
+    <rect x="0" y="0" width="505" height="48" rx="24" fill="url(#glassBar)" stroke="#FFFFFF" stroke-opacity="0.65" stroke-width="1"/>
+    <!-- Pause -->
+    <g transform="translate(14, 14) scale(0.833333)" opacity="0.88"><path d="M4 7C4 5.58579 4 4.87868 4.43934 4.43934C4.87868 4 5.58579 4 7 4C8.41421 4 9.12132 4 9.56066 4.43934C10 4.87868 10 5.58579 10 7V17C10 18.4142 10 19.1213 9.56066 19.5607C9.12132 20 8.41421 20 7 20C5.58579 20 4.87868 20 4.43934 19.5607C4 19.1213 4 18.4142 4 17V7Z" stroke="#1d1d1f" stroke-width="1.8"/><path d="M14 7C14 5.58579 14 4.87868 14.4393 4.43934C14.8787 4 15.5858 4 17 4C18.4142 4 19.1213 4 19.5607 4.43934C20 4.87868 20 5.58579 20 7V17C20 18.4142 20 19.1213 19.5607 19.5607C19.1213 20 18.4142 20 17 20C15.5858 20 14.8787 20 14.4393 19.5607C14 19.1213 14 18.4142 14 17V7Z" stroke="#1d1d1f" stroke-width="1.8"/></g>
+    <!-- Time & Scrubber -->
+    <text x="52" y="28.5" fill="#6E6E73" font-family="-apple-system, 'SF Pro Text', sans-serif" font-size="12" font-weight="600">0:04</text>
+    <rect x="86" y="22" width="96" height="4" rx="2" fill="#000000" fill-opacity="0.14"/>
+    <rect x="86" y="22" width="34" height="4" rx="2" fill="#0A7CFF"/>
+    <circle cx="120" cy="24" r="6" fill="#FFFFFF" stroke="#000000" stroke-opacity="0.25"/>
+    <text x="190" y="28.5" fill="#6E6E73" font-family="-apple-system, 'SF Pro Text', sans-serif" font-size="12" font-weight="600">0:18</text>
+
+    <rect x="228" y="13" width="1" height="22" fill="#000000" fill-opacity="0.15"/>
+
+    <!-- MP4 / GIF Capsule Switch -->
+    <rect x="238" y="8" width="92" height="32" rx="16" fill="#000000" fill-opacity="0.07"/>
+    <rect x="240" y="10" width="44" height="28" rx="14" fill="#FFFFFF" stroke="#000000" stroke-opacity="0.1"/>
+    <text x="262" y="28" text-anchor="middle" fill="#1D1D1F" font-family="-apple-system, 'SF Pro Text', sans-serif" font-size="11" font-weight="700">MP4</text>
+    <text x="306" y="28" text-anchor="middle" fill="#6E6E73" font-family="-apple-system, 'SF Pro Text', sans-serif" font-size="11" font-weight="600">GIF</text>
+
+    <rect x="339" y="13" width="1" height="22" fill="#000000" fill-opacity="0.15"/>
+
+    <!-- Record Again / Copy / Save / Close -->
+    <g transform="translate(357, 14) scale(0.833333)" opacity="0.88"><path d="M20.5 5.5H9.5C5.78672 5.5 3 8.18503 3 12" stroke="#1d1d1f" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/><path d="M3.5 18.5H14.5C18.2133 18.5 21 15.815 21 12" stroke="#1d1d1f" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/><path d="M18.5 3C18.5 3 21 4.84122 21 5.50002C21 6.15882 18.5 8 18.5 8" stroke="#1d1d1f" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/><path d="M5.49998 16C5.49998 16 3.00001 17.8412 3 18.5C2.99999 19.1588 5.5 21 5.5 21" stroke="#1d1d1f" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/></g>
+    <g transform="translate(395, 14) scale(0.833333)" opacity="0.88"><path d="M7.5 14.5C7.5 11.2002 7.5 9.55025 8.52513 8.52513C9.55025 7.5 11.2002 7.5 14.5 7.5C17.7998 7.5 19.4497 7.5 20.4749 8.52513C21.5 9.55025 21.5 11.2002 21.5 14.5C21.5 17.7998 21.5 19.4497 20.4749 20.4749C19.4497 21.5 17.7998 21.5 14.5 21.5C11.2002 21.5 9.55025 21.5 8.52513 20.4749C7.5 19.4497 7.5 17.7998 7.5 14.5Z" stroke="#1d1d1f" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/><path d="M7.5 16.5C6.10355 16.5 5.40533 16.5 4.84402 16.3036C3.83866 15.9518 3.0482 15.1613 2.69641 14.156C2.5 13.5947 2.5 12.8964 2.5 11.5V9.5C2.5 6.20017 2.5 4.55025 3.52513 3.52513C4.55025 2.5 6.20017 2.5 9.5 2.5H11.5C12.8964 2.5 13.5947 2.5 14.156 2.69641C15.1613 3.0482 15.9518 3.83866 16.3036 4.84402C16.5 5.40533 16.5 6.10355 16.5 7.5" stroke="#1d1d1f" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/></g>
+    <g transform="translate(433, 14) scale(0.833333)" opacity="0.88"><path d="M16.9504 12.1817C17.1981 12.814 16.5076 13.5726 15.1267 15.0899C13.6702 16.6902 12.9201 17.4904 12 17.5C11.0799 17.4904 10.3298 16.6902 8.87331 15.0899C7.49239 13.5726 6.80193 12.814 7.04964 12.1817C7.05868 12.1586 7.06851 12.1359 7.0791 12.1135C7.34928 11.542 8.24477 11.5029 10 11.5002V4.99998C10 4.53501 10 4.30253 10.0511 4.11179C10.1898 3.59414 10.5941 3.1898 11.1118 3.05111C11.3025 3 11.535 3 12 3C12.4649 3 12.6974 3 12.8882 3.05111C13.4058 3.1898 13.8102 3.59414 13.9489 4.11179C14 4.30253 14 4.53501 14 4.99998V11.5002C15.7552 11.5029 16.6507 11.542 16.9209 12.1135C16.9315 12.1359 16.9413 12.1586 16.9504 12.1817Z" stroke="#1d1d1f" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/><path d="M5.00006 21H19.0001" stroke="#1d1d1f" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/></g>
+    <g transform="translate(471, 14) scale(0.833333)" opacity="0.88"><path d="M18 6L6.00081 17.9992M17.9992 18L6 6.00085" stroke="#1d1d1f" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/></g>
+  </g>
+
+  <!-- Footer caption -->
+  <text x="490" y="528" text-anchor="middle" fill="#FFFFFF" fill-opacity="0.45" font-family="-apple-system, 'PingFang SC', sans-serif" font-size="12">F2 贴图：无边框纯图直角窗口 · 跨显示器（含上方外接屏）自由拖拽 · 光标中心滚轮缩放 · 双击复制原始分辨率并关闭</text>
+</svg>
