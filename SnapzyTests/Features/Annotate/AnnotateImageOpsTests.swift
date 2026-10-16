@@ -210,11 +210,8 @@ final class AnnotateImageOpsTests: XCTestCase {
           // Routed before the drawing-tool intent is consulted.
           XCTAssertEqual(unselected, .draw, "\(tool) unselected")
           XCTAssertEqual(selected, .draw, "\(tool) selected")
-        case .text, .counter:
-          XCTAssertEqual(unselected, .selectNow(item: rectangle, editTextOnClick: false), "\(tool) unselected")
-          XCTAssertEqual(selected, .moveSelection(anchor: rectangle, editTextOnClick: false), "\(tool) selected")
         default:
-          XCTAssertEqual(unselected, .drawThenMaybeSelect(candidate: rectangle), "\(tool) unselected")
+          XCTAssertEqual(unselected, .selectNow(item: rectangle, editTextOnClick: false), "\(tool) unselected")
           XCTAssertEqual(selected, .moveSelection(anchor: rectangle, editTextOnClick: false), "\(tool) selected")
         }
       }
@@ -225,7 +222,7 @@ final class AnnotateImageOpsTests: XCTestCase {
     XCTAssertEqual(intent(.text, text), .selectNow(item: text, editTextOnClick: true))
     XCTAssertEqual(intent(.text, rectangle), .selectNow(item: rectangle, editTextOnClick: false))
     XCTAssertEqual(intent(.counter, text), .selectNow(item: text, editTextOnClick: false))
-    XCTAssertEqual(intent(.rectangle, text), .drawThenMaybeSelect(candidate: text))
+    XCTAssertEqual(intent(.rectangle, text), .selectNow(item: text, editTextOnClick: false))
     // An already-selected text still drag-moves with the Text tool (rule 2),
     // but a click without movement enters edit mode (D-2). Other tools on a
     // selected text, and the Text tool on a selected shape, only move.

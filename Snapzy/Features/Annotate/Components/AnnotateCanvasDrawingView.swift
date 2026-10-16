@@ -231,12 +231,12 @@ enum DrawingToolPressIntent: Equatable {
   /// selection. A click leaves it as it is, except that the Text tool on a
   /// selected text annotation enters edit mode (`editTextOnClick`).
   case moveSelection(anchor: AnnotationItem, editTextOnClick: Bool)
-  /// Click-to-place tools (Text, Counter) select the hit item immediately; a
-  /// drag then moves it. The Text tool on a text annotation enters edit mode
+  /// Every drawing tool selects the hit item immediately; a drag then moves
+  /// it (Pinny follows PixPin here). The Text tool on a text annotation enters edit mode
   /// when the press ends as a click (`editTextOnClick`).
   case selectNow(item: AnnotationItem, editTextOnClick: Bool)
-  /// Drag tools start drawing as usual; if the gesture ends as a click, the
-  /// candidate is selected instead of committing a drawing.
+  /// Upstream routing for drag tools (draw, select on click). Pinny's routing
+  /// no longer produces it; kept so the gesture handling stays intact.
   case drawThenMaybeSelect(candidate: AnnotationItem)
   /// Draw or place a new annotation (no edge hit, or Option held).
   case draw
@@ -1163,14 +1163,10 @@ final class DrawingCanvasNSView: NSView {
       )
     }
 
-    switch tool {
-    case .text:
-      return .selectNow(item: edgeHit, editTextOnClick: isTextHit)
-    case .counter:
-      return .selectNow(item: edgeHit, editTextOnClick: false)
-    default:
-      return .drawThenMaybeSelect(candidate: edgeHit)
-    }
+    // Pinny follows PixPin: a press on any item's edge grabs it, so a drag
+    // moves it straight away (including the one just drawn) and a click
+    // selects it. Option still draws over an edge.
+    return .selectNow(item: edgeHit, editTextOnClick: tool == .text && isTextHit)
   }
 
   private func beginAnnotationDrag(anchor annotation: AnnotationItem, at imagePoint: CGPoint) {
