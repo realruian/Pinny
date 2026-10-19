@@ -306,9 +306,8 @@ private struct InlineAreaAnnotateRootView: View {
 
   var body: some View {
     GeometryReader { geometry in
-      // The finer-grained AX element highlight (a button, a popup, an element inside a browser
-      // page) takes priority over the whole-window highlight when both are present.
-      let hoveredHighlightScreenRect = session.hoveredSmartElementRect ?? session.hoveredWindowCandidate?.target.frame
+      // Detected elements by default, whole windows after Tab; see `hoverTargetsWindows`.
+      let hoveredHighlightScreenRect = session.hoverHighlightScreenRect
       let hoveredWindowDesktopRect = hoveredHighlightScreenRect.map {
         InlineAreaAnnotateSession.localFrame(for: $0, in: session.desktopFrame)
       }
@@ -477,7 +476,7 @@ private struct InlineAreaAnnotateRootView: View {
         // A highlighted element alone (menu bar, Dock, desktop icons, or before the window
         // list has loaded) is clickable too.
         if pendingWindowSelectionStart == nil, session.selectionRect == nil,
-           session.hoveredWindowCandidate != nil || session.hoveredSmartElementRect != nil {
+           session.hoverHighlightScreenRect != nil {
           // Don't commit to a manual drag yet — the gesture might resolve as a click on the
           // hovered window instead; crossing the threshold below promotes it to a real drag.
           pendingWindowSelectionStart = value.startLocation
@@ -518,12 +517,11 @@ private struct InlineAreaAnnotateRootView: View {
           // window (or, if a finer element was detected, that element) rather than an (empty,
           // sub-threshold) manual region.
           pendingWindowSelectionStart = nil
-          let clickPoint = screenPoint(fromDesktopPoint: desktopPoint(for: value.location))
-          if let smartElementRect = session.hoveredSmartElementRect,
-             smartElementRect.insetBy(dx: -2, dy: -2).contains(clickPoint) {
+          // Captures exactly what is highlighted: the element, or the window after Tab.
+          if session.hoverTargetsWindows || !session.autoDetectElementUnderCursor {
+            if let candidate = session.hoveredWindowCandidate { session.selectWindow(candidate) }
+          } else if let smartElementRect = session.hoveredSmartElementRect {
             session.selectElement(atScreenRect: smartElementRect)
-          } else if let candidate = session.hoveredWindowCandidate {
-            session.selectWindow(candidate)
           }
           cursorIndicatorPoint = nil
           session.refreshHoverCursor()
@@ -3425,6 +3423,19 @@ private struct InlineAreaCaptureActions: View {
 
 private struct InlineAreaSelectionDimShape: Shape {
   var hole: CGRect?
+
+  /// Lets the cutout slide with the border between hover highlights.
+  var animatableData: AnimatablePair<AnimatablePair<CGFloat, CGFloat>, AnimatablePair<CGFloat, CGFloat>> {
+    get {
+      let rect = hole ?? .zero
+      return AnimatablePair(AnimatablePair(rect.minX, rect.minY), AnimatablePair(rect.width, rect.height))
+    }
+    set {
+      guard hole != nil else { return }
+      hole = CGRect(x: newValue.first.first, y: newValue.first.second,
+                    width: newValue.second.first, height: newValue.second.second)
+    }
+  }
 
   func path(in rect: CGRect) -> Path {
     var path = Path(rect)

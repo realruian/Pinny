@@ -627,7 +627,7 @@ final class InlineAreaAnnotateSessionTests: XCTestCase {
     let backTab = try makeKeyEvent(keyCode: 48, characters: "\t", flags: .shift)
     let appSwitch = try makeKeyEvent(keyCode: 48, characters: "\t", flags: .command)
     XCTAssertEqual(InlineAreaAnnotateSession.keyAction(for: tab, source: .local, phase: .selecting,
-      hasTextResponder: false, hasKeyWindow: true), .selectWindow)
+      hasTextResponder: false, hasKeyWindow: true), .toggleWindowMode)
     // Pinny removed expand / shrink of the detected element.
     XCTAssertEqual(InlineAreaAnnotateSession.keyAction(for: backTab, source: .local, phase: .selecting,
       hasTextResponder: false, hasKeyWindow: true), .passThrough)

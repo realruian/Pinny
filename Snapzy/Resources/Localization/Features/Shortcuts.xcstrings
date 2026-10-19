@@ -3339,13 +3339,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Capture the whole window"
+            "value": "Switch between element and window detection"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "整个窗口"
+            "value": "切换元素 / 窗口识别"
           }
         }
       }

@@ -42,6 +42,29 @@ final class SmartElementQueryServiceTests: XCTestCase {
     XCTAssertFalse(service.selectAdjacentCandidate(towardParent: true))
   }
 
+  func testCoarseFirstAnswerAtNewSpotIsAskedAgainBeforeShowing() throws {
+    guard !NSScreen.screens.isEmpty else { throw XCTSkip("Requires display") }
+    // Claude: the first hit test at the Context card answers with the whole window content.
+    let content = AXElementSnapshot(role: "AXGroup", position: CGPoint(x: 10, y: 40), size: CGSize(width: 700, height: 500))
+    let sidebar = AXElementSnapshot(role: "AXGroup", position: CGPoint(x: 20, y: 50),
+      size: CGSize(width: 160, height: 400), parent: { content })
+    let card = AXElementSnapshot(role: "AXGroup", position: CGPoint(x: 400, y: 60),
+      size: CGSize(width: 200, height: 60), parent: { content })
+    let service = SmartElementQueryService(
+      snapshotProvider: FakeAXSnapshotProvider(snapshotForCall: [sidebar, content, card]),
+      permissionChecker: { true }, coarseRetryMilliseconds: 20)
+    var received: [CGRect?] = []
+    service.elementDetectedPublisher.sink { received.append($0) }.store(in: &cancellables)
+    service.queryElement(at: CGPoint(x: 60, y: 100), pid: 1)
+    XCTAssertEqual(received.last??.width, 160)
+    service.queryElement(at: CGPoint(x: 450, y: 80), pid: 1)
+    XCTAssertEqual(received.count, 1, "The coarse window-sized answer must not flash")
+    let retried = expectation(description: "Asked again")
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { retried.fulfill() }
+    wait(for: [retried], timeout: 1)
+    XCTAssertEqual(received.map { $0?.width }, [160, 200])
+  }
+
   func testHoverStabilizesNestedChangesAndCancelDiscardsDelayedResult() throws {
     guard !NSScreen.screens.isEmpty else { throw XCTSkip("Requires display") }
     // Both groups are panel-sized, so either may be the default target.

@@ -2997,7 +2997,7 @@ nonisolated enum L10n {
   /// Pinny: keys available inside the F1 capture overlay and on pinned images.
   enum PinnyKeyReference {
     static let selectingSection = string("preferences-shortcuts.pinny-selecting-section", defaultValue: "While choosing an area", comment: "Pinny capture key reference")
-    static let selectWindow = string("preferences-shortcuts.pinny-select-window", defaultValue: "Capture the whole window", comment: "Pinny capture key reference")
+    static let selectWindow = string("preferences-shortcuts.pinny-select-window", defaultValue: "Switch between element and window detection", comment: "Pinny capture key reference")
     static let selectDisplay = string("preferences-shortcuts.pinny-select-display", defaultValue: "Capture the whole display", comment: "Pinny capture key reference")
     static let lastRegion = string("preferences-shortcuts.pinny-last-region", defaultValue: "Use the last captured region", comment: "Pinny capture key reference")
     static let copyColor = string("preferences-shortcuts.pinny-copy-color", defaultValue: "Copy the color under the cursor", comment: "Pinny capture key reference")

@@ -9,6 +9,7 @@ import AppKit
 import Combine
 import CoreGraphics
 import Foundation
+import SwiftUI
 
 struct InlineAreaAnnotateDisplay: Identifiable {
   let displayID: CGDirectDisplayID
@@ -51,7 +52,8 @@ nonisolated enum InlineAreaKeyAction: Equatable {
   case copyCurrentImage
   case copyMagnifierColor
   case selectDisplay
-  case selectWindow
+  /// Tab while choosing an area: hover between detected elements and whole windows.
+  case toggleWindowMode
   /// Arrow keys after a selection exists; see `InlineAreaSelectionNudge`.
   case adjustSelection(InlineAreaSelectionNudge)
   /// `,` (older) / `.` (newer) through recently captured regions.
@@ -214,6 +216,30 @@ final class InlineAreaAnnotateSession: ObservableObject {
   /// priority over the whole-window highlight, mirroring plain area screenshot's
   /// `hoveredSmartElementRect`. Arrives asynchronously — see `subscribeToSmartElementHighlights`.
   @Published var hoveredSmartElementRect: CGRect?
+  /// Pinny: hovering highlights detected elements by default; Tab switches to whole windows and
+  /// back. The other mode's highlight never stands in while an answer is pending.
+  @Published private(set) var hoverTargetsWindows = false
+
+  /// What the pointer would capture on click, in AppKit global screen coordinates.
+  var hoverHighlightScreenRect: CGRect? {
+    if hoverTargetsWindows || !autoDetectElementUnderCursor {
+      return hoveredWindowCandidate?.target.frame
+    }
+    return hoveredSmartElementRect
+  }
+
+  /// Moving between detected elements or windows slides the border and the dim cutout:
+  /// 180 ms, decelerating — measured PixPin transitions take 130-170 ms with the same shape.
+  static let hoverSlideAnimation = Animation.timingCurve(0.33, 1, 0.68, 1, duration: 0.18)
+
+  /// Changes a hover highlight, sliding from the previous one; the first highlight just appears.
+  private func slideHover(_ change: () -> Void) {
+    if hoverHighlightScreenRect == nil {
+      change()
+    } else {
+      withAnimation(Self.hoverSlideAnimation) { change() }
+    }
+  }
 
   let state: AnnotateState
   let desktopFrame: CGRect
@@ -332,8 +358,14 @@ final class InlineAreaAnnotateSession: ObservableObject {
       .receive(on: DispatchQueue.main)
       .sink { [weak self] rect in
         guard let self, autoDetectElementUnderCursor, phase == .selecting else { return }
-        hoveredSmartElementRect = rect
-        if let rect { rememberRecognizedElement(rect) }
+        // Keep the last element through an empty answer; the whole window is Tab's job.
+        guard let rect else { return }
+        if hoverTargetsWindows {
+          hoveredSmartElementRect = rect
+        } else if rect != hoveredSmartElementRect {
+          slideHover { self.hoveredSmartElementRect = rect }
+        }
+        rememberRecognizedElement(rect)
       }
   }
 
@@ -377,14 +409,21 @@ final class InlineAreaAnnotateSession: ObservableObject {
   /// (AppKit global screen coordinates, bottom-left origin).
   func updateHoveredWindow(atScreenPoint point: CGPoint) {
     guard phase == .selecting else { return }
-    if let rect = hoveredSmartElementRect, !rect.insetBy(dx: -2, dy: -2).contains(point) {
-      hoveredSmartElementRect = nil
-    }
-    guard autoDetectWindowUnderCursor else {
+    // The element highlight stays until the next answer replaces it, so moving between
+    // elements slides instead of dropping back to the whole window in between.
+    guard autoDetectWindowUnderCursor || hoverTargetsWindows else {
       hoveredWindowCandidate = nil
       return
     }
-    hoveredWindowCandidate = windowSelectionSnapshot?.hitTest(at: point)
+    let candidate = windowSelectionSnapshot?.hitTest(at: point)
+    if candidate?.target != hoveredWindowCandidate?.target {
+      if hoverTargetsWindows {
+        slideHover { self.hoveredWindowCandidate = candidate }
+      } else {
+        hoveredWindowCandidate = candidate
+      }
+    }
+    guard !hoverTargetsWindows else { return }
     // Also layers in element-level detection (a button, a popup, an element inside a browser
     // page) on top of the whole-window highlight, when that's separately turned on — the
     // result arrives later via `subscribeToSmartElementHighlights` and updates
@@ -634,8 +673,8 @@ final class InlineAreaAnnotateSession: ObservableObject {
     case .selectDisplay:
       selectDisplayUnderPointer()
       return true
-    case .selectWindow:
-      selectWindowUnderPointer()
+    case .toggleWindowMode:
+      toggleWindowMode()
       return true
     case .adjustSelection(let nudge):
       return adjustSelection(nudge)
@@ -742,20 +781,14 @@ final class InlineAreaAnnotateSession: ObservableObject {
     return bestMatch?.displayID ?? primaryDisplayID
   }
 
-  /// The whole window under the pointer; the display when no window is detected there.
-  /// Tab works with window detection switched off or the window list still loading: the list
-  /// is fetched on demand. Over no window (the desktop) nothing is selected rather than
-  /// silently taking the whole screen.
-  func selectWindowUnderPointer() {
+  /// Tab: hover whole windows instead of detected elements, and back. The window list is
+  /// fetched on demand when window detection is off or it has not loaded yet.
+  func toggleWindowMode() {
     guard phase == .selecting else { return }
     let local = selectionPointerLocation ?? currentDesktopMouseLocation
     let screenPoint = CGPoint(x: desktopFrame.minX + local.x, y: desktopFrame.maxY - local.y)
-    if let candidate = hoveredWindowCandidate ?? windowSelectionSnapshot?.hitTest(at: screenPoint) {
-      selectWindow(candidate)
-      return
-    }
-    guard windowSelectionSnapshot == nil else { return }
-    if windowSelectionTask == nil {
+    slideHover { self.hoverTargetsWindows.toggle() }
+    if hoverTargetsWindows, windowSelectionSnapshot == nil, windowSelectionTask == nil {
       startWindowSelectionQuery(
         prefetchedContentTask: nil,
         excludeOwnApplication: excludesOwnApplicationFromWindows,
@@ -764,10 +797,13 @@ final class InlineAreaAnnotateSession: ObservableObject {
     }
     let pending = windowSelectionTask
     Task { [weak self] in
-      await pending?.value
-      guard let self, self.phase == .selecting,
-            let candidate = self.windowSelectionSnapshot?.hitTest(at: screenPoint) else { return }
-      self.selectWindow(candidate)
+      if self?.windowSelectionSnapshot == nil { await pending?.value }
+      guard let self, self.phase == .selecting else { return }
+      if !self.hoverTargetsWindows {
+        // Ask for the element under the pointer again; it may have changed meanwhile.
+        SmartElementQueryService.shared.cancelPendingQueries()
+      }
+      self.updateHoveredWindow(atScreenPoint: screenPoint)
     }
   }
 
@@ -1019,7 +1055,8 @@ final class InlineAreaAnnotateSession: ObservableObject {
   /// (or a two-finger swipe toward you with natural scrolling) selects the parent, down the
   /// child. Trackpad deltas accumulate so one gesture moves one level per notch-sized step.
   private func changeElementLevel(for event: NSEvent) -> Bool {
-    guard selectionStartPoint == nil, autoDetectElementUnderCursor, hoveredSmartElementRect != nil else {
+    guard selectionStartPoint == nil, autoDetectElementUnderCursor, !hoverTargetsWindows,
+          hoveredSmartElementRect != nil else {
       elementLevelScrollAccumulator = 0
       return false
     }
@@ -1211,13 +1248,13 @@ final class InlineAreaAnnotateSession: ObservableObject {
       if event.type == .keyDown, event.keyCode == 0,
          event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command,
          source == .local || hasKeyWindow { return .selectDisplay }
-      // Pinny, while choosing an area: R reuses the last captured region, Tab takes the whole
-      // window under the pointer. After a selection exists, R is the rectangle tool again.
+      // Pinny, while choosing an area: R reuses the last captured region, Tab switches between
+      // element and window detection. After a selection exists, R is the rectangle tool again.
       if event.type == .keyDown, ownsKeyboard, !hasTextResponder, plainKey {
         if event.keyCode == 15 || event.charactersIgnoringModifiers?.lowercased() == "r" {
           return .recallRegion(older: true)
         }
-        if event.keyCode == 48 { return .selectWindow }
+        if event.keyCode == 48 { return .toggleWindowMode }
       }
       if matchesCancelShortcut(event) {
         return .cancel

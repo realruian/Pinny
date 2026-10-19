@@ -38,6 +38,7 @@ final class SmartElementQueryService {
     let point: CGPoint
     let pid: Int32?
     let revision: UInt64
+    var isRetry = false
   }
   private struct Resolution {
     let rects: [CGRect] // AX top-left coordinates, no live AX references cross the queue.
@@ -57,6 +58,7 @@ final class SmartElementQueryService {
   private var pendingChange: DispatchWorkItem?
   private var pendingRect: CGRect?
   private let stabilizationMilliseconds: Int
+  private let coarseRetryMilliseconds: Int
   private let detectedSubject = PassthroughSubject<CGRect?, Never>()
   private var cancellables = Set<AnyCancellable>()
   private var lastEmittedRect: CGRect?
@@ -73,12 +75,14 @@ final class SmartElementQueryService {
     snapshotProvider: AXSnapshotProviding = AXAccessibilitySnapshotProvider(),
     permissionChecker: @escaping () -> Bool = { AXIsProcessTrusted() },
     debounceMilliseconds: Int = 25,
-    stabilizationMilliseconds: Int = 120
+    stabilizationMilliseconds: Int = 120,
+    coarseRetryMilliseconds: Int = 50
   ) {
     self.snapshotProvider = snapshotProvider
     self.permissionChecker = permissionChecker
     self.debounceMilliseconds = debounceMilliseconds
     self.stabilizationMilliseconds = stabilizationMilliseconds
+    self.coarseRetryMilliseconds = coarseRetryMilliseconds
     bindPipeline()
   }
 
@@ -108,7 +112,7 @@ final class SmartElementQueryService {
         queryInFlight = false
         if request.revision == revision {
           latestRequest = nil
-          apply(result, point: request.point, pid: request.pid)
+          apply(result, point: request.point, pid: request.pid, isRetry: request.isRetry)
         }
         if let next = queuedRequest {
           queuedRequest = nil
@@ -226,7 +230,7 @@ final class SmartElementQueryService {
                       preferredIndex: AXElementInspector.preferredIndex(in: options), permissionGranted: true)
   }
 
-  private func apply(_ result: Resolution, point: CGPoint, pid: Int32?) {
+  private func apply(_ result: Resolution, point: CGPoint, pid: Int32?, isRetry: Bool = false) {
     guard result.permissionGranted else {
       logPermissionDeniedOnce()
       cancelPendingChange()
@@ -263,6 +267,19 @@ final class SmartElementQueryService {
     let oldAXRect = oldRect.map { rect in
       let height = CGDisplayBounds(CGMainDisplayID()).height
       return CGRect(x: rect.minX, y: height - rect.maxY, width: rect.width, height: rect.height)
+    }
+    // Chromium answers the first hit test at a new spot with a coarse ancestor (often the whole
+    // window) and the real element a moment later. Leaving a block for something that swallows
+    // it — or for nothing — is asked again before it flashes on screen.
+    if !isRetry, sameOwner, let oldRect, let oldAXRect, coarseRetryMilliseconds > 0,
+       !oldAXRect.insetBy(dx: -2, dy: -2).contains(point),
+       nextRect.map({ $0.insetBy(dx: -1, dy: -1).contains(oldRect) }) ?? true {
+      cancelPendingChange()
+      let retry = Request(point: point, pid: pid, revision: revision, isRetry: true)
+      DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(coarseRetryMilliseconds)) { [weak self] in
+        self?.enqueue(retry)
+      }
+      return
     }
     if sameOwner, let oldAXRect, oldAXRect.insetBy(dx: -2, dy: -2).contains(point),
        stabilizationMilliseconds > 0 {
