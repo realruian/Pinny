@@ -1684,7 +1684,7 @@ final class AnnotateCoreTests: XCTestCase {
 
   // 4
   @MainActor
-  func testCanvasRectangleToolDragOnUnselectedEdgeDrawsNewRectangle() throws {
+  func testCanvasRectangleToolDragOnUnselectedEdgeMovesIt() throws {
     let state = makeAnnotateState()
     let existing = AnnotationItem(
       type: .rectangle,
@@ -1695,15 +1695,16 @@ final class AnnotateCoreTests: XCTestCase {
     state.selectedTool = .rectangle
     let canvas = makeClickSelectCanvas(state: state)
 
+    // Pinny follows PixPin: a press on any edge grabs the item, so the drag
+    // moves it instead of drawing a new rectangle.
     drag(canvas, from: CGPoint(x: 10, y: 50), to: CGPoint(x: 160, y: 120))
 
-    XCTAssertEqual(state.annotations.count, 2)
-    XCTAssertEqual(state.annotations[0].id, existing.id)
-    XCTAssertEqual(state.annotations[0].bounds, existing.bounds)
-    let created = try XCTUnwrap(state.annotations.last)
-    XCTAssertEqual(created.type, .rectangle)
-    XCTAssertEqual(created.bounds, CGRect(x: 10, y: 50, width: 150, height: 70))
-    XCTAssertEqual(state.selectedAnnotationId, created.id)
+    XCTAssertEqual(state.annotations.count, 1)
+    let moved = try XCTUnwrap(state.annotations.first)
+    XCTAssertEqual(moved.id, existing.id)
+    XCTAssertEqual(moved.bounds, existing.bounds.offsetBy(dx: 150, dy: 70))
+    XCTAssertEqual(state.selectedAnnotationIds, [existing.id])
+    XCTAssertEqual(state.selectedTool, .rectangle)
   }
 
   // 5
@@ -2130,10 +2131,11 @@ final class AnnotateCoreTests: XCTestCase {
     canvas.mouseUp(with: makeMouseEvent(type: .leftMouseUp, location: last))
   }
 
-  // MARK: F1 - a just-drawn (auto-selected) item does not steal the next stroke
+  // MARK: F1 - a just-drawn (auto-selected) item moves like any other edge hit
+  // (Pinny follows PixPin; Option still draws over an edge)
 
   @MainActor
-  func testCanvasLineToolSecondLineStartingOnJustDrawnLineDrawsInsteadOfMovingIt() throws {
+  func testCanvasLineToolDragStartingOnJustDrawnLineMovesIt() throws {
     let state = makeAnnotateState()
     state.selectedTool = .line
     let canvas = makeClickSelectCanvas(state: state)
@@ -2145,13 +2147,11 @@ final class AnnotateCoreTests: XCTestCase {
     // On the stroke near B, outside B's 8-point resize handle.
     drag(canvas, from: CGPoint(x: 190, y: 100), to: CGPoint(x: 250, y: 200))
 
-    XCTAssertEqual(state.annotations.count, 2)
-    XCTAssertEqual(state.annotations[0].id, first.id)
-    XCTAssertEqual(state.annotations[0].bounds, first.bounds)
-    XCTAssertEqual(state.annotations[0].type, first.type)
-    let second = try XCTUnwrap(state.annotations.last)
-    XCTAssertEqual(second.type, .line(start: CGPoint(x: 190, y: 100), end: CGPoint(x: 250, y: 200)))
-    XCTAssertEqual(state.selectedAnnotationIds, [second.id])
+    XCTAssertEqual(state.annotations.count, 1)
+    let moved = try XCTUnwrap(state.annotations.first)
+    XCTAssertEqual(moved.id, first.id)
+    XCTAssertEqual(moved.type, .line(start: CGPoint(x: 110, y: 200), end: CGPoint(x: 260, y: 200)))
+    XCTAssertEqual(state.selectedAnnotationIds, [first.id])
   }
 
   @MainActor
@@ -2174,7 +2174,7 @@ final class AnnotateCoreTests: XCTestCase {
   }
 
   @MainActor
-  func testCanvasPencilStrokeStartingOnJustDrawnStrokeDrawsSecondPath() throws {
+  func testCanvasPencilStrokeStartingOnJustDrawnStrokeMovesIt() throws {
     let state = makeAnnotateState()
     state.selectedTool = .pencil
     let canvas = makeClickSelectCanvas(state: state)
@@ -2187,14 +2187,18 @@ final class AnnotateCoreTests: XCTestCase {
 
     stroke(canvas, through: [CGPoint(x: 150, y: 150), CGPoint(x: 150, y: 200), CGPoint(x: 150, y: 250)])
 
-    XCTAssertEqual(state.annotations.count, 2)
-    XCTAssertEqual(state.annotations[0].id, first.id)
-    XCTAssertEqual(state.annotations[0].type, first.type)
-    XCTAssertEqual(state.annotations[0].bounds, first.bounds)
-    guard case .path(let points) = state.annotations[1].type else {
-      return XCTFail("Expected a second path, got \(state.annotations[1].type)")
+    XCTAssertEqual(state.annotations.count, 1)
+    let moved = try XCTUnwrap(state.annotations.first)
+    XCTAssertEqual(moved.id, first.id)
+    // A move may pad a flat path's bounds to a minimum height, so check the
+    // points (and the bounds' centre) rather than the exact bounds rect.
+    XCTAssertEqual(moved.bounds.midX, first.bounds.midX)
+    XCTAssertEqual(moved.bounds.midY, first.bounds.midY + 100)
+    guard case .path(let originalPoints) = first.type, case .path(let points) = moved.type else {
+      return XCTFail("Expected the stroke to stay a path, got \(moved.type)")
     }
-    XCTAssertEqual(points.first, CGPoint(x: 150, y: 150))
+    XCTAssertEqual(points, originalPoints.map { CGPoint(x: $0.x, y: $0.y + 100) })
+    XCTAssertEqual(state.selectedAnnotationIds, [first.id])
   }
 
   @MainActor
@@ -2756,7 +2760,7 @@ final class AnnotateCoreTests: XCTestCase {
   }
 
   @MainActor
-  func testCanvasRectangleToolDragFromOtherEdgeKeepsSelectionUntilItBecomesADrawing() throws {
+  func testCanvasRectangleToolDragFromOtherEdgeSelectsAndMovesThatItem() throws {
     let state = makeAnnotateState()
     let first = AnnotationItem(
       type: .rectangle,
@@ -2774,15 +2778,15 @@ final class AnnotateCoreTests: XCTestCase {
     let canvas = makeClickSelectCanvas(state: state)
 
     canvas.mouseDown(with: makeMouseEvent(type: .leftMouseDown, location: CGPoint(x: 200, y: 50)))
-    XCTAssertEqual(state.selectedAnnotationIds, [first.id], "Kept while the press may be a click")
+    XCTAssertEqual(state.selectedAnnotationIds, [second.id], "The press on the other edge grabs that item at once")
     canvas.mouseDragged(with: makeMouseEvent(type: .leftMouseDragged, location: CGPoint(x: 260, y: 150)))
-    XCTAssertFalse(state.hasSelectedAnnotations, "Blurred once the press is a drawing")
     canvas.mouseUp(with: makeMouseEvent(type: .leftMouseUp, location: CGPoint(x: 260, y: 150)))
 
-    XCTAssertEqual(state.annotations.count, 3)
-    let created = try XCTUnwrap(state.annotations.last)
-    XCTAssertEqual(created.bounds, CGRect(x: 200, y: 50, width: 60, height: 100))
-    XCTAssertEqual(state.selectedAnnotationIds, [created.id])
+    XCTAssertEqual(state.annotations.count, 2)
+    XCTAssertEqual(state.annotations[0].bounds, first.bounds)
+    XCTAssertEqual(state.annotations[1].id, second.id)
+    XCTAssertEqual(state.annotations[1].bounds, second.bounds.offsetBy(dx: 60, dy: 100))
+    XCTAssertEqual(state.selectedAnnotationIds, [second.id])
   }
 
   // MARK: F11 - Counter clicks, multi-select moves, zoomed drag threshold
