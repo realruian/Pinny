@@ -229,8 +229,9 @@ final class InlineAreaAnnotateSession: ObservableObject {
   }
 
   /// Moving between detected elements or windows slides the border and the dim cutout:
-  /// 180 ms, decelerating — measured PixPin transitions take 130-170 ms with the same shape.
-  static let hoverSlideAnimation = Animation.timingCurve(0.33, 1, 0.68, 1, duration: 0.18)
+  /// 130 ms, ease-out quart: most of the move lands in the first frames. Measured PixPin
+  /// transitions take 130-170 ms; 180 ms felt slightly slow.
+  static let hoverSlideAnimation = Animation.timingCurve(0.25, 1, 0.5, 1, duration: 0.13)
 
   /// Changes a hover highlight, sliding from the previous one; the first highlight just appears.
   private func slideHover(_ change: () -> Void) {

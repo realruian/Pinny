@@ -11,13 +11,13 @@ import AppKit
 import Combine
 import SwiftUI
 
-/// Where the long screenshot toolbar sits: the F1 rule, centered under the selection, above
-/// it when there is no room below, inside its bottom edge when neither fits.
+/// Where the long screenshot toolbar sits: the F1 rule, right-aligned under the selection,
+/// above it when there is no room below, inside its bottom edge when neither fits.
 nonisolated enum LongScreenshotToolbarGeometry {
   static func frame(size: CGSize, selection: CGRect, visibleFrame: CGRect) -> CGRect {
     let gap = InlineAreaLayout.selectionGap
     let padding = InlineAreaLayout.screenPadding
-    let x = min(max(selection.midX - size.width / 2, visibleFrame.minX + padding),
+    let x = min(max(selection.maxX - size.width, visibleFrame.minX + padding),
                 visibleFrame.maxX - padding - size.width)
     let below = selection.minY - gap - size.height
     let above = selection.maxY + gap

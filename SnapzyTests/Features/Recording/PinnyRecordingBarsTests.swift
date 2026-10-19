@@ -32,7 +32,8 @@ final class PinnyRecordingBarsTests: XCTestCase {
       toolbarWidth: PinnyRecordingPrepBar.width(showsBack: false)
     )
     XCTAssertEqual(placement.toolbarWidth, PinnyRecordingPrepBar.width(showsBack: false))
-    XCTAssertEqual(placement.toolbarCenter.x, 550)
+    // Right-aligned with the selection's right edge (x 700).
+    XCTAssertEqual(placement.toolbarCenter.x + placement.toolbarWidth / 2, 700)
     XCTAssertGreaterThan(placement.toolbarCenter.y, 400) // below the selection
   }
 }

@@ -208,11 +208,11 @@ final class LongScreenshotGeometryTests: XCTestCase {
     XCTAssertEqual(rect.minY, 0)
   }
 
-  func testToolbarSitsCenteredBelowTheSelection() {
+  func testToolbarSitsRightAlignedBelowTheSelection() {
     let selection = CGRect(x: 330, y: 400, width: 570, height: 500)
     let frame = LongScreenshotToolbarGeometry.frame(
       size: CGSize(width: 300, height: 68), selection: selection, visibleFrame: visible)
-    XCTAssertEqual(frame.midX, selection.midX, accuracy: 0.5)
+    XCTAssertEqual(frame.maxX, selection.maxX, accuracy: 0.5)
     XCTAssertEqual(frame.maxY, selection.minY - InlineAreaLayout.selectionGap, accuracy: 0.5)
   }
 

@@ -693,7 +693,8 @@ private struct InlineAreaAnnotateRootView: View {
       controlInsets: insets
     )
 
-    InlineAreaControlDeck(session: session, maxWidth: placement.toolbarWidth)
+    let propertiesAbove = showsDetails && placement.propertiesCenter.y < placement.toolbarCenter.y
+    InlineAreaControlDeck(session: session, maxWidth: placement.toolbarWidth, tipsAbove: !propertiesAbove)
       .frame(width: placement.toolbarWidth, height: InlineAreaLayout.toolbarHeight)
       .inlineAreaPanelChrome()
       .position(placement.toolbarCenter)
@@ -701,13 +702,13 @@ private struct InlineAreaAnnotateRootView: View {
       .transaction { $0.animation = nil }
 
     if showsDetails {
-      // Pinny: the secondary bar is its own capsule 8 pt under (or over) the toolbar. It hugs its
-      // content and starts at the toolbar's leading edge, shifting left only when the screen
-      // edge would clip it.
+      // Pinny: the secondary bar is its own capsule 8 pt beyond the toolbar, on the side away from
+      // the selection. It hugs its content and shares the toolbar's right edge, shifting only
+      // when a screen edge would clip it.
       let available = max(0, containerSize.width - insets.controlLeadingPadding - insets.controlTrailingPadding)
       let width = min(available, propertiesContentWidth)
-      let toolbarLeft = placement.toolbarCenter.x - placement.toolbarWidth / 2
-      let left = clamped(toolbarLeft, min: insets.controlLeadingPadding,
+      let toolbarRight = placement.toolbarCenter.x + placement.toolbarWidth / 2
+      let left = clamped(toolbarRight - width, min: insets.controlLeadingPadding,
                          max: containerSize.width - insets.controlTrailingPadding - width)
       Group {
         if let message = session.actionMessage {
@@ -732,6 +733,7 @@ private struct InlineAreaAnnotateRootView: View {
         }
       )
       .inlineAreaPanelChrome(cornerRadius: InlineAreaChrome.propertiesBarCornerRadius)
+      .environment(\.inlineAreaHoverTipAbove, propertiesAbove)
       .position(x: left + width / 2, y: placement.propertiesCenter.y)
       .opacity(propertiesContentWidth > 0 ? 1 : 0)
       .zIndex(10)
@@ -1473,22 +1475,26 @@ enum InlineAreaControlGeometry {
       contentWidth: propertiesContentWidth,
       controlInsets: controlInsets
     )
+    // Right-aligned to the selection: a drag ends at its bottom-right corner, where the pointer
+    // already is. The secondary bar shares the main bar's right edge.
     let toolbarX = clampedControlCenterX(
-      rect.midX,
+      rect.maxX - toolbarWidth / 2,
       width: toolbarWidth,
       containerSize: containerSize,
       controlInsets: controlInsets
     )
     let propertiesX = clampedControlCenterX(
-      rect.midX,
+      toolbarX + toolbarWidth / 2 - propertiesWidth / 2,
       width: propertiesWidth,
       containerSize: containerSize,
       controlInsets: controlInsets
     )
+    // Above or below is decided by the main bar alone, so opening the secondary bar never moves
+    // the main bar; the secondary bar opens on the side facing away from the selection.
     let verticalSide = preferredVerticalSide(
       for: rect,
       containerSize: containerSize,
-      showsProperties: showsProperties,
+      showsProperties: false,
       controlInsets: controlInsets
     )
     let centers = controlCenters(
@@ -1503,9 +1509,8 @@ enum InlineAreaControlGeometry {
       propertiesWidth: propertiesWidth,
       toolbarCenter: CGPoint(x: toolbarX, y: centers.toolbar),
       propertiesCenter: CGPoint(x: propertiesX, y: centers.properties),
-      // The secondary bar always sits under the main bar, so its popovers attach to its bottom
-      // edge and open downward; opening upward would cover the main bar.
-      propertiesPopoverEdge: .bottom
+      // Popovers open away from the main bar so they never cover it.
+      propertiesPopoverEdge: centers.properties < centers.toolbar ? .top : .bottom
     )
   }
 
@@ -1587,26 +1592,31 @@ enum InlineAreaControlGeometry {
     showsProperties: Bool,
     controlInsets: InlineAreaControlInsets
   ) -> (toolbar: CGFloat, properties: CGFloat) {
-    let reservedHeight = InlineAreaLayout.reservedControlHeight(showsProperties: showsProperties)
-    let minGroupCenter = controlInsets.controlTopPadding + reservedHeight / 2
-    let maxGroupCenter = containerSize.height - controlInsets.controlBottomPadding - reservedHeight / 2
-    let rawGroupCenter: CGFloat
+    let toolbarHeight = InlineAreaLayout.toolbarHeight
+    let propertiesHeight = InlineAreaLayout.propertiesHeight
+    let spacing = InlineAreaLayout.controlStackSpacing
+    let top = controlInsets.controlTopPadding
+    let bottom = containerSize.height - controlInsets.controlBottomPadding
 
+    let rawToolbarCenter: CGFloat
     switch side {
     case .above:
-      rawGroupCenter = rect.minY - InlineAreaLayout.selectionGap - reservedHeight / 2
+      rawToolbarCenter = rect.minY - InlineAreaLayout.selectionGap - toolbarHeight / 2
     case .below:
-      rawGroupCenter = rect.maxY + InlineAreaLayout.selectionGap + reservedHeight / 2
+      rawToolbarCenter = rect.maxY + InlineAreaLayout.selectionGap + toolbarHeight / 2
     }
+    let toolbarCenter = clamped(rawToolbarCenter, min: top + toolbarHeight / 2, max: bottom - toolbarHeight / 2)
+    guard showsProperties else { return (toolbarCenter, toolbarCenter) }
 
-    let groupCenter = clamped(rawGroupCenter, min: minGroupCenter, max: maxGroupCenter)
-    let groupTop = groupCenter - reservedHeight / 2
-    let toolbarCenter = groupTop + InlineAreaLayout.toolbarHeight / 2
-    let propertiesCenter = showsProperties
-      ? groupTop + InlineAreaLayout.toolbarHeight + InlineAreaLayout.controlStackSpacing
-      + InlineAreaLayout.propertiesHeight / 2
-      : toolbarCenter
-
+    let belowCenter = toolbarCenter + toolbarHeight / 2 + spacing + propertiesHeight / 2
+    let aboveCenter = toolbarCenter - toolbarHeight / 2 - spacing - propertiesHeight / 2
+    let fitsBelow = belowCenter + propertiesHeight / 2 <= bottom
+    let fitsAbove = aboveCenter - propertiesHeight / 2 >= top
+    let propertiesCenter: CGFloat
+    switch side {
+    case .below: propertiesCenter = fitsBelow || !fitsAbove ? belowCenter : aboveCenter
+    case .above: propertiesCenter = fitsAbove || !fitsBelow ? aboveCenter : belowCenter
+    }
     return (toolbarCenter, propertiesCenter)
   }
 
@@ -1774,6 +1784,8 @@ enum InlineAreaResizeCursor {
 struct InlineAreaControlDeck: View {
   @ObservedObject var session: InlineAreaAnnotateSession
   let maxWidth: CGFloat
+  /// Tips open away from the secondary bar: above unless that bar sits above the toolbar.
+  var tipsAbove = true
 
   var body: some View {
     HStack(spacing: 0) {
@@ -1821,7 +1833,7 @@ struct InlineAreaControlDeck: View {
     }
     .padding(.horizontal, InlineAreaToolbarMetrics.horizontalPadding)
     .frame(width: maxWidth, height: InlineAreaLayout.toolbarHeight)
-    .environment(\.inlineAreaHoverTipAbove, true)
+    .environment(\.inlineAreaHoverTipAbove, tipsAbove)
     .accessibilityElement(children: .contain)
     .accessibilityIdentifier("inline.captureToolbar")
   }

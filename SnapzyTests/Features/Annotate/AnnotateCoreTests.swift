@@ -575,18 +575,18 @@ final class AnnotateCoreTests: XCTestCase {
       controlInsets: .zero
     )
 
-    let reservedHeight = InlineAreaLayout.reservedControlHeight(showsProperties: true)
-    let expectedGroupTop = containerSize.height - InlineAreaLayout.screenPadding - reservedHeight
+    // The main bar sits on the bottom edge; with no room under it the secondary bar opens above.
     XCTAssertEqual(
-      placement.toolbarCenter.y,
-      expectedGroupTop + InlineAreaLayout.toolbarHeight / 2,
+      placement.toolbarCenter.y + InlineAreaLayout.toolbarHeight / 2,
+      containerSize.height - InlineAreaLayout.screenPadding,
       accuracy: 0.0001
     )
     XCTAssertEqual(
       placement.propertiesCenter.y + InlineAreaLayout.propertiesHeight / 2,
-      containerSize.height - InlineAreaLayout.screenPadding,
+      placement.toolbarCenter.y - InlineAreaLayout.toolbarHeight / 2 - InlineAreaLayout.controlStackSpacing,
       accuracy: 0.0001
     )
+    XCTAssertEqual(placement.propertiesPopoverEdge, .top)
     XCTAssertGreaterThan(placement.toolbarCenter.y, containerSize.height / 2)
   }
 
@@ -647,16 +647,60 @@ final class AnnotateCoreTests: XCTestCase {
       controlInsets: .zero
     )
 
-    let reservedHeight = InlineAreaLayout.reservedControlHeight(showsProperties: true)
     XCTAssertEqual(
       placement.toolbarCenter.y,
-      rect.minY - InlineAreaLayout.selectionGap - reservedHeight + InlineAreaLayout.toolbarHeight / 2,
+      rect.minY - InlineAreaLayout.selectionGap - InlineAreaLayout.toolbarHeight / 2,
       accuracy: 0.0001
     )
-    XCTAssertLessThanOrEqual(
+    // Above the selection the secondary bar opens upward, away from it.
+    XCTAssertEqual(
       placement.propertiesCenter.y + InlineAreaLayout.propertiesHeight / 2,
-      rect.minY - InlineAreaLayout.selectionGap + 0.0001
+      placement.toolbarCenter.y - InlineAreaLayout.toolbarHeight / 2 - InlineAreaLayout.controlStackSpacing,
+      accuracy: 0.0001
     )
+    XCTAssertEqual(placement.propertiesPopoverEdge, .top)
+  }
+
+  func testInlineAreaControls_openingSecondaryBarNeverMovesTheToolbar() {
+    let containerSize = CGSize(width: 1512, height: 982)
+    // Room under the selection for the toolbar alone, not for the toolbar and the secondary bar.
+    let below = InlineAreaLayout.selectionGap + InlineAreaLayout.toolbarHeight + InlineAreaLayout.screenPadding + 10
+    let rects = [
+      CGRect(x: 120, y: 200, width: 900, height: 300),
+      CGRect(x: 120, y: 300, width: 900, height: containerSize.height - 300 - below),
+      CGRect(x: 120, y: 500, width: 900, height: 450),
+      CGRect(origin: .zero, size: containerSize),
+    ]
+    for rect in rects {
+      let closed = InlineAreaControlGeometry.placement(
+        for: rect, containerSize: containerSize, showsProperties: false,
+        propertiesContentWidth: 0, controlInsets: .zero
+      )
+      let open = InlineAreaControlGeometry.placement(
+        for: rect, containerSize: containerSize, showsProperties: true,
+        propertiesContentWidth: 0, controlInsets: .zero
+      )
+      XCTAssertEqual(open.toolbarCenter, closed.toolbarCenter, "\(rect)")
+    }
+  }
+
+  func testInlineAreaControls_rightAlignedToSelection() {
+    let containerSize = CGSize(width: 1512, height: 982)
+    let rect = CGRect(x: 300, y: 200, width: 900, height: 300)
+    let placement = InlineAreaControlGeometry.placement(
+      for: rect, containerSize: containerSize, showsProperties: true,
+      propertiesContentWidth: 0, controlInsets: .zero, toolbarWidth: 400
+    )
+    XCTAssertEqual(placement.toolbarCenter.x + placement.toolbarWidth / 2, rect.maxX, accuracy: 0.0001)
+    XCTAssertEqual(placement.propertiesCenter.x + placement.propertiesWidth / 2, rect.maxX, accuracy: 0.0001)
+
+    // A selection narrower than the toolbar near the left edge: the toolbar stays on screen.
+    let narrow = CGRect(x: 20, y: 200, width: 80, height: 80)
+    let shifted = InlineAreaControlGeometry.placement(
+      for: narrow, containerSize: containerSize, showsProperties: false,
+      propertiesContentWidth: 0, controlInsets: .zero, toolbarWidth: 400
+    )
+    XCTAssertGreaterThanOrEqual(shifted.toolbarCenter.x - shifted.toolbarWidth / 2, 0)
   }
 
   func testUnifiedControlsStayTogetherAndOnScreen() {
@@ -670,10 +714,12 @@ final class AnnotateCoreTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(placement.toolbarCenter.x - placement.toolbarWidth / 2, 16)
         XCTAssertLessThanOrEqual(placement.toolbarCenter.x + placement.toolbarWidth / 2, size.width - 16)
         XCTAssertGreaterThanOrEqual(placement.toolbarCenter.y - InlineAreaLayout.toolbarHeight / 2, 16)
+        XCTAssertLessThanOrEqual(placement.toolbarCenter.y + InlineAreaLayout.toolbarHeight / 2, size.height - 16)
+        XCTAssertGreaterThanOrEqual(placement.propertiesCenter.y - InlineAreaLayout.propertiesHeight / 2, 16)
         XCTAssertLessThanOrEqual(placement.propertiesCenter.y + InlineAreaLayout.propertiesHeight / 2, size.height - 16)
-        XCTAssertEqual(placement.propertiesCenter.y - InlineAreaLayout.propertiesHeight / 2,
-                       placement.toolbarCenter.y + InlineAreaLayout.toolbarHeight / 2
-                         + InlineAreaLayout.controlStackSpacing)
+        XCTAssertEqual(abs(placement.propertiesCenter.y - placement.toolbarCenter.y),
+                       InlineAreaLayout.toolbarHeight / 2 + InlineAreaLayout.controlStackSpacing
+                         + InlineAreaLayout.propertiesHeight / 2, accuracy: 0.0001)
       }
     }
   }
