@@ -23,13 +23,18 @@ enum AXElementInspector {
     // Website specific roles
     "AXHeading", "AXParagraph", "AXList", "AXForm", "AXGrid",
     "AXDocument", "AXLandmark", "AXRegion", "AXBlockQuote",
-    "AXComboBox", "AXSlider", "AXDisclosureTriangle", "AXTabGroup"
+    "AXComboBox", "AXSlider", "AXDisclosureTriangle", "AXTabGroup",
+    // Dock icons
+    "AXDockItem"
   ]
 
   /// Roles to reject outright — too coarse or non-renderable.
   static let rejectedRoles: Set<String> = [
     "AXApplication", "AXSystemWide", "AXUnknown",
   ]
+
+  /// Subroles that look like components but draw nothing worth capturing.
+  static let rejectedSubroles: Set<String> = ["AXSeparatorDockItem"]
 
   static let minSide: CGFloat = 12
   /// Electron and web content nest 30+ levels below the window.
@@ -41,7 +46,11 @@ enum AXElementInspector {
     var result: [AXElementSnapshot] = []
     var current: AXElementSnapshot? = snapshot
     for depth in 0..<maxParentDepth {
-      guard let candidate = current else { break }
+      guard let raw = current else { break }
+      guard let candidate = fittedToWindow(raw) else {
+        current = raw.parent
+        continue
+      }
       let rect = candidate.rect
       let validBounds = rect.origin.x.isFinite && rect.origin.y.isFinite
         && rect.width.isFinite && rect.height.isFinite
@@ -63,15 +72,44 @@ enum AXElementInspector {
     return result
   }
 
+  /// Real UI lies inside its window. An element sticking out sideways is an invisible hit area
+  /// (Aside's sidebar splitter reports a 1660x1114 group reaching into the menu bar), so it is
+  /// dropped. Content scrolled partly out of view only sticks out above or below; keep its
+  /// visible part.
+  static func fittedToWindow(_ snapshot: AXElementSnapshot) -> AXElementSnapshot? {
+    guard snapshot.role != "AXWindow", let window = snapshot.containingWindowFrame,
+          window.width > 0, window.height > 0 else { return snapshot }
+    let rect = snapshot.rect
+    if rect.minX < window.minX - 2 || rect.maxX > window.maxX + 2 { return nil }
+    guard rect.minY < window.minY - 2 || rect.maxY > window.maxY + 2 else { return snapshot }
+    let visible = rect.intersection(window)
+    guard !visible.isNull else { return nil }
+    return AXElementSnapshot(
+      role: snapshot.role,
+      subrole: snapshot.subrole,
+      position: visible.origin,
+      size: visible.size,
+      containingWindowFrame: window,
+      parent: { snapshot.parent }
+    )
+  }
+
   private static let componentRoles: Set<String> = [
     "AXGroup", "AXCell", "AXRow", "AXScrollArea", "AXOutline", "AXTable",
     "AXList", "AXGrid", "AXForm", "AXRegion", "AXLandmark", "AXSheet", "AXTabGroup"
   ]
 
-  /// Default selection is the element the system reports under the pointer (the innermost
-  /// candidate), as PixPin does; the scroll wheel then walks to its parent or child.
+  /// Smallest block the default selection may land on. Text lines and single rows are shorter.
+  static let minBlockSize = CGSize(width: 120, height: 40)
+
+  /// Default selection is the first block around the pointer — a card, a panel, the sidebar —
+  /// skipping text lines and rows inside it. The scroll wheel still walks down to them.
+  /// Falls back to the innermost element when nothing below the window is big enough.
   static func preferredIndex(in candidates: [AXElementSnapshot]) -> Int? {
-    candidates.isEmpty ? nil : 0
+    guard !candidates.isEmpty else { return nil }
+    return candidates.firstIndex {
+      $0.role != "AXWindow" && $0.size.width >= minBlockSize.width && $0.size.height >= minBlockSize.height
+    } ?? 0
   }
 
   static func findMeaningful(_ snapshot: AXElementSnapshot) -> AXElementSnapshot? {
@@ -96,6 +134,11 @@ enum AXElementInspector {
       return false
     }
     
+    if let subrole = snapshot.subrole, rejectedSubroles.contains(subrole) {
+      DiagnosticLogger.shared.log(.debug, .capture, "isMeaningful(depth: \(depth)): false (rejected subrole)", context: ["subrole": subrole])
+      return false
+    }
+
     if !acceptableRoles.contains(role) {
       DiagnosticLogger.shared.log(.debug, .capture, "isMeaningful(depth: \(depth)): false (role not in acceptableRoles)", context: ["role": role])
       return false

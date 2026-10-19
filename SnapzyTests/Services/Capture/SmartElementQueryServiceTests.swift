@@ -31,15 +31,15 @@ final class SmartElementQueryServiceTests: XCTestCase {
     var received: [CGRect?] = []
     service.elementDetectedPublisher.sink { received.append($0) }.store(in: &cancellables)
     service.queryElement(at: CGPoint(x: 50, y: 50), pid: 1)
-    XCTAssertEqual(received.last??.width, 24, "Defaults to the element the system reports")
-    XCTAssertTrue(service.selectAdjacentCandidate(towardParent: true))
-    XCTAssertEqual(received.last??.width, 240)
-    service.queryElement(at: CGPoint(x: 51, y: 51), pid: 1)
-    XCTAssertEqual(received.count, 2, "Explicit parent choice must survive small pointer moves")
-    XCTAssertFalse(service.selectAdjacentCandidate(towardParent: true))
+    XCTAssertEqual(received.last??.width, 240, "Defaults to the card around the small icon")
     XCTAssertTrue(service.selectAdjacentCandidate(towardParent: false))
     XCTAssertEqual(received.last??.width, 24)
+    service.queryElement(at: CGPoint(x: 51, y: 51), pid: 1)
+    XCTAssertEqual(received.count, 2, "Explicit child choice must survive small pointer moves")
     XCTAssertFalse(service.selectAdjacentCandidate(towardParent: false))
+    XCTAssertTrue(service.selectAdjacentCandidate(towardParent: true))
+    XCTAssertEqual(received.last??.width, 240)
+    XCTAssertFalse(service.selectAdjacentCandidate(towardParent: true))
   }
 
   func testHoverStabilizesNestedChangesAndCancelDiscardsDelayedResult() throws {

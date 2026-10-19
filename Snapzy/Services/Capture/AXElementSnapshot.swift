@@ -20,22 +20,29 @@ import Foundation
 /// (researcher-01 §7: requesting kAXParentAttribute in a batch can loop).
 struct AXElementSnapshot {
   let role: String?
+  let subrole: String?
   let position: CGPoint
   let size: CGSize
   let containingWindowSize: CGSize?
+  /// The containing window's frame in the same AX top-left coordinates, when known.
+  let containingWindowFrame: CGRect?
   private let parentResolver: () -> AXElementSnapshot?
 
   init(
     role: String?,
+    subrole: String? = nil,
     position: CGPoint,
     size: CGSize,
     containingWindowSize: CGSize? = nil,
+    containingWindowFrame: CGRect? = nil,
     parent: @escaping () -> AXElementSnapshot? = { nil }
   ) {
     self.role = role
+    self.subrole = subrole
     self.position = position
     self.size = size
-    self.containingWindowSize = containingWindowSize
+    self.containingWindowSize = containingWindowSize ?? containingWindowFrame?.size
+    self.containingWindowFrame = containingWindowFrame
     self.parentResolver = parent
   }
 
@@ -90,6 +97,7 @@ protocol AXSnapshotProviding {
 struct AXAccessibilitySnapshotProvider: AXSnapshotProviding {
 
   func snapshot(at point: CGPoint, pid: Int32?) -> AXElementSnapshot? {
+    if let dockItem = Self.dockSnapshot(at: point) { return dockItem }
     let root = pid.map { AXUIElementCreateApplication($0) } ?? AXUIElementCreateSystemWide()
     var element: AXUIElement?
     let error = AXUIElementCopyElementAtPosition(root, Float(point.x), Float(point.y), &element)
@@ -98,6 +106,19 @@ struct AXAccessibilitySnapshotProvider: AXSnapshotProviding {
       return nil
     }
     return Self.snapshot(of: axElement, correction: Self.zoomCorrection(for: axElement))
+  }
+
+  /// The Dock floats above app windows but owns no normal window, so the window under it (or
+  /// the system-wide query, which hits the capture overlay) never reaches it. Ask it first.
+  private static func dockSnapshot(at point: CGPoint) -> AXElementSnapshot? {
+    guard let dock = NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.dock").first
+    else { return nil }
+    var element: AXUIElement?
+    let error = AXUIElementCopyElementAtPosition(
+      AXUIElementCreateApplication(dock.processIdentifier), Float(point.x), Float(point.y), &element)
+    guard error == .success, let element,
+          stringAttribute(of: element, attribute: kAXRoleAttribute) == "AXDockItem" else { return nil }
+    return snapshot(of: element, correction: nil)
   }
 
   fileprivate static func snapshot(of element: AXUIElement, correction: AXZoomCorrection?) -> AXElementSnapshot? {
@@ -110,7 +131,7 @@ struct AXAccessibilitySnapshotProvider: AXSnapshotProviding {
       return nil
     }
 
-    let windowSize = windowSize(for: element)
+    let windowFrame = windowFrame(for: element)
     // Windows are reported by the window server and are never zoomed.
     let rect = role == kAXWindowRole
       ? CGRect(origin: rawPosition, size: rawSize)
@@ -118,9 +139,10 @@ struct AXAccessibilitySnapshotProvider: AXSnapshotProviding {
 
     return AXElementSnapshot(
       role: role,
+      subrole: stringAttribute(of: element, attribute: kAXSubroleAttribute),
       position: rect.origin,
       size: rect.size,
-      containingWindowSize: windowSize,
+      containingWindowFrame: windowFrame,
       parent: { parentSnapshot(of: element, correction: correction) }
     )
   }
@@ -166,7 +188,7 @@ struct AXAccessibilitySnapshotProvider: AXSnapshotProviding {
     return snapshot(of: parentRef as! AXUIElement, correction: correction)
   }
 
-  private static func windowSize(for element: AXUIElement) -> CGSize? {
+  private static func windowFrame(for element: AXUIElement) -> CGRect? {
     var windowRef: CFTypeRef?
     let result = AXUIElementCopyAttributeValue(element, kAXWindowAttribute as CFString, &windowRef)
     guard
@@ -175,7 +197,9 @@ struct AXAccessibilitySnapshotProvider: AXSnapshotProviding {
       CFGetTypeID(windowRef) == AXUIElementGetTypeID()
     else { return nil }
     let windowElement = windowRef as! AXUIElement
-    return sizeValue(of: windowElement, attribute: kAXSizeAttribute)
+    guard let origin = pointValue(of: windowElement, attribute: kAXPositionAttribute),
+          let size = sizeValue(of: windowElement, attribute: kAXSizeAttribute) else { return nil }
+    return CGRect(origin: origin, size: size)
   }
 
   private static func stringAttribute(of element: AXUIElement, attribute: String) -> String? {

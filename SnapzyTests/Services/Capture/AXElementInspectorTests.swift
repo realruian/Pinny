@@ -12,7 +12,7 @@ import XCTest
 
 final class AXElementInspectorTests: XCTestCase {
 
-  func testDefaultsToReportedIconButKeepsCardAndWindowReachable() {
+  func testDefaultsToCardAroundIconButKeepsIconAndWindowReachable() {
     let window = AXElementSnapshot(role: "AXWindow", position: .zero, size: CGSize(width: 800, height: 600))
     let card = AXElementSnapshot(role: "AXGroup", position: CGPoint(x: 20, y: 20),
       size: CGSize(width: 240, height: 160), parent: { window })
@@ -20,16 +20,66 @@ final class AXElementInspectorTests: XCTestCase {
       size: CGSize(width: 24, height: 24), parent: { card })
     let options = AXElementInspector.candidates(icon, at: CGPoint(x: 50, y: 50))
     XCTAssertEqual(options.map(\.role), ["AXImage", "AXGroup", "AXWindow"])
-    XCTAssertEqual(AXElementInspector.preferredIndex(in: options), 0)
+    XCTAssertEqual(AXElementInspector.preferredIndex(in: options), 1)
   }
 
-  func testDefaultsToTextInsideSidebarRow() {
+  func testDefaultsToSidebarAroundRowText() {
     let sidebar = AXElementSnapshot(role: "AXOutline", position: .zero, size: CGSize(width: 180, height: 600))
     let row = AXElementSnapshot(role: "AXRow", position: CGPoint(x: 0, y: 30),
       size: CGSize(width: 180, height: 28), parent: { sidebar })
     let text = AXElementSnapshot(role: "AXStaticText", position: CGPoint(x: 20, y: 35),
       size: CGSize(width: 60, height: 18), parent: { row })
-    XCTAssertEqual(AXElementInspector.findMeaningful(text)?.role, "AXStaticText")
+    XCTAssertEqual(AXElementInspector.findMeaningful(text)?.role, "AXOutline")
+  }
+
+  func testClaudeContextRowDefaultsToWholeCard() {
+    // Measured in Claude: label 345x35 -> 366x35 -> the 366x55 Context card.
+    let window = AXElementSnapshot(role: "AXWindow", position: CGPoint(x: 0, y: 33), size: CGSize(width: 1728, height: 976))
+    let card = AXElementSnapshot(role: "AXGroup", position: CGPoint(x: 1346, y: 275),
+      size: CGSize(width: 366, height: 55), parent: { window })
+    let inner = AXElementSnapshot(role: "AXGroup", position: CGPoint(x: 1346, y: 285),
+      size: CGSize(width: 366, height: 35), parent: { card })
+    let row = AXElementSnapshot(role: "AXGroup", position: CGPoint(x: 1356, y: 285),
+      size: CGSize(width: 345, height: 35), parent: { inner })
+    let options = AXElementInspector.candidates(row, at: CGPoint(x: 1500, y: 302))
+    XCTAssertEqual(options[AXElementInspector.preferredIndex(in: options)!].size, CGSize(width: 366, height: 55))
+  }
+
+  func testDockIconIsSelectedAndSeparatorIsSkipped() {
+    let list = AXElementSnapshot(role: "AXList", position: CGPoint(x: 215, y: 1005), size: CGSize(width: 1298, height: 102))
+    // The Dock reports its icons 5 points taller than the list that holds them.
+    let icon = AXElementSnapshot(role: "AXDockItem", subrole: "AXApplicationDockItem",
+      position: CGPoint(x: 481, y: 1010), size: CGSize(width: 86, height: 102), parent: { list })
+    XCTAssertEqual(AXElementInspector.candidates(icon, at: CGPoint(x: 525, y: 1060)).map(\.role), ["AXDockItem"])
+    let separator = AXElementSnapshot(role: "AXDockItem", subrole: "AXSeparatorDockItem",
+      position: CGPoint(x: 997, y: 1010), size: CGSize(width: 38, height: 102), parent: { list })
+    XCTAssertEqual(AXElementInspector.candidates(separator, at: CGPoint(x: 1000, y: 1050)).map(\.role), ["AXList"])
+  }
+
+  func testElementStickingOutOfWindowSidewaysIsDropped() {
+    // Measured in Aside on the external display: the sidebar splitter reports a 1660x1114 group
+    // that reaches 32 points above the window and past its right edge.
+    let windowFrame = CGRect(x: -97, y: -1050, width: 1920, height: 1050)
+    let window = AXElementSnapshot(role: "AXWindow", position: windowFrame.origin, size: windowFrame.size)
+    let content = AXElementSnapshot(role: "AXGroup", position: windowFrame.origin, size: windowFrame.size,
+      containingWindowFrame: windowFrame, parent: { window })
+    let splitter = AXElementSnapshot(role: "AXGroup", position: CGPoint(x: 195, y: -1082),
+      size: CGSize(width: 1660, height: 1114), containingWindowFrame: windowFrame, parent: { content })
+    let options = AXElementInspector.candidates(splitter, at: CGPoint(x: 214, y: -533))
+    XCTAssertFalse(options.contains { $0.size == CGSize(width: 1660, height: 1114) })
+    XCTAssertEqual(options.last?.role, "AXWindow")
+  }
+
+  func testPostScrolledPartlyOutOfViewKeepsItsVisiblePart() {
+    let windowFrame = CGRect(x: 0, y: 33, width: 1728, height: 976)
+    let window = AXElementSnapshot(role: "AXWindow", position: windowFrame.origin, size: windowFrame.size)
+    let column = AXElementSnapshot(role: "AXGroup", position: CGPoint(x: 500, y: 80),
+      size: CGSize(width: 600, height: 929), containingWindowFrame: windowFrame, parent: { window })
+    let post = AXElementSnapshot(role: "AXGroup", position: CGPoint(x: 500, y: 800),
+      size: CGSize(width: 600, height: 500), containingWindowFrame: windowFrame, parent: { column })
+    let options = AXElementInspector.candidates(post, at: CGPoint(x: 700, y: 900))
+    XCTAssertEqual(options.first?.rect, CGRect(x: 500, y: 800, width: 600, height: 209))
+    XCTAssertEqual(AXElementInspector.preferredIndex(in: options), 0)
   }
 
   // MARK: - Default level (PixPin: the element the system reports; the wheel walks the chain)
