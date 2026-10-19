@@ -30,6 +30,15 @@ private enum ShareableContentCacheMode: String {
 private struct ShareableContentCacheEntry {
   let mode: ShareableContentCacheMode
   let task: ShareableContentPrefetchTask
+  var createdAt = Date()
+
+  /// Desktop-inclusive content feeds the Finder `exceptingWindows` list when desktop
+  /// icons are hidden. A stale list misses Finder windows opened or moved since, and
+  /// those windows then vanish from the capture with the rest of Finder. Reuse it only
+  /// within one capture.
+  var isUsable: Bool {
+    mode != .desktopInclusive || Date().timeIntervalSince(createdAt) < 1
+  }
 }
 
 /// Result type for capture operations
@@ -325,7 +334,7 @@ final class ScreenCaptureManager: ObservableObject {
     guard hasPermission else { return nil }
 
     let cacheMode = shareableContentCacheMode(includeDesktopWindows: includeDesktopWindows)
-    if !forceRefresh, let cached = shareableContentCacheEntry(for: cacheMode) {
+    if !forceRefresh, let cached = shareableContentCacheEntry(for: cacheMode), cached.isUsable {
       return cached.task
     }
 
