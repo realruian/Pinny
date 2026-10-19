@@ -1831,7 +1831,7 @@ final class KeyboardShortcutManager {
 
   private func installFnMonitorsIfNeeded() {
     if fnGlobalMonitor == nil {
-      fnGlobalMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
+      fnGlobalMonitor = NSEvent.addTrustedGlobalKeyMonitor(matching: .keyDown) { [weak self] event in
         MainActor.assumeIsolated {
           self?.handleFnKeyDown(event)
         }

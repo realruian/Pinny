@@ -508,7 +508,7 @@ final class HistoryFloatingManager: ObservableObject {
       return nil
     }
 
-    globalEscapeMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
+    globalEscapeMonitor = NSEvent.addTrustedGlobalKeyMonitor(matching: .keyDown) { [weak self] event in
       guard event.keyCode == 53 else { return }
       Task { @MainActor [weak self] in
         guard let self else { return }

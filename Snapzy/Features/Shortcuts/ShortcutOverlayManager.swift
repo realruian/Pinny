@@ -77,7 +77,7 @@ final class ShortcutOverlayManager {
       return nil
     }
 
-    globalEscapeMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
+    globalEscapeMonitor = NSEvent.addTrustedGlobalKeyMonitor(matching: .keyDown) { [weak self] event in
       guard event.keyCode == 53 else { return }  // Escape
       DispatchQueue.main.async {
         self?.hide()

@@ -136,7 +136,7 @@ final class CaptureDelayCountdownController {
     // Global monitor covers the usual case (another app is frontmost); it only
     // delivers events when Snapzy has Accessibility permission. The local
     // monitor covers Snapzy itself being active.
-    globalKeyMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
+    globalKeyMonitor = NSEvent.addTrustedGlobalKeyMonitor(matching: .keyDown) { [weak self] event in
       guard event.keyCode == 53 else { return }
       Task { @MainActor in self?.cancel() }
     }

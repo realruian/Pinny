@@ -36,7 +36,7 @@ enum ActiveWindowResolver {
   private static func focusedWindowTarget(
     in snapshot: WindowSelectionSnapshot
   ) -> WindowCaptureTarget? {
-    guard AXIsProcessTrusted() else { return nil }
+    guard AccessibilityTrust.isGranted else { return nil }
     guard let frontmostApplication = NSWorkspace.shared.frontmostApplication else { return nil }
     guard let focusedFrame = focusedWindowFrame(forProcessIdentifier: frontmostApplication.processIdentifier) else {
       return nil
@@ -52,6 +52,8 @@ enum ActiveWindowResolver {
   }
 
   private static func focusedWindowFrame(forProcessIdentifier pid: pid_t) -> CGRect? {
+    // Asking another app without trust makes macOS show its "control this Mac" alert.
+    guard AccessibilityTrust.isGranted else { return nil }
     let appElement = AXUIElementCreateApplication(pid)
 
     var focusedWindowRef: CFTypeRef?

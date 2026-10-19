@@ -172,7 +172,7 @@ struct PermissionsView: View {
   }
 
   private func checkAccessibilityPermission() {
-    accessibilityGranted = AXIsProcessTrusted()
+    accessibilityGranted = AccessibilityTrust.isGranted
   }
 
   private func checkExportFolderPermission() {
@@ -260,13 +260,12 @@ struct PermissionsView: View {
   }
 
   private func requestAccessibilityPermission() {
-    if AXIsProcessTrusted() {
+    if AccessibilityTrust.isGranted {
       accessibilityGranted = true
       return
     }
 
-    let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
-    _ = AXIsProcessTrustedWithOptions(options)
+    AccessibilityTrustPrompt.request()
 
     // Keep user on the correct settings page if macOS does not navigate there.
     openSystemSettings(accessibilityURL)

@@ -97,6 +97,8 @@ protocol AXSnapshotProviding {
 struct AXAccessibilitySnapshotProvider: AXSnapshotProviding {
 
   func snapshot(at point: CGPoint, pid: Int32?) -> AXElementSnapshot? {
+    // Asking another app without trust makes macOS show its "control this Mac" alert.
+    guard AccessibilityTrust.isGranted else { return nil }
     if let dockItem = Self.dockSnapshot(at: point) { return dockItem }
     let root = pid.map { AXUIElementCreateApplication($0) } ?? AXUIElementCreateSystemWide()
     var element: AXUIElement?

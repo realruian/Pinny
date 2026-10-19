@@ -183,7 +183,7 @@ struct SnapzyOnboardingPermissionsView: View {
     fileAccessManager.ensureExportLocationInitialized()
     AppIdentityManager.shared.refresh()
     await screenCaptureManager.checkPermission()
-    accessibilityGranted = AXIsProcessTrusted()
+    accessibilityGranted = AccessibilityTrust.isGranted
     exportFolderGranted = fileAccessManager.hasPersistedExportPermission
     microphoneGranted = AVCaptureDevice.authorizationStatus(for: .audio) == .authorized
 
@@ -202,12 +202,11 @@ struct SnapzyOnboardingPermissionsView: View {
   }
 
   private func requestAccessibility() {
-    if AXIsProcessTrusted() {
+    if AccessibilityTrust.isGranted {
       accessibilityGranted = true
       return
     }
-    let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
-    _ = AXIsProcessTrustedWithOptions(options)
+    AccessibilityTrustPrompt.request()
     Task { await refreshPermissions() }
   }
 

@@ -157,6 +157,8 @@ final class QuickAccessHoverShortcutRegistry {
   }
 
   private func installEventTap() -> Bool {
+    // A key tap without Accessibility trust only triggers the system alert.
+    guard AccessibilityTrust.isGranted else { return false }
     let eventMask = CGEventMask(1) << CGEventMask(CGEventType.keyDown.rawValue)
     guard let eventTap = CGEvent.tapCreate(
       tap: .cgSessionEventTap,
@@ -187,7 +189,7 @@ final class QuickAccessHoverShortcutRegistry {
   }
 
   private func installMonitorFallback() {
-    globalKeyMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) {
+    globalKeyMonitor = NSEvent.addTrustedGlobalKeyMonitor(matching: .keyDown) {
       [weak self] event in
       MainActor.assumeIsolated {
         _ = self?.handleObservedKeyDown(event)

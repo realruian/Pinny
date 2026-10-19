@@ -2091,10 +2091,10 @@ final class ScreenRecordingManager: NSObject, ObservableObject {
     let requiresDesktopWindowEnumeration = excludeDesktopIconsFromCapture || excludeDesktopWidgetsFromCapture
     if requiresDesktopWindowEnumeration {
       // Finder/widget exclusion needs desktop windows in the shareable snapshot.
-      return try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
+      return try await ShareableContentGate.load(includeDesktopWindows: true)
     }
 
-    return try await SCShareableContent.current
+    return try await ShareableContentGate.load()
   }
 
   private func updateContentFilter(for activeStream: SCStream) async {

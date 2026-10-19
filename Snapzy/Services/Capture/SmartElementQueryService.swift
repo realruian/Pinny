@@ -73,7 +73,7 @@ final class SmartElementQueryService {
 
   init(
     snapshotProvider: AXSnapshotProviding = AXAccessibilitySnapshotProvider(),
-    permissionChecker: @escaping () -> Bool = { AXIsProcessTrusted() },
+    permissionChecker: @escaping () -> Bool = { AccessibilityTrust.isGranted },
     debounceMilliseconds: Int = 25,
     stabilizationMilliseconds: Int = 120,
     coarseRetryMilliseconds: Int = 50
@@ -190,16 +190,15 @@ final class SmartElementQueryService {
   /// Prompt the user for Accessibility permission if not already granted.
   /// Returns `true` if permission is already granted at call time.
   ///
-  /// Deliberately calls `AXIsProcessTrusted()` directly (not the injected
+  /// Deliberately calls `AccessibilityTrust.isGranted` directly (not the injected
   /// `permissionChecker`) — the system prompt must reflect real TCC trust,
   /// not a test fake. Tests that need to assert prompt behavior should
   /// instead exercise the `queryElement` path, which uses the injectable
   /// checker.
   @discardableResult
   func ensureAccessibilityPermission() -> Bool {
-    if AXIsProcessTrusted() { return true }
-    let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
-    _ = AXIsProcessTrustedWithOptions(options)
+    if AccessibilityTrust.isGranted { return true }
+    AccessibilityTrustPrompt.request()
     DiagnosticLogger.shared.log(
       .warning,
       .capture,
@@ -333,5 +332,38 @@ final class SmartElementQueryService {
       .capture,
       "Smart element capture: accessibility not trusted; emitting nil"
     )
+  }
+}
+
+/// Accessibility trust without side effects in unit-test hosts. On macOS 27 even
+/// `AccessibilityTrust.isGranted` makes an untrusted process show the "would like to control this Mac"
+/// alert, and every test run used to stack another one. Test hosts are never trusted, so they
+/// answer false without asking; the installed app asks the system as before.
+nonisolated enum AccessibilityTrust {
+  static let isUnitTestHost = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+
+  static var isGranted: Bool {
+    isUnitTestHost ? false : AXIsProcessTrusted()
+  }
+}
+
+/// Asks macOS for Accessibility trust, showing the system prompt. Unit-test hosts never prompt.
+enum AccessibilityTrustPrompt {
+  static func request() {
+    guard !AccessibilityTrust.isUnitTestHost else { return }
+    let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
+    _ = AXIsProcessTrustedWithOptions(options)
+  }
+}
+
+extension NSEvent {
+  /// Key events from other apps need Accessibility trust. Without it the monitor receives
+  /// nothing and only makes macOS show its "control this Mac" alert, so it is not installed.
+  static func addTrustedGlobalKeyMonitor(
+    matching mask: NSEvent.EventTypeMask,
+    handler: @escaping (NSEvent) -> Void
+  ) -> Any? {
+    guard AccessibilityTrust.isGranted else { return nil }
+    return addGlobalMonitorForEvents(matching: mask, handler: handler)
   }
 }

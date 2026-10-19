@@ -85,7 +85,7 @@ struct CaptureEventTapDependencies {
 extension CaptureEventTapDependencies {
   static func live(eventMask: CGEventMask) -> CaptureEventTapDependencies {
     CaptureEventTapDependencies(
-      isAccessibilityTrusted: { AXIsProcessTrusted() },
+      isAccessibilityTrusted: { AccessibilityTrust.isGranted },
       createTap: { callback, userInfo in
         CGEvent.tapCreate(
           tap: .cgSessionEventTap,
@@ -168,9 +168,8 @@ final class CaptureEventTapController {
   /// system prompt reflects reality — mirrors `SmartElementQueryService`.
   @discardableResult
   func ensureAccessibilityPermission() -> Bool {
-    if AXIsProcessTrusted() { return true }
-    let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
-    _ = AXIsProcessTrustedWithOptions(options)
+    if AccessibilityTrust.isGranted { return true }
+    AccessibilityTrustPrompt.request()
     DiagnosticLogger.shared.log(
       .warning,
       .capture,

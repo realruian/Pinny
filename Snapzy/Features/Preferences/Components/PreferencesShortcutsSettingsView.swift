@@ -55,7 +55,7 @@ struct ShortcutsSettingsView: View {
   @State private var isConfirmedDisable: Bool = false
   @State private var hasSystemConflict: Bool = false
   @State private var isRefreshingConflict: Bool = false
-  @State private var accessibilityGranted: Bool = AXIsProcessTrusted()
+  @State private var accessibilityGranted: Bool = AccessibilityTrust.isGranted
 
   private let manager = KeyboardShortcutManager.shared
   private let validator = ShortcutValidationService.shared
@@ -683,10 +683,10 @@ struct ShortcutsSettingsView: View {
     }
     .formStyle(.grouped)
     .onAppear {
-      accessibilityGranted = AXIsProcessTrusted()
+      accessibilityGranted = AccessibilityTrust.isGranted
     }
     .onReceive(NotificationCenter.default.publisher(for: NSWindow.didBecomeKeyNotification)) { _ in
-      accessibilityGranted = AXIsProcessTrusted()
+      accessibilityGranted = AccessibilityTrust.isGranted
     }
     .safeAreaInset(edge: .bottom) {
       HStack {

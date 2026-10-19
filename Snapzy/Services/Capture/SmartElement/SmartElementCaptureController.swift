@@ -149,7 +149,7 @@ final class SmartElementCaptureController: NSObject {
       Task { @MainActor in self?.cancel() }
       return nil
     }
-    globalKeyMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
+    globalKeyMonitor = NSEvent.addTrustedGlobalKeyMonitor(matching: .keyDown) { [weak self] event in
       guard event.keyCode == UInt16(kVK_Escape) else { return }
       Task { @MainActor in self?.cancel() }
     }

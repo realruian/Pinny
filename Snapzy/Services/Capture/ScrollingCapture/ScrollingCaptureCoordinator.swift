@@ -598,14 +598,11 @@ final class ScrollingCaptureCoordinator {
   }
 
   private func requestAccessibilityPermissionForAutoScrollIfNeeded() -> Bool {
-    if AXIsProcessTrusted() {
+    if AccessibilityTrust.isGranted {
       return true
     }
 
-    let options = [
-      kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true
-    ] as CFDictionary
-    _ = AXIsProcessTrustedWithOptions(options)
+    AccessibilityTrustPrompt.request()
 
     sessionModel?.setStatus(
       L10n.ScrollingCaptureStatus.autoScrollNeedsAccessibility,
@@ -1846,7 +1843,7 @@ final class ScrollingCaptureCoordinator {
       return self.handleSessionEscapeKey() ? nil : event
     }
 
-    globalSessionKeyMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
+    globalSessionKeyMonitor = NSEvent.addTrustedGlobalKeyMonitor(matching: .keyDown) { [weak self] event in
       guard event.keyCode == 53 else { return }
       DispatchQueue.main.async {
         _ = self?.handleSessionEscapeKey()

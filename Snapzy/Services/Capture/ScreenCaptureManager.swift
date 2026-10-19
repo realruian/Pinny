@@ -18,6 +18,24 @@ import ScreenCaptureKit
 private let logger = Logger(subsystem: "Snapzy", category: "ScreenCaptureManager")
 typealias ShareableContentPrefetchTask = Task<SCShareableContent, Error>
 
+/// Lists shareable content without side effects in unit-test hosts. Asking ScreenCaptureKit
+/// without Screen Recording access makes macOS show its "would like to record this computer's
+/// screen" alert, and every test run used to stack another one; untrusted test hosts get an
+/// error instead, as the denied call would have returned.
+nonisolated enum ShareableContentGate {
+  struct NotPermittedInTests: Error {}
+
+  static func load(includeDesktopWindows: Bool = false) async throws -> SCShareableContent {
+    if AccessibilityTrust.isUnitTestHost, !CGPreflightScreenCaptureAccess() {
+      throw NotPermittedInTests()
+    }
+    if includeDesktopWindows {
+      return try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
+    }
+    return try await ShareableContentGate.load()
+  }
+}
+
 private enum ShareableContentCacheMode: String {
   case standard = "standard"
   case desktopInclusive = "desktop-inclusive"
@@ -229,10 +247,13 @@ final class ScreenCaptureManager: ObservableObject {
       return hasPermission
     }
 
+    // Unit-test hosts never ask: each request would leave another system alert on screen.
+    if AccessibilityTrust.isUnitTestHost { return false }
+
     // Primary: ScreenCaptureKit triggers the native permission dialog (macOS 13-14)
     // and auto-adds the app to the Screen Recording list.
     do {
-      _ = try await SCShareableContent.current
+      _ = try await ShareableContentGate.load()
       // If we reach here, the system granted access.
       requiresRelaunchToActivate = false
       updatePermissionStatus(systemGranted: true)
@@ -1577,7 +1598,7 @@ final class ScreenCaptureManager: ObservableObject {
   /// Get list of available displays
   func getAvailableDisplays() async -> [SCDisplay] {
     do {
-      let content = try await SCShareableContent.current
+      let content = try await ShareableContentGate.load()
       return content.displays
     } catch {
       DiagnosticLogger.shared.log(.warning, .capture, "Failed to get available displays", context: ["error": error.localizedDescription])
@@ -2648,10 +2669,7 @@ final class ScreenCaptureManager: ObservableObject {
   }
 
   private func fetchShareableContent(includeDesktopWindows: Bool) async throws -> SCShareableContent {
-    if includeDesktopWindows {
-      return try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
-    }
-    return try await SCShareableContent.current
+    try await ShareableContentGate.load(includeDesktopWindows: includeDesktopWindows)
   }
 
   private func makeShareableContentPrefetchTask(includeDesktopWindows: Bool) -> ShareableContentPrefetchTask {

@@ -23,7 +23,7 @@ final class KeystrokeMonitorService {
     guard !isRunning else { return }
     isRunning = true
 
-    globalKeyDownMonitor = NSEvent.addGlobalMonitorForEvents(
+    globalKeyDownMonitor = NSEvent.addTrustedGlobalKeyMonitor(
       matching: [.keyDown]
     ) { [weak self] event in
       MainActor.assumeIsolated {

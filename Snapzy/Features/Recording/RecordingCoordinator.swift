@@ -210,7 +210,7 @@ final class RecordingCoordinator: ObservableObject {
       return event
     }
 
-    globalEscapeMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
+    globalEscapeMonitor = NSEvent.addTrustedGlobalKeyMonitor(matching: .keyDown) { [weak self] event in
       guard self?.isPreRecordKeyEvent(event) == true else { return }
       DispatchQueue.main.async {
         _ = self?.handlePreRecordKeyEvent(event)

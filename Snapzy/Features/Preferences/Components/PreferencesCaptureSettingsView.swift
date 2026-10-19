@@ -43,7 +43,7 @@ struct CaptureSettingsView: View {
   @AppStorage(PreferencesKeys.screenshotDelayedCaptureSeconds)
   private var delayedCaptureSeconds = CaptureDelayOption.defaultValue.seconds
   @AppStorage(PreferencesKeys.screenshotLivePassthrough) private var livePassthrough = true
-  @State private var livePassthroughAccessibilityGranted = AXIsProcessTrusted()
+  @State private var livePassthroughAccessibilityGranted = AccessibilityTrust.isGranted
   @AppStorage(PreferencesKeys.screenshotShowSelectionAreaOverlay) private var showSelectionAreaOverlay = true
   @AppStorage(PreferencesKeys.screenshotReverseMagnifierZoomDirection) private var reverseMagnifierZoomDirection = false
   @AppStorage(PreferencesKeys.screenshotAutoDetectWindowUnderCursor) private var autoDetectWindowUnderCursor = false
@@ -350,7 +350,7 @@ struct CaptureSettingsView: View {
               }
               .padding(.vertical, 4)
               .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
-                livePassthroughAccessibilityGranted = AXIsProcessTrusted()
+                livePassthroughAccessibilityGranted = AccessibilityTrust.isGranted
               }
             }
 

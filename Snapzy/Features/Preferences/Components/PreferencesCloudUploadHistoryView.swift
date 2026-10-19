@@ -108,7 +108,7 @@ final class CloudUploadHistoryWindowController {
       return nil
     }
 
-    globalEscapeMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
+    globalEscapeMonitor = NSEvent.addTrustedGlobalKeyMonitor(matching: .keyDown) { [weak self] event in
       guard Self.isPlainEscape(event) else { return }
       Task { @MainActor [weak self] in
         guard self?.canCloseForEscape == true else { return }

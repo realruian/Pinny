@@ -216,7 +216,7 @@ struct PermissionsSettingsView: View {
   }
 
   private func checkAccessibilityPermission() {
-    accessibilityGranted = AXIsProcessTrusted()
+    accessibilityGranted = AccessibilityTrust.isGranted
   }
 
   private func checkSaveFolderPermission() {

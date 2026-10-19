@@ -348,7 +348,7 @@ enum WindowSelectionQueryService {
         return prefetchedMatch
       }
 
-      let refreshedContent = try await SCShareableContent.current
+      let refreshedContent = try await ShareableContentGate.load()
       return refreshedContent.windows.first { $0.windowID == windowID && $0.isOnScreen }
     } catch {
       DiagnosticLogger.shared.logError(
@@ -381,7 +381,7 @@ enum WindowSelectionQueryService {
     if let prefetchedContentTask {
       return try await prefetchedContentTask.value
     }
-    return try await SCShareableContent.current
+    return try await ShareableContentGate.load()
   }
 
   private static func displayID(for frame: CGRect) -> CGDirectDisplayID? {

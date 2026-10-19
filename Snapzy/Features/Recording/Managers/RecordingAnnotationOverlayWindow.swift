@@ -121,7 +121,7 @@ final class RecordingAnnotationOverlayWindow: NSWindow {
 
   private func startModifierMonitor() {
     // Global monitor — works when overlay is NOT key window
-    globalFlagsMonitor = NSEvent.addGlobalMonitorForEvents(matching: .flagsChanged) { [weak self] event in
+    globalFlagsMonitor = NSEvent.addTrustedGlobalKeyMonitor(matching: .flagsChanged) { [weak self] event in
       MainActor.assumeIsolated {
         self?.handleFlagsChanged(event)
       }
@@ -152,7 +152,7 @@ final class RecordingAnnotationOverlayWindow: NSWindow {
   /// annotation tool; the local monitor consumes matching events addressed to
   /// Snapzy so they do not fall through to the responder chain and beep.
   private func startKeyMonitor() {
-    globalKeyMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
+    globalKeyMonitor = NSEvent.addTrustedGlobalKeyMonitor(matching: .keyDown) { [weak self] event in
       MainActor.assumeIsolated {
         _ = self?.handleToolShortcut(event)
       }

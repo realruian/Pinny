@@ -163,6 +163,8 @@ final class LongScreenshotKeyTap {
   }
 
   private func installEventTap() -> Bool {
+    // A key tap without Accessibility trust only triggers the system alert.
+    guard AccessibilityTrust.isGranted else { return false }
     let mask = CGEventMask(1) << CGEventMask(CGEventType.keyDown.rawValue)
     guard let tap = CGEvent.tapCreate(
       tap: .cgSessionEventTap, place: .headInsertEventTap, options: .defaultTap,

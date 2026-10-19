@@ -22,6 +22,8 @@ enum MinimizedWindowFilter {
   /// Quartz (top-left) frames of the app's windows that Accessibility reports as minimized.
   /// Empty when Accessibility is unavailable, so nothing is filtered without permission.
   nonisolated static func minimizedFrames(pid: pid_t) -> [CGRect] {
+    // Asking another app without trust makes macOS show its "control this Mac" alert.
+    guard AccessibilityTrust.isGranted else { return [] }
     let app = AXUIElementCreateApplication(pid)
     var windowsRef: CFTypeRef?
     guard AXUIElementCopyAttributeValue(app, kAXWindowsAttribute as CFString, &windowsRef) == .success,

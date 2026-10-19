@@ -1006,7 +1006,7 @@ final class InlineAreaAnnotateSession: ObservableObject {
       guard self?.handleKeyEvent(event) == true else { return event }
       return nil
     }
-    globalKeyMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.keyDown, .keyUp]) { [weak self] event in
+    globalKeyMonitor = NSEvent.addTrustedGlobalKeyMonitor(matching: [.keyDown, .keyUp]) { [weak self] event in
       Task { @MainActor in
         _ = self?.handleKeyEvent(event, source: .global)
       }

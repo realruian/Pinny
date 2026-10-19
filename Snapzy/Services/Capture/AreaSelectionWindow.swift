@@ -762,7 +762,7 @@ final class AreaSelectionController: NSObject {
       }
 
       // Global monitor for when app may not be fully active.
-      globalEscapeMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
+      globalEscapeMonitor = NSEvent.addTrustedGlobalKeyMonitor(matching: .keyDown) { [weak self] event in
         guard self?.isSessionKeyEvent(event) == true else { return }
         DispatchQueue.main.async {
           _ = self?.handleSessionKeyEvent(event)
@@ -2179,7 +2179,7 @@ final class AreaSelectionController: NSObject {
       }
     }
     if manualSelectionKeyGlobalMonitor == nil {
-      manualSelectionKeyGlobalMonitor = NSEvent.addGlobalMonitorForEvents(
+      manualSelectionKeyGlobalMonitor = NSEvent.addTrustedGlobalKeyMonitor(
         matching: [.keyDown, .keyUp]
       ) { [weak self] event in
         MainActor.assumeIsolated {
