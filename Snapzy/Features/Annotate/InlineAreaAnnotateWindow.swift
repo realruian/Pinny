@@ -13,6 +13,8 @@ final class InlineAreaAnnotateCoordinator {
   static let shared = InlineAreaAnnotateCoordinator()
   private var activeWindows: [InlineAreaAnnotatePanel] = []
   private var previouslyActiveApplication: NSRunningApplication?
+  private var keyWindowObservers: [NSObjectProtocol] = []
+  private weak var lastKeyPanel: InlineAreaAnnotatePanel?
 
   func start(
     screens: [NSScreen],
@@ -47,6 +49,7 @@ final class InlineAreaAnnotateCoordinator {
         onComplete(result)
         return
       }
+      self.stopKeepingKeyboard()
       self.previouslyActiveApplication?.activate(options: [])
       self.previouslyActiveApplication = nil
       onComplete(result)
@@ -106,6 +109,7 @@ final class InlineAreaAnnotateCoordinator {
     if !windows.contains(where: { $0.displayID == primaryDisplayID }) {
       windows.first?.makeKey()
     }
+    keepKeyboard(for: windows, primaryDisplayID: primaryDisplayID)
     if let recordingPrepRect {
       session.beginRecordingPrep(screenRect: recordingPrepRect)
     }
@@ -115,7 +119,52 @@ final class InlineAreaAnnotateCoordinator {
     }
   }
 
+  /// Activating Pinny gives the keyboard back to the window that had it last, such as an open
+  /// Settings window, after the panel was made key, so Esc and every other key went to that
+  /// hidden window. While the overlay is up, a Pinny window below it (Settings, a pin) never
+  /// keeps the keyboard; popovers and alerts sit above the overlay or run modally and keep it.
+  private func keepKeyboard(for windows: [InlineAreaAnnotatePanel], primaryDisplayID: CGDirectDisplayID) {
+    stopKeepingKeyboard()
+    lastKeyPanel = windows.first { $0.isKeyWindow }
+      ?? windows.first { $0.displayID == primaryDisplayID }
+      ?? windows.first
+    let center = NotificationCenter.default
+    keyWindowObservers = [
+      center.addObserver(forName: NSWindow.didBecomeKeyNotification, object: nil, queue: .main) { [weak self] notification in
+        MainActor.assumeIsolated {
+          if let panel = notification.object as? InlineAreaAnnotatePanel {
+            self?.lastKeyPanel = panel
+          } else {
+            self?.reclaimKeyboard()
+          }
+        }
+      },
+      // The restored window can already count as key when activation finishes, so no
+      // didBecomeKey arrives for it; check again once Pinny is active.
+      center.addObserver(forName: NSApplication.didBecomeActiveNotification, object: nil, queue: .main) { [weak self] _ in
+        MainActor.assumeIsolated { self?.reclaimKeyboard() }
+      },
+    ]
+    DispatchQueue.main.async { [weak self] in self?.reclaimKeyboard() }
+  }
+
+  private func reclaimKeyboard() {
+    guard !activeWindows.isEmpty, NSApp.modalWindow == nil else { return }
+    if let keyWindow = NSApp.keyWindow {
+      guard !(keyWindow is InlineAreaAnnotatePanel), keyWindow.level < .screenSaver else { return }
+    }
+    guard let panel = lastKeyPanel ?? activeWindows.first, panel.isVisible else { return }
+    panel.makeKey()
+  }
+
+  private func stopKeepingKeyboard() {
+    keyWindowObservers.forEach(NotificationCenter.default.removeObserver)
+    keyWindowObservers = []
+    lastKeyPanel = nil
+  }
+
   private func closeActiveWindows() {
+    stopKeepingKeyboard()
     let windows = activeWindows
     activeWindows.removeAll()
     for window in windows {
