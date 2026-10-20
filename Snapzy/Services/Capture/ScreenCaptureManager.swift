@@ -32,7 +32,7 @@ nonisolated enum ShareableContentGate {
     if includeDesktopWindows {
       return try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
     }
-    return try await ShareableContentGate.load()
+    return try await SCShareableContent.current
   }
 }
 
