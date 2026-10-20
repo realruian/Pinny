@@ -34,7 +34,7 @@ enum DatabaseInitializationError: LocalizedError {
   }
 
   var recoverySuggestion: String? {
-    "Try repairing the database, reset it after backing up the existing files, or quit Snapzy."
+    "Try repairing the database, reset it after backing up the existing files, or quit Pinny."
   }
 
   var databaseURL: URL {

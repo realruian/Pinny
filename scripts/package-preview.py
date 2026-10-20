@@ -34,8 +34,13 @@ subprocess.run(['ditto', str(source), str(destination)], check=True)
 info_path = destination / 'Contents/Info.plist'
 with info_path.open('rb') as stream:
     info = plistlib.load(stream)
+# The Xcode target still builds an executable named Snapzy (unit tests load it as their host);
+# the installed app shows its executable name in Activity Monitor, crash and memory reports.
+executable = info.get('CFBundleExecutable', 'Snapzy')
+if executable != 'Pinny':
+    (destination / 'Contents/MacOS' / executable).rename(destination / 'Contents/MacOS/Pinny')
 info.update(CFBundleIdentifier='com.tianruian.openshot.preview',
-            CFBundleName='Pinny', CFBundleDisplayName='Pinny')
+            CFBundleName='Pinny', CFBundleDisplayName='Pinny', CFBundleExecutable='Pinny')
 # Personal build: never fetch the upstream Snapzy appcast, which would replace
 # this build with the original app.
 info.pop('SUFeedURL', None)

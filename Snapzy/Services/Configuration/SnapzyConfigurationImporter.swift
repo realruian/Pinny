@@ -87,7 +87,7 @@ enum SnapzyConfigurationImporter {
   private static func validateSchema(_ reader: inout SnapzyConfigurationReader) {
     guard let schemaVersion = reader.int("schema_version") else { return }
     if schemaVersion != 1 {
-      reader.error("Unsupported schema_version \(schemaVersion). Snapzy currently supports schema_version 1.")
+      reader.error("Unsupported schema_version \(schemaVersion). Pinny currently supports schema_version 1.")
     }
   }
 

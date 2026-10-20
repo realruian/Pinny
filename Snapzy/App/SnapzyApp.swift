@@ -182,7 +182,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
       } catch {
         switch presentSandboxOffMigrationRecoveryAlert(error: error, note: note) {
         case .retry:
-          note = "Previous attempt also failed. If this keeps happening, Start Fresh will let you use Snapzy without old data."
+          note = "Previous attempt also failed. If this keeps happening, Start Fresh will let you use Pinny without old data."
           continue
 
         case .startFresh:
@@ -219,7 +219,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     let alert = NSAlert()
     alert.alertStyle = .critical
-    alert.messageText = "Snapzy could not migrate your existing data."
+    alert.messageText = "Pinny could not migrate your existing data."
 
     var informativeText = """
       Snapzy needs to move data from the old sandboxed storage before opening the unsandboxed version.
@@ -232,12 +232,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     if let note {
       informativeText += "\n\n\(note)"
     }
-    informativeText += "\n\nTry again if the error is temporary. Start Fresh launches Snapzy with default settings — your old data stays in the sandbox container and is not deleted."
+    informativeText += "\n\nTry again if the error is temporary. Start Fresh launches Pinny with default settings — your old data stays in the sandbox container and is not deleted."
     alert.informativeText = informativeText
 
     alert.addButton(withTitle: "Try Again")
     alert.addButton(withTitle: "Start Fresh…")
-    alert.addButton(withTitle: "Quit Snapzy")
+    alert.addButton(withTitle: "Quit Pinny")
 
     switch alert.runModal() {
     case .alertFirstButtonReturn:
@@ -288,7 +288,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
           return true
         } catch {
           currentError = error
-          note = "Repair did not succeed. You can reset the database after backing up the current files, or quit Snapzy."
+          note = "Repair did not succeed. You can reset the database after backing up the current files, or quit Pinny."
         }
 
       case .reset:
@@ -312,11 +312,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return true
           case let .failure(error):
             currentError = error
-            note = "Reset moved the old database files aside, but Snapzy still could not create a fresh database."
+            note = "Reset moved the old database files aside, but Pinny still could not create a fresh database."
           }
         } catch {
           currentError = error
-          note = "Reset failed before Snapzy could create a fresh database."
+          note = "Reset failed before Pinny could create a fresh database."
         }
 
       case .quit:
@@ -334,7 +334,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     let alert = NSAlert()
     alert.alertStyle = .critical
-    alert.messageText = "Snapzy could not open its database."
+    alert.messageText = "Pinny could not open its database."
 
     var informativeText = """
       Snapzy needs this database for capture history and cloud upload records.
@@ -353,7 +353,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     alert.addButton(withTitle: "Try Repair")
     alert.addButton(withTitle: "Reset Database...")
-    alert.addButton(withTitle: "Quit Snapzy")
+    alert.addButton(withTitle: "Quit Pinny")
 
     switch alert.runModal() {
     case .alertFirstButtonReturn:
@@ -368,7 +368,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
   private func confirmDatabaseReset(error: Error) -> Bool {
     let alert = NSAlert()
     alert.alertStyle = .critical
-    alert.messageText = "Reset Snapzy Database?"
+    alert.messageText = "Reset Pinny Database?"
     alert.informativeText = """
       Snapzy will move the current database files into a recovery folder, then create a new empty database.
 

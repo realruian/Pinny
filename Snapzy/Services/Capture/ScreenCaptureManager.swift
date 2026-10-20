@@ -299,7 +299,7 @@ final class ScreenCaptureManager: ObservableObject {
     }
 
     guard let executableURL = Bundle.main.executableURL,
-          executableURL.lastPathComponent.contains("Snapzy"),
+          ["Snapzy", "Pinny"].contains(where: executableURL.lastPathComponent.contains),
           FileManager.default.isExecutableFile(atPath: executableURL.path) else {
       return false
     }

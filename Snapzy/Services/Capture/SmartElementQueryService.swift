@@ -336,7 +336,7 @@ final class SmartElementQueryService {
 }
 
 /// Accessibility trust without side effects in unit-test hosts. On macOS 27 even
-/// `AccessibilityTrust.isGranted` makes an untrusted process show the "would like to control this Mac"
+/// `AXIsProcessTrusted()` makes an untrusted process show the "would like to control this Mac"
 /// alert, and every test run used to stack another one. Test hosts are never trusted, so they
 /// answer false without asking; the installed app asks the system as before.
 nonisolated enum AccessibilityTrust {

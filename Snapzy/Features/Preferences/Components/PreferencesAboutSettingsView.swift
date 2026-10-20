@@ -14,7 +14,7 @@ struct AboutSettingsView: View {
   private var appVersion: String {
     let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
     let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
-    return "Snapzy \(version) (\(build))"
+    return "Pinny \(version) (\(build))"
   }
 
   @StateObject private var updatesViewModel = CheckForUpdatesViewModel(updater: UpdaterManager.shared.updater)
@@ -209,8 +209,8 @@ struct AboutSettingsView: View {
 
         VStack(alignment: .trailing, spacing: 8) {
           supportLink(title: L10n.PreferencesAbout.website, url: "https://snapzy.app")
-          supportLink(title: L10n.PreferencesAbout.github, url: "https://github.com/duongductrong/Snapzy")
-          supportLink(title: L10n.PreferencesAbout.reportBug, url: "https://github.com/duongductrong/Snapzy/issues")
+          supportLink(title: L10n.PreferencesAbout.github, url: "https://github.com/realruian/Pinny")
+          supportLink(title: L10n.PreferencesAbout.reportBug, url: "https://github.com/realruian/Pinny/issues")
           supportLink(title: L10n.PreferencesAbout.discordCommunity, url: "https://discord.gg/xkWDAuJkZu")
           supportLink(
             title: "\(L10n.PreferencesAbout.supportTitle) ❤️",
